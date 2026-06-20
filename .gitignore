@@ -29,6 +29,12 @@ bin/
 ### VS Code ###
 .vscode/
 
+### AI / local editor tooling (keep local, do not commit) ###
+.claude/
+.cursor/
+.aider*
+.continue/
+
 ### Mac OS ###
 .DS_Store
 
