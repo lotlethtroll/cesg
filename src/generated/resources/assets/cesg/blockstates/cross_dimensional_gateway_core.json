@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cesg:block/cross_dimensional_gateway_core"
+    }
+  }
+}

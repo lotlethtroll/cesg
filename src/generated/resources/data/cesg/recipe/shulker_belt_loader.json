@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_casing"
+    },
+    "C": {
+      "item": "create:cogwheel"
+    },
+    "F": {
+      "item": "create:andesite_funnel"
+    }
+  },
+  "pattern": [
+    " F ",
+    "CBC",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:shulker_belt_loader"
+  }
+}

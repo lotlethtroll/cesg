@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down": { "model": "cesg:block/shulker_belt_loader/block", "x": 90 },
+    "facing=up": { "model": "cesg:block/shulker_belt_loader/block", "x": 270 },
+    "facing=north": { "model": "cesg:block/shulker_belt_loader/block" },
+    "facing=south": { "model": "cesg:block/shulker_belt_loader/block", "y": 180 },
+    "facing=west": { "model": "cesg:block/shulker_belt_loader/block", "y": 270 },
+    "facing=east": { "model": "cesg:block/shulker_belt_loader/block", "y": 90 }
+  }
+}

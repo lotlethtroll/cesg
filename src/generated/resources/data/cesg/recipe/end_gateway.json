@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "minecraft:chorus_fruit"
+    },
+    "E": {
+      "item": "minecraft:end_stone"
+    },
+    "G": {
+      "item": "minecraft:ender_pearl"
+    }
+  },
+  "pattern": [
+    "CEC",
+    "EGE",
+    "CEC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:end_gateway"
+  }
+}

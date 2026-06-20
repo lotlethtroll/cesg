@@ -1,0 +1,68 @@
+{
+  "credit": "Brass extractor nozzle: wider than the hose with an item-sized mouth",
+  "parent": "minecraft:block/block",
+  "textures": {
+    "casing": "create:block/brass_casing",
+    "gearbox": "create:block/brass_gearbox",
+    "particle": "create:block/brass_casing"
+  },
+  "elements": [
+    {
+      "name": "Collar",
+      "from": [4, -1, 4],
+      "to": [12, 0, 12],
+      "faces": {
+        "north": { "uv": [4, 0, 12, 1], "texture": "#casing" },
+        "south": { "uv": [4, 0, 12, 1], "texture": "#casing" },
+        "east": { "uv": [4, 0, 12, 1], "texture": "#casing" },
+        "west": { "uv": [4, 0, 12, 1], "texture": "#casing" },
+        "up": { "uv": [4, 4, 12, 12], "texture": "#casing" },
+        "down": { "uv": [4, 4, 12, 12], "texture": "#gearbox" }
+      }
+    },
+    {
+      "name": "Mouth North",
+      "from": [3, -3, 3],
+      "to": [13, -1, 4],
+      "faces": {
+        "north": { "uv": [3, 1, 13, 3], "texture": "#casing" },
+        "south": { "uv": [3, 1, 13, 3], "texture": "#casing" },
+        "up": { "uv": [3, 3, 13, 4], "texture": "#casing" },
+        "down": { "uv": [3, 3, 13, 4], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Mouth South",
+      "from": [3, -3, 12],
+      "to": [13, -1, 13],
+      "faces": {
+        "north": { "uv": [3, 1, 13, 3], "texture": "#casing" },
+        "south": { "uv": [3, 1, 13, 3], "texture": "#casing" },
+        "up": { "uv": [3, 12, 13, 13], "texture": "#casing" },
+        "down": { "uv": [3, 12, 13, 13], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Mouth West",
+      "from": [3, -3, 4],
+      "to": [4, -1, 12],
+      "faces": {
+        "west": { "uv": [4, 1, 12, 3], "texture": "#casing" },
+        "east": { "uv": [4, 1, 12, 3], "texture": "#casing" },
+        "up": { "uv": [3, 4, 4, 12], "texture": "#casing" },
+        "down": { "uv": [3, 4, 4, 12], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Mouth East",
+      "from": [12, -3, 4],
+      "to": [13, -1, 12],
+      "faces": {
+        "west": { "uv": [4, 1, 12, 3], "texture": "#casing" },
+        "east": { "uv": [4, 1, 12, 3], "texture": "#casing" },
+        "up": { "uv": [12, 4, 13, 12], "texture": "#casing" },
+        "down": { "uv": [12, 4, 13, 12], "texture": "#casing" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_chorus": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:chorus_fruit"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "cesg:end_gateway"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_chorus"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "cesg:end_gateway"
+    ]
+  }
+}

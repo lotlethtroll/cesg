@@ -1,0 +1,165 @@
+{
+  "credit": "Compact icon model — body, shaft, and intake head kept inside the 0–16 item cube",
+  "parent": "minecraft:block/block",
+  "textures": {
+    "casing": "create:block/brass_casing",
+    "gearbox": "create:block/brass_casing",
+    "axis": "create:block/axis",
+    "axis_top": "create:block/axis_top",
+    "particle": "create:block/brass_casing"
+  },
+  "elements": [
+    {
+      "name": "Front",
+      "from": [0, 6, 0],
+      "to": [16, 16, 0.95],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 10], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Side Left",
+      "from": [0, 6, 0],
+      "to": [0.95, 16, 16],
+      "faces": {
+        "west": { "uv": [0, 0, 16, 10], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Side Right",
+      "from": [15.05, 6, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "east": { "uv": [0, 0, 16, 10], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Top",
+      "from": [0, 15.05, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Core",
+      "from": [0.95, 6.95, 0.95],
+      "to": [15.05, 15.05, 15.05],
+      "faces": {
+        "south": { "uv": [1, 2, 15, 14], "texture": "#gearbox" },
+        "north": { "uv": [1, 2, 15, 14], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Left",
+      "from": [0, 6, 0.95],
+      "to": [0.95, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 1, 10], "texture": "#casing" },
+        "south": { "uv": [0, 0, 1, 10], "texture": "#casing" },
+        "east": { "uv": [0, 0, 16, 1], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Right",
+      "from": [15.05, 6, 0.95],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [15, 0, 16, 10], "texture": "#casing" },
+        "south": { "uv": [15, 0, 16, 10], "texture": "#casing" },
+        "west": { "uv": [0, 0, 16, 1], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Bottom",
+      "from": [0.95, 6, 0.95],
+      "to": [15.05, 6.95, 16],
+      "faces": {
+        "north": { "uv": [1, 0, 15, 1], "texture": "#casing" },
+        "south": { "uv": [1, 0, 15, 1], "texture": "#casing" },
+        "up": { "uv": [1, 0, 15, 1], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Top",
+      "from": [0.95, 15.05, 0.95],
+      "to": [15.05, 16, 16],
+      "faces": {
+        "north": { "uv": [1, 15, 15, 16], "texture": "#casing" },
+        "south": { "uv": [1, 15, 15, 16], "texture": "#casing" },
+        "down": { "uv": [1, 15, 15, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Axis",
+      "from": [6, 6, 0],
+      "to": [10, 10, 16],
+      "faces": {
+        "north": { "uv": [6, 6, 10, 10], "rotation": 180, "texture": "#axis_top" },
+        "east": { "uv": [6, 0, 10, 16], "rotation": 90, "texture": "#axis" },
+        "south": { "uv": [6, 6, 10, 10], "texture": "#axis_top" },
+        "west": { "uv": [6, 0, 10, 16], "rotation": 270, "texture": "#axis" },
+        "up": { "uv": [6, 0, 10, 16], "texture": "#axis" },
+        "down": { "uv": [6, 0, 10, 16], "rotation": 180, "texture": "#axis" }
+      }
+    },
+    {
+      "name": "Head Body",
+      "from": [5, 2, 5],
+      "to": [11, 6, 11],
+      "faces": {
+        "north": { "uv": [5, 10, 11, 14], "texture": "#casing" },
+        "south": { "uv": [5, 10, 11, 14], "texture": "#casing" },
+        "east": { "uv": [5, 10, 11, 14], "texture": "#casing" },
+        "west": { "uv": [5, 10, 11, 14], "texture": "#casing" },
+        "down": { "uv": [5, 5, 11, 11], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Head Nozzle",
+      "from": [6.5, 0, 6.5],
+      "to": [9.5, 2, 9.5],
+      "faces": {
+        "north": { "uv": [6.5, 14, 9.5, 16], "texture": "#casing" },
+        "south": { "uv": [6.5, 14, 9.5, 16], "texture": "#casing" },
+        "east": { "uv": [6.5, 14, 9.5, 16], "texture": "#casing" },
+        "west": { "uv": [6.5, 14, 9.5, 16], "texture": "#casing" },
+        "down": { "uv": [6.5, 6.5, 9.5, 9.5], "texture": "#casing" }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 1, 0],
+      "scale": [0.45, 0.45, 0.45]
+    },
+    "fixed": {
+      "rotation": [90, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.35, 0.35, 0.35]
+    },
+    "ground": {
+      "translation": [0, 2, 0],
+      "scale": [0.35, 0.35, 0.35]
+    },
+    "thirdperson_righthand": {
+      "rotation": [75, 45, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.35, 0.35, 0.35]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [75, 45, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.35, 0.35, 0.35]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, 45, 0],
+      "scale": [0.35, 0.35, 0.35]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 225, 0],
+      "scale": [0.35, 0.35, 0.35]
+    }
+  }
+}
