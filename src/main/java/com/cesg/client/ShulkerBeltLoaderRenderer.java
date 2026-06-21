@@ -19,8 +19,8 @@ import net.minecraft.world.level.block.state.BlockState;
  * mirroring how Create's Hose Pulley pays out a continuous line of body segments capped by a tip.
  */
 public class ShulkerBeltLoaderRenderer extends SafeBlockEntityRenderer<ShulkerBeltLoaderBlockEntity> {
-    /** Y of the bottom of the static nozzle ring (1px below the block); the tube hangs flush from here. */
-    private static final float TUBE_TOP_Y = -1f / 16f;
+    /** Hose routes up through the plate opening; its top sits at the block bottom (the plate spans -1..0). */
+    private static final float TUBE_TOP_Y = 0f;
     /** Height of one {@code SPOUT_MIDDLE} body ring. */
     private static final float SEGMENT_HEIGHT = 2f / 16f;
     /** Height of the brass extractor nozzle head. */
@@ -47,9 +47,8 @@ public class ShulkerBeltLoaderRenderer extends SafeBlockEntityRenderer<ShulkerBe
 
     private static void renderTube(ShulkerBeltLoaderBlockEntity be, float partialTicks, PoseStack ms,
             MultiBufferSource buffer, int light) {
-        float extension = be.getTubeExtension(partialTicks);
-        if (extension <= 0)
-            return;
+        // At extension 0 the hose has no segments and the nozzle parks in the plate opening, poking out below.
+        float extension = Math.max(0f, be.getTubeExtension(partialTicks));
 
         BlockState state = be.getBlockState();
         VertexConsumer vb = buffer.getBuffer(RenderType.solid());

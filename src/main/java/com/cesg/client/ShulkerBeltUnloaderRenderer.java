@@ -4,6 +4,7 @@ import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.AllPartialModels;
+import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringRenderer;
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
 
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
@@ -40,9 +41,10 @@ public class ShulkerBeltUnloaderRenderer extends SafeBlockEntityRenderer<Shulker
     @Override
     protected void renderSafe(ShulkerBeltUnloaderBlockEntity be, float partialTicks, PoseStack ms,
             MultiBufferSource buffer, int light, int overlay) {
-        float extension = be.getTubeExtension(partialTicks);
-        if (extension <= 0)
-            return;
+        FilteringRenderer.renderOnBlockEntity(be, partialTicks, ms, buffer, light, overlay);
+
+        // At extension 0 the hose has no segments and the nozzle parks at the block bottom, poking out below.
+        float extension = Math.max(0f, be.getTubeExtension(partialTicks));
 
         BlockState state = be.getBlockState();
         VertexConsumer vb = buffer.getBuffer(RenderType.solid());

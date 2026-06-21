@@ -75,7 +75,9 @@ public class CESGRegistration {
             .initialProperties(SharedProperties::stone)
             .properties(p -> p.mapColor(MapColor.GOLD).noOcclusion())
             .blockstate(CESGPlaceholderModels::shulkerBeltUnloader)
-            .simpleItem()
+            .item()
+            .model(CESGPlaceholderModels::shulkerBeltUnloaderItem)
+            .build()
             .register();
 
     public static final ItemEntry<EnhancedShulkerItem> ENHANCED_SHULKER_T2 = CESG.REGISTRATE.item("enhanced_shulker_t2",

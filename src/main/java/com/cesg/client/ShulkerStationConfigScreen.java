@@ -9,6 +9,7 @@ import com.cesg.storage.station.AbstractShulkerStationBlockEntity;
 import com.cesg.storage.station.StationFullnessMode;
 import com.cesg.storage.station.StationRetentionMode;
 import com.cesg.storage.beltloader.ShulkerBeltLoaderBlockEntity;
+import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
 import com.cesg.storage.unloader.ShulkerUnloaderBlockEntity;
 import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.gui.widget.IconButton;
@@ -24,6 +25,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     private final AbstractShulkerStationBlockEntity blockEntity;
     private final boolean unloader;
     private final boolean beltLoader;
+    private final boolean beltUnloader;
 
     // ---- Panel geometry (flat-drawn, brown/brass) ----
     private static final int PANEL_W = 224;
@@ -71,7 +73,8 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
 
     public ShulkerStationConfigScreen(AbstractShulkerStationBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
-        this.unloader = blockEntity instanceof ShulkerUnloaderBlockEntity;
+        this.beltUnloader = blockEntity instanceof ShulkerBeltUnloaderBlockEntity;
+        this.unloader = beltUnloader || blockEntity instanceof ShulkerUnloaderBlockEntity;
         this.beltLoader = blockEntity instanceof ShulkerBeltLoaderBlockEntity;
         this.retention = blockEntity.getRetentionMode().ordinal();
         this.fullness = blockEntity.getFullnessMode().ordinal();
@@ -205,7 +208,8 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
 
         drawPanel(graphics, x, y);
 
-        String titleKey = unloader ? "cesg.station.config.title.unloader"
+        String titleKey = beltUnloader ? "cesg.station.config.title.belt_unloader"
+                : unloader ? "cesg.station.config.title.unloader"
                 : beltLoader ? "cesg.station.config.title.belt_loader"
                 : "cesg.station.config.title.loader";
         MutableComponent header = Component.translatable(titleKey);

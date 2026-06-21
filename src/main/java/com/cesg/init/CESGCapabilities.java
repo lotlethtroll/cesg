@@ -2,6 +2,7 @@ package com.cesg.init;
 
 import com.cesg.CESG;
 import com.cesg.storage.beltloader.ShulkerBeltLoaderBlockEntity;
+import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
 import com.cesg.storage.loader.ShulkerLoaderBlockEntity;
 import com.cesg.storage.unloader.ShulkerUnloaderBlockEntity;
 
@@ -20,6 +21,8 @@ public class CESGCapabilities {
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_UNLOADER.get(),
                 (be, side) -> be.getItemHandler(side));
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_BELT_LOADER.get(),
+                (be, side) -> be.getItemHandler(side));
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_BELT_UNLOADER.get(),
                 (be, side) -> be.getItemHandler(side));
     }
 }

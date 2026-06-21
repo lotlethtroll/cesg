@@ -50,6 +50,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.station.config.title.loader", "Shulker Loader");
         add("cesg.station.config.title.belt_loader", "Shulker Belt Loader");
         add("cesg.station.config.title.unloader", "Shulker Unloader");
+        add("cesg.station.config.title.belt_unloader", "Shulker Belt Unloader");
 
         add("cesg.goggles.loader.station.empty", "No shulker docked");
         add("cesg.goggles.loader.station.dock_via_funnel", "Insert a shulker box from any funnel side to dock");
@@ -83,7 +84,11 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.belt_loader.filter_all", "Filter: accepts all items");
         add("cesg.goggles.belt_loader.filter_set", "Filter: %s");
         add("cesg.goggles.belt_loader.filter_hint", "Click the front filter slot with an item or Create filter");
-        add("cesg.goggles.belt_unloader", "Empties shulkers travelling on a belt to adjacent inventory");
+
+        add("cesg.goggles.belt_unloader.placement", "Place two blocks above a horizontal belt");
+        add("cesg.goggles.belt_unloader.filter_all", "Filter: unloads all items");
+        add("cesg.goggles.belt_unloader.filter_set", "Filter: %s");
+        add("cesg.goggles.belt_unloader.filter_hint", "Click the front filter slot with an item or Create filter");
 
         add("cesg.goggles.gateway.fuel", "Gateway fluid: %s/%s mB");
         add("cesg.goggles.gateway.bound", "Bound to partner gateway");

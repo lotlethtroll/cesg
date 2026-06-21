@@ -76,7 +76,11 @@ public final class CESGPlaceholderModels {
     }
 
     public static void shulkerBeltUnloader(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
-        prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(), create("block/brass_casing")));
+        shulkerStation(ctx, prov, "shulker_belt_unloader");
+    }
+
+    public static void shulkerBeltUnloaderItem(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
+        prov.withExistingParent(ctx.getName(), cesg("block/shulker_belt_unloader/item"));
     }
 
     public static void shulkerDuplicationAid(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {

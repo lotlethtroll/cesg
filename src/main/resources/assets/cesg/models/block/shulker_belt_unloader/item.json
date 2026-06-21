@@ -1,11 +1,11 @@
 {
-  "credit": "Item icon — full loader body with the brass plate and parked extractor nozzle below",
+  "credit": "Item icon — full unloader body with the brass plate and parked extractor nozzle below",
   "parent": "minecraft:block/block",
   "textures": {
     "casing": "create:block/brass_casing",
     "brass": "create:block/brass_block",
     "gearbox": "create:block/brass_gearbox",
-    "front": "cesg:block/shulker_belt_loader_front",
+    "front": "cesg:block/shulker_belt_unloader_front",
     "particle": "create:block/brass_casing"
   },
   "elements": [
@@ -116,8 +116,8 @@
       "from": [2, -1, 12],
       "to": [14, 0, 14],
       "faces": {
-        "north": { "uv": [2, 15, 14, 16], "texture": "#brass" },
-        "south": { "uv": [2, 15, 14, 16], "texture": "#casing" },
+        "north": { "uv": [2, 15, 14, 16], "texture": "#casing" },
+        "south": { "uv": [2, 15, 14, 16], "texture": "#brass" },
         "west": { "uv": [2, 15, 4, 16], "texture": "#brass" },
         "east": { "uv": [12, 15, 14, 16], "texture": "#brass" },
         "up": { "uv": [2, 12, 14, 14], "texture": "#brass" },
@@ -130,7 +130,7 @@
       "to": [4, 0, 12],
       "faces": {
         "west": { "uv": [4, 15, 12, 16], "texture": "#brass" },
-        "east": { "uv": [4, 15, 12, 16], "texture": "#brass" },
+        "east": { "uv": [4, 15, 12, 16], "texture": "#casing" },
         "up": { "uv": [2, 4, 4, 12], "texture": "#brass" },
         "down": { "uv": [2, 4, 4, 12], "texture": "#brass" }
       }
@@ -140,7 +140,7 @@
       "from": [12, -1, 4],
       "to": [14, 0, 12],
       "faces": {
-        "west": { "uv": [4, 15, 12, 16], "texture": "#brass" },
+        "west": { "uv": [4, 15, 12, 16], "texture": "#casing" },
         "east": { "uv": [4, 15, 12, 16], "texture": "#brass" },
         "up": { "uv": [12, 4, 14, 12], "texture": "#brass" },
         "down": { "uv": [12, 4, 14, 12], "texture": "#brass" }

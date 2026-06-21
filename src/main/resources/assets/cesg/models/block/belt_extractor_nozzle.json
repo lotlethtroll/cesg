@@ -27,6 +27,8 @@
       "faces": {
         "north": { "uv": [3, 1, 13, 3], "texture": "#casing" },
         "south": { "uv": [3, 1, 13, 3], "texture": "#casing" },
+        "west": { "uv": [3, 1, 4, 3], "texture": "#casing" },
+        "east": { "uv": [12, 1, 13, 3], "texture": "#casing" },
         "up": { "uv": [3, 3, 13, 4], "texture": "#casing" },
         "down": { "uv": [3, 3, 13, 4], "texture": "#casing" }
       }
@@ -38,6 +40,8 @@
       "faces": {
         "north": { "uv": [3, 1, 13, 3], "texture": "#casing" },
         "south": { "uv": [3, 1, 13, 3], "texture": "#casing" },
+        "west": { "uv": [3, 1, 4, 3], "texture": "#casing" },
+        "east": { "uv": [12, 1, 13, 3], "texture": "#casing" },
         "up": { "uv": [3, 12, 13, 13], "texture": "#casing" },
         "down": { "uv": [3, 12, 13, 13], "texture": "#casing" }
       }
