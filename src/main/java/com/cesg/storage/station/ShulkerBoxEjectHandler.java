@@ -4,9 +4,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 
-class ShulkerBoxEjectHandler implements IItemHandler {
+public class ShulkerBoxEjectHandler implements IItemHandler {
     private final ShulkerStation station;
     private final Direction side;
+
+    static IItemHandler create(ShulkerStation station, Direction side) {
+        return new ShulkerBoxEjectHandler(station, side);
+    }
 
     ShulkerBoxEjectHandler(ShulkerStation station, Direction side) {
         this.station = station;
