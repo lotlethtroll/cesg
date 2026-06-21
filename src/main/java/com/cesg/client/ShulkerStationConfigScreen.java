@@ -136,6 +136,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
             int barTop = rowTop(row);
             addArrows(row, () -> nudgeThreshold(-1), () -> nudgeThreshold(+1));
             thresholdSlider = new ThresholdSlider(x + BAR_X, barTop, BAR_W, BAR_H);
+            thresholdSlider.syncFromThreshold();
             addRenderableWidget(thresholdSlider);
             row++;
         }
@@ -253,7 +254,6 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     private class ThresholdSlider extends AbstractSliderButton {
         ThresholdSlider(int x, int y, int w, int h) {
             super(x, y, w, h, Component.empty(), 0.0);
-            syncFromThreshold();
         }
 
         void syncFromThreshold() {
