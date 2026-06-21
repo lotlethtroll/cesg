@@ -1,13 +1,7 @@
 package com.cesg.init;
 
-import com.cesg.CESG;
-import com.cesg.storage.beltloader.ShulkerBeltLoaderBlockEntity;
-import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
-import com.cesg.storage.loader.ShulkerLoaderBlockEntity;
-import com.cesg.storage.unloader.ShulkerUnloaderBlockEntity;
-
+import com.cesg.storage.station.StationCapabilities;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class CESGCapabilities {
@@ -16,13 +10,10 @@ public class CESGCapabilities {
     }
 
     private static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_LOADER.get(),
-                (be, side) -> be.getItemHandler(side));
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_UNLOADER.get(),
-                (be, side) -> be.getItemHandler(side));
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_BELT_LOADER.get(),
-                (be, side) -> be.getItemHandler(side));
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.SHULKER_BELT_UNLOADER.get(),
-                (be, side) -> be.getItemHandler(side));
+        StationCapabilities.register(event,
+                CESGBlockEntities.SHULKER_LOADER.get(),
+                CESGBlockEntities.SHULKER_UNLOADER.get(),
+                CESGBlockEntities.SHULKER_BELT_LOADER.get(),
+                CESGBlockEntities.SHULKER_BELT_UNLOADER.get());
     }
 }

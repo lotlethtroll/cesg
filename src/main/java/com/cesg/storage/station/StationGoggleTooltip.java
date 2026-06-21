@@ -26,12 +26,12 @@ public final class StationGoggleTooltip {
                 CESGLang.forGoggles(tooltip, prefix + ".funnel_connected", ChatFormatting.WHITE,
                         Component.translatable(funnelSide.getSerializedName()));
 
-            if (be.hasDockedShulker() && be.meetsEjectConditionPublic() && be.isPowered())
+            if (be.hasHeldShulker() && be.meetsEjectConditionPublic() && be.isPowered())
                 CESGLang.forGoggles(tooltip, prefix + ".ready_to_eject", ChatFormatting.GREEN);
         }
     }
 
-    public static void appendDockedHeader(AbstractShulkerStationBlockEntity be, List<Component> tooltip, String prefix) {
+    public static void appendHeldHeader(AbstractShulkerStationBlockEntity be, List<Component> tooltip, String prefix) {
         if (be.getHeldShulker().isEmpty()) {
             CESGLang.forGoggles(tooltip, prefix + ".empty", ChatFormatting.GRAY);
             CESGLang.forGoggles(tooltip, prefix + ".dock_via_funnel", ChatFormatting.DARK_GRAY);
@@ -44,5 +44,8 @@ public final class StationGoggleTooltip {
             if (!be.isPowered())
                 CESGLang.forGoggles(tooltip, prefix + ".unpowered", ChatFormatting.GRAY);
         }
+
+        if (!be.getStationName().isEmpty())
+            CESGLang.forGoggles(tooltip, "cesg.goggles.station.names", ChatFormatting.WHITE, be.getStationName());
     }
 }

@@ -4,7 +4,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 
 public interface ShulkerStation {
-    boolean hasDockedShulker();
+    boolean hasHeldShulker();
 
     ItemStack getHeldShulker();
 

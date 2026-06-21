@@ -47,21 +47,21 @@ public final class CESGPlaceholderModels {
         ModelFile model = prov.models().getExistingFile(cesg("block/" + name + "/block"));
         prov.getVariantBuilder(ctx.getEntry()).forAllStates(state -> {
             Direction facing = state.getValue(DirectionalKineticBlock.FACING);
-            int xRot = switch (facing) {
-                case UP -> 270;
-                case DOWN -> 90;
-                default -> 0;
-            };
-            int yRot = switch (facing) {
-                case EAST -> 90;
-                case SOUTH -> 180;
-                case WEST -> 270;
-                default -> 0;
+            if (facing == null) {
+                throw new IllegalStateException("Missing FACING property on " + state);
+            }
+            int[] rotations = switch (facing) {
+                case UP -> new int[]{270, 0};
+                case DOWN -> new int[]{90, 0};
+                case EAST -> new int[]{0, 90};
+                case SOUTH -> new int[]{0, 180};
+                case WEST -> new int[]{0, 270};
+                case NORTH -> new int[]{0, 0};
             };
             return ConfiguredModel.builder()
                     .modelFile(model)
-                    .rotationX(xRot)
-                    .rotationY(yRot)
+                    .rotationX(rotations[0])
+                    .rotationY(rotations[1])
                     .uvLock(true)
                     .build();
         });

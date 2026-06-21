@@ -29,7 +29,7 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.items.IItemHandler;
 
 /**
- * Mirror image of the Shulker Belt Loader: docks a shulker box, then pays its contents out onto the
+ * Mirror image of the Shulker Belt Loader: holds a shulker box, then pays its contents out onto the
  * belt two blocks below (everything, or only items matching the front filter). Auto-eject ejects the
  * emptied shulker through an output funnel exactly like the loader ejects a filled one.
  */
@@ -116,7 +116,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     }
 
     private void tickUnload() {
-        if (!hasDockedShulker())
+        if (!hasHeldShulker())
             return;
 
         DirectBeltInputBehaviour belt = getTargetBelt();
@@ -174,7 +174,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
 
         ItemStack leftover = belt.handleInsertion(extracted, Direction.UP, false);
         if (!leftover.isEmpty())
-            contentsHandler.insertItem(slot, leftover, false); // belt refused after all; put it back
+            insertIntoContents(slot, leftover, false); // belt refused after all; put it back
 
         onInventoryChanged();
         syncTubeState();
@@ -238,7 +238,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     }
 
     @Override
-    protected IItemHandler getDockedItemHandler() {
+    protected IItemHandler getHeldItemHandler() {
         return extractHandler;
     }
 
@@ -248,15 +248,15 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     }
 
     @Override
-    protected void clearDockedHandlers() {
-        extractHandler.setDelegate(EMPTY_HANDLER);
+    protected void clearHeldHandlers() {
+        extractHandler.setDelegate(emptyHandler());
     }
 
     @Override
     protected void updateHandlerLimits() {
         if (getRetentionMode() == StationRetentionMode.AUTO_EJECT
                 && getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD
-                && hasDockedShulker()) {
+                && hasHeldShulker()) {
             extractHandler.setMinOccupiedSlotsForExtract(getThreshold());
         } else {
             extractHandler.setMinOccupiedSlotsForExtract(0);
@@ -271,12 +271,12 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
 
     @Override
     protected boolean meetsEjectCondition() {
-        if (heldShulker.isEmpty())
+        if (getHeldShulker().isEmpty())
             return false;
 
         return switch (getFullnessMode()) {
-            case ALL_SLOTS -> ShulkerInventoryAccess.isEmpty(heldShulker);
-            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdEmptied(heldShulker, getThreshold());
+            case ALL_SLOTS -> ShulkerInventoryAccess.isEmpty(getHeldShulker());
+            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdEmptied(getHeldShulker(), getThreshold());
         };
     }
 
@@ -309,7 +309,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
         else
             CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.filter_set", ChatFormatting.WHITE, filter.getHoverName());
 
-        StationGoggleTooltip.appendDockedHeader(this, tooltip, "cesg.goggles.unloader.station");
+        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.unloader.station");
         CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.retention", ChatFormatting.WHITE,
                 Component.translatable(getRetentionMode().getTranslationKey()));
 

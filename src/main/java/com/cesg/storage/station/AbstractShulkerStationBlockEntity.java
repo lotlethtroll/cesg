@@ -1,9 +1,7 @@
 package com.cesg.storage.station;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import com.cesg.storage.ShulkerInventoryAccess;
+import com.cesg.storage.util.NotifyingComponentItemHandler;
 import com.cesg.storage.util.NotifyingItemHandler;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 
@@ -17,18 +15,17 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ComponentItemHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
 public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEntity implements ShulkerStation {
-    protected static final IItemHandler EMPTY_HANDLER = new ItemStackHandler(0);
+    private static final ItemStackHandler EMPTY = new ItemStackHandler(0);
     public static final int MAX_THRESHOLD = 54;
 
-    protected ItemStack heldShulker = ItemStack.EMPTY;
-    protected IItemHandler contentsHandler = EMPTY_HANDLER;
-    private final IItemHandler holdingHandler;
-    private final Map<Direction, IItemHandler> ejectHandlers = new EnumMap<>(Direction.class);
+    private ItemStack heldShulker = ItemStack.EMPTY;
+    private IItemHandler contentsHandler = emptyHandler();
+    private final HoldingHandler holdingHandler;
+    private final ShulkerBoxEjectHandler[] ejectHandlers = new ShulkerBoxEjectHandler[6];
 
     protected int retentionOrdinal = StationRetentionMode.HOLD.ordinal();
     protected int fullnessOrdinal = StationFullnessMode.ALL_SLOTS.ordinal();
@@ -41,7 +38,7 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
         super(type, pos, state);
         holdingHandler = new HoldingHandler(this);
         for (Direction direction : Direction.values())
-            ejectHandlers.put(direction, ShulkerBoxEjectHandler.create(this, direction));
+            ejectHandlers[direction.ordinal()] = new ShulkerBoxEjectHandler(this, direction);
     }
 
     @Override
@@ -113,21 +110,25 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
     @Override
     public void clearHeldShulkerAfterEject() {
         heldShulker = ItemStack.EMPTY;
-        contentsHandler = EMPTY_HANDLER;
+        contentsHandler = emptyHandler();
         clearHeldHandlers();
         updateHandlerLimits();
         setChanged();
         sendData();
     }
 
-    public IItemHandler getItemHandler(Direction side) {
+    IItemHandler resolveItemHandler(Direction side) {
         if (!hasHeldShulker())
             return holdingHandler;
 
         if (isPowered() && canExposeShulkerForEject(side))
-            return ejectHandlers.get(side);
+            return ejectHandlers[side.ordinal()];
 
         return getHeldItemHandler();
+    }
+
+    protected static IItemHandler emptyHandler() {
+        return EMPTY;
     }
 
     @Override
@@ -143,7 +144,7 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
 
     protected void rebuildContentsHandlers() {
         if (heldShulker.isEmpty() || !ShulkerInventoryAccess.isShulkerBox(heldShulker)) {
-            contentsHandler = EMPTY_HANDLER;
+            contentsHandler = emptyHandler();
             clearHeldHandlers();
             updateHandlerLimits();
             return;
@@ -151,13 +152,8 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
 
         Runnable notify = this::onInventoryChanged;
         if (ShulkerInventoryAccess.isVanillaShulker(heldShulker)) {
-            contentsHandler = new ComponentItemHandler(heldShulker, DataComponents.CONTAINER, 27) {
-                @Override
-                protected void onContentsChanged(int slot, ItemStack oldStack, ItemStack newStack) {
-                    super.onContentsChanged(slot, oldStack, newStack);
-                    notify.run();
-                }
-            };
+            contentsHandler = new NotifyingComponentItemHandler(
+                    heldShulker, DataComponents.CONTAINER, 27, notify);
         } else {
             contentsHandler = new NotifyingItemHandler(ShulkerInventoryAccess.wrap(heldShulker), notify);
         }
@@ -173,13 +169,18 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
 
     protected abstract IItemHandler getHeldItemHandler();
 
-    protected abstract void bindContentsHandler(IItemHandler contentsHandler);
+    protected abstract void bindContentsHandler(IItemHandler handler);
 
     protected abstract void clearHeldHandlers();
 
     protected abstract void updateHandlerLimits();
 
     protected abstract boolean meetsEjectCondition();
+
+    /** Inserts into the held shulker's contents inventory (used by belt unloaders). */
+    protected void insertIntoContents(int slot, ItemStack stack, boolean simulate) {
+        contentsHandler.insertItem(slot, stack, simulate);
+    }
 
     public boolean meetsEjectConditionPublic() {
         return meetsEjectCondition();
@@ -189,7 +190,7 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
     public void tick() {
         super.tick();
         if (level != null && !level.isClientSide && heldShulker.isEmpty()) {
-            contentsHandler = EMPTY_HANDLER;
+            contentsHandler = emptyHandler();
             clearHeldHandlers();
         }
     }
@@ -220,10 +221,10 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
     }
 
     /** Accepts shulker boxes into the station when no box is held yet. */
-    private static final class HoldingHandler implements IItemHandler {
+    public static final class HoldingHandler implements IItemHandler {
         private final ShulkerStation station;
 
-        private HoldingHandler(ShulkerStation station) {
+        HoldingHandler(ShulkerStation station) {
             this.station = station;
         }
 

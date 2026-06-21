@@ -1,10 +1,8 @@
 package com.cesg.storage.station;
 
 import com.cesg.client.ShulkerStationConfigScreen;
-import com.cesg.init.CESGBlockEntities;
 import com.cesg.storage.ShulkerInventoryAccess;
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
-import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.foundation.block.IBE;
 
 import net.createmod.catnip.gui.ScreenOpener;
@@ -106,9 +104,10 @@ public abstract class AbstractShulkerStationBlock<T extends AbstractShulkerStati
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction preferred = context.getNearestLookingDirection().getOpposite();
-        return defaultBlockState().setValue(FACING, context.getPlayer() != null && context.getPlayer().isShiftKeyDown()
-                ? preferred.getOpposite()
-                : preferred);
+        Direction facing = context.getNearestLookingDirection().getOpposite();
+        Player player = context.getPlayer();
+        if (player != null && player.isShiftKeyDown())
+            facing = facing.getOpposite();
+        return defaultBlockState().setValue(FACING, facing);
     }
 }

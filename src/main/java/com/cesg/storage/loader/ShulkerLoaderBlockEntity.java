@@ -30,7 +30,7 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
     }
 
     @Override
-    protected IItemHandler getDockedItemHandler() {
+    protected IItemHandler getHeldItemHandler() {
         return fillHandler;
     }
 
@@ -40,16 +40,16 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
     }
 
     @Override
-    protected void clearDockedHandlers() {
-        fillHandler.setDelegate(EMPTY_HANDLER);
+    protected void clearHeldHandlers() {
+        fillHandler.setDelegate(emptyHandler());
     }
 
     @Override
     protected void updateHandlerLimits() {
         if (getRetentionMode() == StationRetentionMode.AUTO_EJECT
                 && getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD
-                && hasDockedShulker()) {
-            int slots = ShulkerInventoryAccess.getSlotCount(heldShulker);
+                && hasHeldShulker()) {
+            int slots = ShulkerInventoryAccess.getSlotCount(getHeldShulker());
             fillHandler.setMaxInsertSlotExclusive(Math.min(getThreshold(), slots));
         } else {
             fillHandler.setMaxInsertSlotExclusive(Integer.MAX_VALUE);
@@ -58,12 +58,12 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
 
     @Override
     protected boolean meetsEjectCondition() {
-        if (heldShulker.isEmpty())
+        if (getHeldShulker().isEmpty())
             return false;
 
         return switch (getFullnessMode()) {
-            case ALL_SLOTS -> ShulkerInventoryAccess.isFull(heldShulker);
-            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdReached(heldShulker, getThreshold());
+            case ALL_SLOTS -> ShulkerInventoryAccess.isFull(getHeldShulker());
+            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdReached(getHeldShulker(), getThreshold());
         };
     }
 
@@ -71,7 +71,7 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
-        StationGoggleTooltip.appendDockedHeader(this, tooltip, "cesg.goggles.loader.station");
+        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.loader.station");
         CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.retention", ChatFormatting.WHITE,
                 Component.translatable(getRetentionMode().getTranslationKey()));
 

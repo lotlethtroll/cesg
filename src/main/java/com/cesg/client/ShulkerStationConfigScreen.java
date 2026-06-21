@@ -17,6 +17,7 @@ import com.simibubi.create.foundation.gui.widget.IconButton;
 import net.createmod.catnip.gui.AbstractSimiScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -59,6 +60,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
 
     private IconButton confirmButton;
     private ThresholdSlider thresholdSlider;
+    private EditBox nameField;
 
     private List<Component> retentionOptions;
     private List<Component> fullnessOptions;
@@ -66,6 +68,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     private int retention;
     private int fullness;
     private int threshold;
+    private String name;
 
     private boolean showFullnessRow;
     private boolean showThresholdRow;
@@ -79,10 +82,12 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         this.retention = blockEntity.getRetentionMode().ordinal();
         this.fullness = blockEntity.getFullnessMode().ordinal();
         this.threshold = blockEntity.getThreshold();
+        this.name = blockEntity.getStationName();
     }
 
+    /** The name row is always shown; retention is always shown; the rest depend on the mode. */
     private int visibleRowCount() {
-        int n = 1;
+        int n = 2;
         if (showFullnessRow) n++;
         if (showThresholdRow) n++;
         return n;
@@ -126,6 +131,14 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         clearWidgets();
         int x = guiLeft;
         int row = 0;
+
+        int nameTop = rowTop(row++);
+        nameField = new EditBox(font, x + BAR_X, nameTop + (BAR_H - 12) / 2, BAR_W, 12, Component.empty());
+        nameField.setMaxLength(AbstractShulkerStationBlockEntity.MAX_NAME_LENGTH);
+        nameField.setValue(name);
+        nameField.setHint(Component.translatable("cesg.station.name.hint"));
+        nameField.setResponder(value -> name = value);
+        addRenderableWidget(nameField);
 
         addArrows(row++, () -> changeRetention(-1), () -> changeRetention(+1));
 
@@ -199,7 +212,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     public void onClose() {
         super.onClose();
         PacketDistributor.sendToServer(
-                new StationConfigurationPacket(blockEntity.getBlockPos(), retention, fullness, threshold));
+                new StationConfigurationPacket(blockEntity.getBlockPos(), retention, fullness, threshold, name));
     }
 
     @Override
@@ -221,11 +234,21 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
                 x + PANEL_W / 2 - font.width(header) / 2, titleY, TITLE_TEXT, false);
 
         int row = 0;
+        drawRowLabel(graphics, row++, Component.translatable("cesg.station.name.label"));
+        // name field (EditBox) renders itself as a widget
         drawBar(graphics, row++, retentionOptions.get(retention));
         if (showFullnessRow)
             drawBar(graphics, row++, fullnessOptions.get(fullness));
         // threshold row's bar + label are drawn by the slider widget itself
         if (showThresholdRow) row++;
+    }
+
+    /** Right-aligned caption in the left gutter (used for rows whose body is a custom widget). */
+    private void drawRowLabel(GuiGraphics g, int row, Component label) {
+        int barY = rowTop(row);
+        int textX = guiLeft + BAR_X - ARROW_GAP - font.width(label);
+        int textY = barY + (BAR_H - font.lineHeight) / 2 + 1;
+        g.drawString(font, label, textX, textY, LABEL_TEXT, true);
     }
 
     /** Flat brown/brass panel: nested border layers, brass title, footer strip. */

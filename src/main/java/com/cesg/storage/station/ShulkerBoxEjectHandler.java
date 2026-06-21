@@ -8,11 +8,7 @@ public class ShulkerBoxEjectHandler implements IItemHandler {
     private final ShulkerStation station;
     private final Direction side;
 
-    static IItemHandler create(ShulkerStation station, Direction side) {
-        return new ShulkerBoxEjectHandler(station, side);
-    }
-
-    ShulkerBoxEjectHandler(ShulkerStation station, Direction side) {
+    public ShulkerBoxEjectHandler(ShulkerStation station, Direction side) {
         this.station = station;
         this.side = side;
     }

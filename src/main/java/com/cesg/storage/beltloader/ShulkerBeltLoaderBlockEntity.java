@@ -110,7 +110,7 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
         beginRetracting();
     }
 
-    private BeltItemLoadingProcessing.ProcessingState processBeltItem(ItemStack stack, boolean continuing) {
+    private BeltItemLoadingProcessing.ProcessingState processBeltItem(ItemStack stack, @SuppressWarnings("unused") boolean _continuing) {
         if (!wantsFromBelt(stack))
             return BeltItemLoadingProcessing.ProcessingState.PASS;
 
@@ -171,7 +171,7 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
     }
 
     private boolean canLoadNow(ItemStack stack) {
-        if (!isPowered() || !hasDockedShulker() || stack.isEmpty())
+        if (!isPowered() || !hasHeldShulker() || stack.isEmpty())
             return false;
         if (meetsEjectCondition())
             return false;
@@ -219,7 +219,7 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
     }
 
     @Override
-    protected IItemHandler getDockedItemHandler() {
+    protected IItemHandler getHeldItemHandler() {
         return fillHandler;
     }
 
@@ -229,16 +229,16 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
     }
 
     @Override
-    protected void clearDockedHandlers() {
-        fillHandler.setDelegate(EMPTY_HANDLER);
+    protected void clearHeldHandlers() {
+        fillHandler.setDelegate(emptyHandler());
     }
 
     @Override
     protected void updateHandlerLimits() {
         if (getRetentionMode() == StationRetentionMode.AUTO_EJECT
                 && getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD
-                && hasDockedShulker()) {
-            int slots = ShulkerInventoryAccess.getSlotCount(heldShulker);
+                && hasHeldShulker()) {
+            int slots = ShulkerInventoryAccess.getSlotCount(getHeldShulker());
             fillHandler.setMaxInsertSlotExclusive(Math.min(getThreshold(), slots));
         } else {
             fillHandler.setMaxInsertSlotExclusive(Integer.MAX_VALUE);
@@ -253,12 +253,12 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
 
     @Override
     protected boolean meetsEjectCondition() {
-        if (heldShulker.isEmpty())
+        if (getHeldShulker().isEmpty())
             return false;
 
         return switch (getFullnessMode()) {
-            case ALL_SLOTS -> ShulkerInventoryAccess.isFull(heldShulker);
-            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdReached(heldShulker, getThreshold());
+            case ALL_SLOTS -> ShulkerInventoryAccess.isFull(getHeldShulker());
+            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdReached(getHeldShulker(), getThreshold());
         };
     }
 
@@ -291,7 +291,7 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
         else
             CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.filter_set", ChatFormatting.WHITE, filter.getHoverName());
 
-        StationGoggleTooltip.appendDockedHeader(this, tooltip, "cesg.goggles.loader.station");
+        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.loader.station");
         CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.retention", ChatFormatting.WHITE,
                 Component.translatable(getRetentionMode().getTranslationKey()));
 

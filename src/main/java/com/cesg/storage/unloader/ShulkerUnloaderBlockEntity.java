@@ -13,7 +13,6 @@ import com.cesg.util.CESGLang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,7 +30,7 @@ public class ShulkerUnloaderBlockEntity extends AbstractShulkerStationBlockEntit
     }
 
     @Override
-    protected IItemHandler getDockedItemHandler() {
+    protected IItemHandler getHeldItemHandler() {
         return extractHandler;
     }
 
@@ -41,15 +40,15 @@ public class ShulkerUnloaderBlockEntity extends AbstractShulkerStationBlockEntit
     }
 
     @Override
-    protected void clearDockedHandlers() {
-        extractHandler.setDelegate(EMPTY_HANDLER);
+    protected void clearHeldHandlers() {
+        extractHandler.setDelegate(emptyHandler());
     }
 
     @Override
     protected void updateHandlerLimits() {
         if (getRetentionMode() == StationRetentionMode.AUTO_EJECT
                 && getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD
-                && hasDockedShulker()) {
+                && hasHeldShulker()) {
             extractHandler.setMinOccupiedSlotsForExtract(getThreshold());
         } else {
             extractHandler.setMinOccupiedSlotsForExtract(0);
@@ -58,12 +57,12 @@ public class ShulkerUnloaderBlockEntity extends AbstractShulkerStationBlockEntit
 
     @Override
     protected boolean meetsEjectCondition() {
-        if (heldShulker.isEmpty())
+        if (getHeldShulker().isEmpty())
             return false;
 
         return switch (getFullnessMode()) {
-            case ALL_SLOTS -> ShulkerInventoryAccess.isEmpty(heldShulker);
-            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdEmptied(heldShulker, getThreshold());
+            case ALL_SLOTS -> ShulkerInventoryAccess.isEmpty(getHeldShulker());
+            case SLOT_THRESHOLD -> ShulkerInventoryAccess.isSlotThresholdEmptied(getHeldShulker(), getThreshold());
         };
     }
 
@@ -71,7 +70,7 @@ public class ShulkerUnloaderBlockEntity extends AbstractShulkerStationBlockEntit
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
-        StationGoggleTooltip.appendDockedHeader(this, tooltip, "cesg.goggles.unloader.station");
+        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.unloader.station");
 
         CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.retention", ChatFormatting.WHITE,
                 Component.translatable(getRetentionMode().getTranslationKey()));

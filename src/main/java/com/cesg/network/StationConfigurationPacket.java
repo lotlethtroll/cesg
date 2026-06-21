@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record StationConfigurationPacket(BlockPos pos, int retention, int fullness, int threshold)
+public record StationConfigurationPacket(BlockPos pos, int retention, int fullness, int threshold, String name)
         implements CustomPacketPayload {
     public static final Type<StationConfigurationPacket> TYPE = new Type<>(CESG.id("configure_station"));
 
@@ -22,6 +22,7 @@ public record StationConfigurationPacket(BlockPos pos, int retention, int fullne
             ByteBufCodecs.VAR_INT, StationConfigurationPacket::retention,
             ByteBufCodecs.VAR_INT, StationConfigurationPacket::fullness,
             ByteBufCodecs.VAR_INT, StationConfigurationPacket::threshold,
+            ByteBufCodecs.stringUtf8(64), StationConfigurationPacket::name,
             StationConfigurationPacket::new);
 
     @Override
@@ -40,7 +41,7 @@ public record StationConfigurationPacket(BlockPos pos, int retention, int fullne
                 return;
             BlockEntity blockEntity = player.level().getBlockEntity(packet.pos());
             if (blockEntity instanceof AbstractShulkerStationBlockEntity station) {
-                station.applyConfig(packet.retention(), packet.fullness(), packet.threshold());
+                station.applyConfig(packet.retention(), packet.fullness(), packet.threshold(), packet.name());
                 station.sendData();
                 station.setChanged();
             }

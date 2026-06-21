@@ -7,7 +7,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 
 /**
  * Exposes a shulker's internal slots for insertion while blocking per-slot extraction.
- * Whole-shulker eject uses a separate single-slot handler on the dock.
+ * Whole-shulker eject uses a separate single-slot handler on the station.
  */
 public class ShulkerContentsHandler implements IItemHandler {
     private IItemHandler delegate = new net.neoforged.neoforge.items.ItemStackHandler(0);
