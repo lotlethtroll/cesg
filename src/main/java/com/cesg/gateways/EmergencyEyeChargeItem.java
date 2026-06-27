@@ -2,6 +2,8 @@ package com.cesg.gateways;
 
 import com.cesg.gateways.teleport.TeleportResolver;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -18,11 +20,20 @@ public class EmergencyEyeChargeItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer && level.dimension().equals(Level.END)) {
-            TeleportResolver.teleportToCentralIsland(serverPlayer, (net.minecraft.server.level.ServerLevel) level);
-            if (!player.getAbilities().instabuild)
-                stack.shrink(1);
-        }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        if (level.isClientSide)
+            return InteractionResultHolder.sidedSuccess(stack, true);
+
+        if (!(player instanceof ServerPlayer serverPlayer))
+            return InteractionResultHolder.pass(stack);
+
+        ServerLevel end = serverPlayer.server.getLevel(Level.END);
+        if (end == null)
+            return InteractionResultHolder.fail(stack);
+
+        TeleportResolver.teleportToCentralIsland(serverPlayer, end);
+        if (!player.getAbilities().instabuild)
+            stack.shrink(1);
+
+        return InteractionResultHolder.success(stack);
     }
 }

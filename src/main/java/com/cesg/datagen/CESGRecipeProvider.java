@@ -179,5 +179,27 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .requires(Items.BLAZE_POWDER)
                 .unlockedBy("has_blaze", has(Items.BLAZE_POWDER))
                 .save(output, CESG.MOD_ID + ":liquid_eye_of_ender_mixing");
+
+        // Amethyst (structure) + Echo Shard (location imprint/recall) + Ender Eye (dimensional sight).
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_BINDING_ITEM.get())
+                .pattern(" A ")
+                .pattern("HEH")
+                .pattern(" A ")
+                .define('A', Items.AMETHYST_SHARD)
+                .define('H', Items.ECHO_SHARD)
+                .define('E', Items.ENDER_EYE)
+                .unlockedBy("has_echo_shard", has(Items.ECHO_SHARD))
+                .save(output);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.EMERGENCY_EYE_CHARGE.get())
+                .pattern(" B ")
+                .pattern("PEP")
+                .pattern(" C ")
+                .define('B', Items.BLAZE_POWDER)
+                .define('P', Items.ENDER_PEARL)
+                .define('E', Items.ENDER_EYE)
+                .define('C', Items.CHORUS_FRUIT)
+                .unlockedBy("has_ender_eye", has(Items.ENDER_EYE))
+                .save(output);
     }
 }

@@ -12,9 +12,15 @@ public class CESGFluids {
     public static final ItemEntry<net.minecraft.world.item.Item> TELEPORT_ESSENCE_BUCKET;
     public static final ItemEntry<net.minecraft.world.item.Item> LIQUID_EYE_OF_ENDER_BUCKET;
 
-    /** Real fluid: crush ender pearls to dust, mix with water in a heated basin, then spout onto shells. */
+    /**
+     * Real fluid: crush ender pearls to dust, mix with water in a heated basin, then spout onto shells.
+     * Textures live under {@code textures/block/} so the vanilla block atlas stitches them automatically
+     * (a {@code textures/fluid/} folder is not scanned by default and renders as a missing texture).
+     */
     public static final FluidEntry<BaseFlowingFluid.Flowing> LIQUID_ENDER_PEARL = CESG.REGISTRATE
-            .standardFluid("liquid_ender_pearl")
+            .fluid("liquid_ender_pearl",
+                    CESG.id("block/liquid_ender_pearl_still"),
+                    CESG.id("block/liquid_ender_pearl_flow"))
             .lang("Liquid Ender Pearl")
             .register();
 

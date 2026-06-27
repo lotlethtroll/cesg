@@ -1,3 +1,6 @@
 {
-  "parent": "minecraft:item/lava_bucket"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cesg:item/liquid_eye_of_ender_bucket"
+  }
 }

@@ -33,7 +33,11 @@ public class CESGLangProvider extends LanguageProvider {
         add("block.cesg.shulker_cage.tooltip.behaviour3",
                 "_Right-click_ an occupied cage with an _empty hand_ to free the shulker.");
         add("block.cesg.end_gateway", "Fabricated End Gateway");
+        add("block.cesg.end_gateway.tooltip.summary",
+                "_End-only gateway_ — right-click to return to the _central island_.");
         add("block.cesg.cross_dimensional_gateway_core", "Cross-Dimensional Gateway Core");
+        add("block.cesg.cross_dimensional_gateway_core.tooltip.summary",
+                "_Powered gateway hub_ — bind to a partner, fuel with essence, and travel across dimensions.");
 
         add("block.cesg.enhanced_shulker_box", "Shulker Box");
         add("item.cesg.enhanced_shulker_box", "Shulker Box");
@@ -111,10 +115,10 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.liquid_ender_pearl_bucket", "Bucket of Liquid Ender Pearl");
         add("item.cesg.teleport_essence_bucket", "Bucket of Teleport Essence");
         add("item.cesg.teleport_essence_bucket.tooltip.summary",
-                "_Gateway fuel precursor_ — refined in Phase 4 gateway machines.");
+                "_Gateway fuel precursor_ — pour onto a _Cross-Dimensional Gateway Core_ (+500 mB).");
         add("item.cesg.liquid_eye_of_ender_bucket", "Bucket of Liquid Eye of Ender");
         add("item.cesg.liquid_eye_of_ender_bucket.tooltip.summary",
-                "_Advanced gateway fuel_ — powers cross-dimensional travel in Phase 4.");
+                "_Advanced gateway fuel_ — pour onto a _Cross-Dimensional Gateway Core_ (+1000 mB).");
 
         add("fluid.cesg.teleport_essence", "Teleport Essence");
         add("fluid.cesg.liquid_eye_of_ender", "Liquid Eye of Ender");
@@ -198,17 +202,38 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.shulker_cage.ready", "Ready — power it near another cage to drop shells");
 
         add("item.cesg.gateway_binding_item", "Gateway Binding Crystal");
+        add("item.cesg.gateway_binding_item.tooltip.summary",
+                "Links two _Cross-Dimensional Gateway Cores_ across dimensions.");
+        add("item.cesg.gateway_binding_item.tooltip.condition1", "When imprinting");
+        add("item.cesg.gateway_binding_item.tooltip.behaviour1",
+                "_Sneak + use_ on a gateway core to store its coordinates on the crystal.");
+        add("item.cesg.gateway_binding_item.tooltip.condition2", "When binding");
+        add("item.cesg.gateway_binding_item.tooltip.behaviour2",
+                "_Use_ an imprinted crystal on a second gateway to bind them together.");
         add("item.cesg.emergency_eye_charge", "Emergency Eye Charge");
+        add("item.cesg.emergency_eye_charge.tooltip.summary",
+                "_Consumable escape_ — teleports you to the _End central island_ from any dimension.");
+        add("cesg.goggles.end_gateway.summary", "End-only return to the central island");
         add("cesg.goggles.gateway.fuel", "Gateway fluid: %s/%s mB");
         add("cesg.goggles.gateway.bound", "Bound to partner gateway");
-        add("cesg.goggles.gateway.unbound", "Unbound — use a binding crystal");
+        add("cesg.goggles.gateway.unbound", "Unbound — imprint and apply a binding crystal");
+        add("cesg.goggles.gateway.unpowered", "Unpowered — connect a spinning shaft");
+        add("cesg.goggles.gateway.travel_cost", "Travel cost: %s mB per use");
 
         add("cesg.gateway.end_only", "Native gateway physics only function in the End");
         add("cesg.gateway.central_island", "Routed to central island");
         add("cesg.gateway.fallback", "Partner offline — emergency route to central island");
-        add("cesg.gateway.unpowered", "Gateway requires power and fuel");
+        add("cesg.gateway.unpowered", "Gateway requires kinetic power");
+        add("cesg.gateway.unbound", "Gateway is not bound to a partner");
+        add("cesg.gateway.need_fuel", "Gateway requires fuel");
         add("cesg.gateway.denied", "Travel denied");
         add("cesg.gateway.invalid_partner", "Invalid partner gateway");
+        add("cesg.gateway.crystal_imprinted", "Binding crystal imprinted with this gateway");
+        add("cesg.gateway.crystal_empty", "Binding crystal is empty — sneak + use on a gateway to imprint");
+        add("cesg.gateway.crystal_self", "Cannot bind a gateway to itself");
+        add("cesg.gateway.bound_success", "Gateway bound to partner");
+        add("cesg.gateway.fuel_added", "Added %s mB of gateway fuel");
+        add("cesg.gateway.fuel_full", "Gateway fuel tank is full");
     }
 
     private static String capitalize(String value) {

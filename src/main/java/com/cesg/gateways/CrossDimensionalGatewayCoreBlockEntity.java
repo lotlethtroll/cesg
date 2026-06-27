@@ -18,8 +18,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
-    private static final int TANK_CAPACITY = 4000;
-    private static final int TRAVEL_COST = 250;
+    public static final int TANK_CAPACITY = 4000;
+    public static final int TRAVEL_COST = 250;
+    public static final int ESSENCE_FUEL_MB = 500;
+    public static final int LIQUID_EYE_FUEL_MB = 1000;
 
     private GatewayPartner partner = GatewayPartner.EMPTY;
     private int fuelMb;
@@ -41,13 +43,27 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         setChanged();
     }
 
-    public void addFuel(int amount) {
+    public boolean addFuel(int amount) {
+        int before = fuelMb;
         fuelMb = Math.min(TANK_CAPACITY, fuelMb + amount);
-        setChanged();
+        if (fuelMb != before)
+            setChanged();
+        return fuelMb > before;
     }
 
     public boolean canTravel() {
-        return getSpeed() != 0 && partner.isBound() && fuelMb >= TRAVEL_COST;
+        return getTravelBlockReason() == null;
+    }
+
+    /** @return translation key suffix for cesg.gateway.*, or null when travel is allowed */
+    public String getTravelBlockReason() {
+        if (getSpeed() == 0)
+            return "unpowered";
+        if (!partner.isBound())
+            return "unbound";
+        if (fuelMb < TRAVEL_COST)
+            return "need_fuel";
+        return null;
     }
 
     public boolean consumeFuel() {
@@ -81,10 +97,13 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
         CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.fuel", ChatFormatting.AQUA, fuelMb, TANK_CAPACITY);
+        if (getSpeed() == 0)
+            CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.unpowered", ChatFormatting.GRAY);
         if (partner.isBound())
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.bound", ChatFormatting.GREEN);
         else
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.unbound", ChatFormatting.GRAY);
+        CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.travel_cost", ChatFormatting.WHITE, TRAVEL_COST);
         return true;
     }
 }

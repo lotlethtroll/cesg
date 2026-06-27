@@ -19,7 +19,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 public class EndGatewayBlock extends BaseEntityBlock {
-    public static final MapCodec<EndGatewayBlock> CODEC = simpleCodec(EndGatewayBlock::new);
+    private static final MapCodec<EndGatewayBlock> MAP_CODEC = simpleCodec(EndGatewayBlock::new);
 
     public EndGatewayBlock(Properties properties) {
         super(properties);
@@ -27,7 +27,7 @@ public class EndGatewayBlock extends BaseEntityBlock {
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
+        return MAP_CODEC;
     }
 
     @Nullable

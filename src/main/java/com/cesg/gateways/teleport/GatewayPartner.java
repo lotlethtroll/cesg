@@ -1,10 +1,14 @@
 package com.cesg.gateways.teleport;
 
+import com.cesg.gateways.CrossDimensionalGatewayCoreBlockEntity;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public record GatewayPartner(ResourceKey<Level> dimension, BlockPos position, boolean bound) {
     public static final GatewayPartner EMPTY = new GatewayPartner(Level.OVERWORLD, BlockPos.ZERO, false);
@@ -13,8 +17,20 @@ public record GatewayPartner(ResourceKey<Level> dimension, BlockPos position, bo
         return bound && position != BlockPos.ZERO;
     }
 
-    public GatewaySideState resolve(ServerLevel level) {
-        return new GatewaySideState(dimension, position, true, true, dimension.equals(Level.END));
+    public GatewaySideState resolve(MinecraftServer server) {
+        ServerLevel partnerLevel = server.getLevel(dimension);
+        if (partnerLevel == null)
+            return offlineSideState();
+
+        BlockEntity be = partnerLevel.getBlockEntity(position);
+        if (be instanceof CrossDimensionalGatewayCoreBlockEntity core)
+            return core.createSideState();
+
+        return offlineSideState();
+    }
+
+    private GatewaySideState offlineSideState() {
+        return new GatewaySideState(dimension, position, false, false, dimension.equals(Level.END));
     }
 
     public CompoundTag save() {

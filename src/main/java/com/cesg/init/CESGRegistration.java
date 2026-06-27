@@ -158,7 +158,9 @@ public class CESGRegistration {
             .initialProperties(() -> Blocks.END_STONE)
             .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).lightLevel(s -> 8))
             .blockstate(CESGPlaceholderModels::endGateway)
-            .simpleItem()
+            .item()
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.end_gateway"))
+            .build()
             .register();
 
     public static final BlockEntry<CrossDimensionalGatewayCoreBlock> CROSS_DIMENSIONAL_GATEWAY_CORE =
@@ -166,17 +168,21 @@ public class CESGRegistration {
                     .initialProperties(SharedProperties::stone)
                     .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).lightLevel(s -> 10).noOcclusion())
                     .blockstate(CESGPlaceholderModels::crossDimensionalGatewayCore)
-                    .simpleItem()
+                    .item()
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.cross_dimensional_gateway_core"))
+                    .build()
                     .register();
 
     public static final ItemEntry<GatewayBindingItem> GATEWAY_BINDING_ITEM = CESG.REGISTRATE.item("gateway_binding_item",
                     GatewayBindingItem::new)
             .model(CESGPlaceholderModels::gatewayBindingItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.gateway_binding_item"))
             .register();
 
     public static final ItemEntry<EmergencyEyeChargeItem> EMERGENCY_EYE_CHARGE = CESG.REGISTRATE.item("emergency_eye_charge",
                     EmergencyEyeChargeItem::new)
             .model(CESGPlaceholderModels::emergencyEyeCharge)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.emergency_eye_charge"))
             .register();
 
     public static void register(IEventBus modEventBus) {

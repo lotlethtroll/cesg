@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "H": {
+      "item": "minecraft:echo_shard"
+    }
+  },
+  "pattern": [
+    " A ",
+    "HEH",
+    " A "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:gateway_binding_item"
+  }
+}

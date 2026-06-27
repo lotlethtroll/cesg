@@ -167,18 +167,22 @@ public final class CESGPlaceholderModels {
     }
 
     public static void gatewayBindingItem(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), mc("item/amethyst_shard"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/gateway_binding_item"));
     }
 
     public static void emergencyEyeCharge(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), mc("item/ender_eye"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/emergency_eye_charge"));
     }
 
     public static void teleportEssenceBucket(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), mc("item/water_bucket"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/teleport_essence_bucket"));
     }
 
     public static void liquidEyeOfEnderBucket(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), mc("item/lava_bucket"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/liquid_eye_of_ender_bucket"));
     }
 }
