@@ -1,3 +1,6 @@
 {
-  "parent": "minecraft:item/shulker_shell"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cesg:item/shulker_shell"
+  }
 }

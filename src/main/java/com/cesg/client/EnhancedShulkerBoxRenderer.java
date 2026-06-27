@@ -1,0 +1,74 @@
+package com.cesg.client;
+
+import com.cesg.upgrades.EnhancedShulkerBoxBlockEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.minecraft.client.model.ShulkerModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+
+import org.jetbrains.annotations.Nullable;
+
+public class EnhancedShulkerBoxRenderer implements BlockEntityRenderer<EnhancedShulkerBoxBlockEntity> {
+    private static final float DEG_TO_RAD = (float) (Math.PI / 180.0);
+
+    private final ShulkerModel<?> model;
+
+    public EnhancedShulkerBoxRenderer(BlockEntityRendererProvider.Context context) {
+        this.model = new ShulkerModel<>(context.bakeLayer(ModelLayers.SHULKER));
+    }
+
+    @Override
+    public void render(EnhancedShulkerBoxBlockEntity blockEntity, float partialTick, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight, int packedOverlay) {
+        Direction direction = Direction.UP;
+        Level level = blockEntity.getLevel();
+        if (level != null) {
+            BlockState blockState = level.getBlockState(blockEntity.getBlockPos());
+            if (blockState.getBlock() instanceof ShulkerBoxBlock)
+                direction = blockState.getValue(ShulkerBoxBlock.FACING);
+        }
+
+        @Nullable DyeColor color = blockEntity.getBlockState().getBlock() instanceof ShulkerBoxBlock shulkerBox
+                ? shulkerBox.getColor()
+                : null;
+        Material material = color == null
+                ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION
+                : Sheets.SHULKER_TEXTURE_LOCATION.get(color.getId());
+
+        float progress = blockEntity.getOpenNess(partialTick);
+        ModelPart lid = model.getLid();
+        lid.setPos(0.0F, 24.0F - progress * 0.5F * 16.0F, 0.0F);
+        lid.yRot = 270.0F * progress * DEG_TO_RAD;
+
+        poseStack.pushPose();
+        poseStack.translate(0.5F, 0.5F, 0.5F);
+        poseStack.scale(0.9995F, 0.9995F, 0.9995F);
+        poseStack.mulPose(direction.getRotation());
+        poseStack.scale(1.0F, -1.0F, -1.0F);
+        poseStack.translate(0.0F, -1.0F, 0.0F);
+        VertexConsumer vertexConsumer = material.buffer(buffer, RenderType::entityCutoutNoCull);
+        model.renderToBuffer(poseStack, vertexConsumer, packedLight, packedOverlay);
+        poseStack.popPose();
+    }
+
+    @Override
+    public AABB getRenderBoundingBox(EnhancedShulkerBoxBlockEntity blockEntity) {
+        var pos = blockEntity.getBlockPos();
+        return new AABB(pos.getX() - 0.5, pos.getY() - 0.5, pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 1.5,
+                pos.getZ() + 1.5);
+    }
+}

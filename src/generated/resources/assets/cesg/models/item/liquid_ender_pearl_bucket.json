@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cesg:item/liquid_ender_pearl_bucket"
+  }
+}

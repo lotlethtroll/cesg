@@ -4,9 +4,10 @@ import java.util.List;
 
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.storage.ShulkerInventoryAccess;
-import com.cesg.storage.station.StationGoggleTooltip;
 import com.cesg.storage.station.AbstractShulkerStationBlockEntity;
+import com.cesg.storage.station.FilterGoggleTooltip;
 import com.cesg.storage.station.StationFullnessMode;
+import com.cesg.storage.station.StationGoggleTooltip;
 import com.cesg.storage.station.StationRetentionMode;
 import com.cesg.storage.util.ShulkerExtractContentsHandler;
 import com.cesg.util.CESGLang;
@@ -23,10 +24,16 @@ public class ShulkerUnloaderBlockEntity extends AbstractShulkerStationBlockEntit
 
     public ShulkerUnloaderBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        extractHandler.setTransferBudget(transferBudget());
     }
 
     public ShulkerUnloaderBlockEntity(BlockPos pos, BlockState state) {
         this(CESGBlockEntities.SHULKER_UNLOADER.get(), pos, state);
+    }
+
+    @Override
+    protected void syncItemFilterToHandlers() {
+        extractHandler.setItemFilter(itemFilterPredicate());
     }
 
     @Override
@@ -85,7 +92,12 @@ public class ShulkerUnloaderBlockEntity extends AbstractShulkerStationBlockEntit
             StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.unloader.station");
         }
 
+        appendFilterGoggleTooltip(tooltip, isPlayerSneaking);
         CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
+    }
+
+    private void appendFilterGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        FilterGoggleTooltip.appendStationFilter(this, tooltip, isPlayerSneaking, false);
     }
 }

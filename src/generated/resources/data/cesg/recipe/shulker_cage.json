@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": {
+      "item": "minecraft:end_stone"
+    },
+    "P": {
+      "item": "minecraft:ender_pearl"
+    },
+    "S": {
+      "item": "cesg:shulker_shell"
+    }
+  },
+  "pattern": [
+    " S ",
+    "EPE",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:shulker_cage"
+  }
+}

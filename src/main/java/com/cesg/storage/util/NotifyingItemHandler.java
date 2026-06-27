@@ -12,6 +12,10 @@ public class NotifyingItemHandler implements IItemHandler {
         this.onChanged = onChanged;
     }
 
+    public IItemHandler getDelegate() {
+        return delegate;
+    }
+
     @Override
     public int getSlots() {
         return delegate.getSlots();

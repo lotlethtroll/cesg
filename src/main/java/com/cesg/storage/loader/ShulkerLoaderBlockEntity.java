@@ -5,6 +5,7 @@ import java.util.List;
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.storage.ShulkerInventoryAccess;
 import com.cesg.storage.station.AbstractShulkerStationBlockEntity;
+import com.cesg.storage.station.FilterGoggleTooltip;
 import com.cesg.storage.station.StationFullnessMode;
 import com.cesg.storage.station.StationGoggleTooltip;
 import com.cesg.storage.station.StationRetentionMode;
@@ -23,10 +24,16 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
 
     public ShulkerLoaderBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        fillHandler.setTransferBudget(transferBudget());
     }
 
     public ShulkerLoaderBlockEntity(BlockPos pos, BlockState state) {
         this(CESGBlockEntities.SHULKER_LOADER.get(), pos, state);
+    }
+
+    @Override
+    protected void syncItemFilterToHandlers() {
+        fillHandler.setItemFilter(itemFilterPredicate());
     }
 
     @Override
@@ -84,7 +91,12 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
             StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.loader.station");
         }
 
+        appendFilterGoggleTooltip(tooltip, isPlayerSneaking);
         CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
+    }
+
+    private void appendFilterGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        FilterGoggleTooltip.appendStationFilter(this, tooltip, isPlayerSneaking, true);
     }
 }

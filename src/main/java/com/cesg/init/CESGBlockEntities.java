@@ -1,13 +1,15 @@
 package com.cesg.init;
 
 import com.cesg.CESG;
-import com.cesg.farming.ShulkerDuplicationAidBlockEntity;
+import com.cesg.farming.ShulkerCageBlockEntity;
 import com.cesg.gateways.CrossDimensionalGatewayCoreBlockEntity;
 import com.cesg.gateways.EndGatewayBlockEntity;
 import com.cesg.storage.beltloader.ShulkerBeltLoaderBlockEntity;
 import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
 import com.cesg.storage.loader.ShulkerLoaderBlockEntity;
 import com.cesg.storage.unloader.ShulkerUnloaderBlockEntity;
+import com.cesg.upgrades.EnhancedShulkerBoxBlockEntity;
+import com.cesg.upgrades.EnhancedShulkerBoxes;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -39,10 +41,10 @@ public class CESGBlockEntities {
                     () -> BlockEntityType.Builder.of(ShulkerBeltUnloaderBlockEntity::new, CESGRegistration.SHULKER_BELT_UNLOADER.get())
                             .build(null));
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShulkerDuplicationAidBlockEntity>> SHULKER_DUPLICATION_AID =
-            BLOCK_ENTITIES.register("shulker_duplication_aid",
-                    () -> BlockEntityType.Builder.of(ShulkerDuplicationAidBlockEntity::new,
-                                    CESGRegistration.SHULKER_DUPLICATION_AID.get())
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShulkerCageBlockEntity>> SHULKER_CAGE =
+            BLOCK_ENTITIES.register("shulker_cage",
+                    () -> BlockEntityType.Builder.of(ShulkerCageBlockEntity::new,
+                                    CESGRegistration.SHULKER_CAGE.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EndGatewayBlockEntity>> END_GATEWAY =
@@ -54,6 +56,11 @@ public class CESGBlockEntities {
             BLOCK_ENTITIES.register("cross_dimensional_gateway_core",
                     () -> BlockEntityType.Builder.of(CrossDimensionalGatewayCoreBlockEntity::new,
                                     CESGRegistration.CROSS_DIMENSIONAL_GATEWAY_CORE.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnhancedShulkerBoxBlockEntity>> ENHANCED_SHULKER_BOX =
+            BLOCK_ENTITIES.register("enhanced_shulker_box",
+                    () -> BlockEntityType.Builder.of(EnhancedShulkerBoxBlockEntity::new, EnhancedShulkerBoxes.allBlocks())
                             .build(null));
 
     static void register(IEventBus modEventBus) {

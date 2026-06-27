@@ -4,8 +4,11 @@ import com.cesg.client.CESGKineticVisuals;
 import com.cesg.client.CESGMenuScreens;
 import com.cesg.client.CESGPartialModels;
 import com.cesg.client.CESGFluidRenderers;
+import com.cesg.client.EnhancedShulkerBoxRenderer;
 import com.cesg.client.ShulkerBeltLoaderRenderer;
 import com.cesg.client.ShulkerBeltUnloaderRenderer;
+import com.cesg.client.ShulkerCageRenderer;
+import com.cesg.client.ShulkerStationRenderer;
 import com.cesg.init.CESGBlockEntities;
 
 import net.createmod.catnip.render.CachedBuffers;
@@ -37,8 +40,12 @@ public class CESGClient {
     }
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(CESGBlockEntities.ENHANCED_SHULKER_BOX.get(), EnhancedShulkerBoxRenderer::new);
+        event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_LOADER.get(), ShulkerStationRenderer::new);
+        event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_UNLOADER.get(), ShulkerStationRenderer::new);
         event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_BELT_LOADER.get(), ShulkerBeltLoaderRenderer::new);
         event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_BELT_UNLOADER.get(), ShulkerBeltUnloaderRenderer::new);
+        event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_CAGE.get(), ShulkerCageRenderer::new);
     }
 
     private static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {

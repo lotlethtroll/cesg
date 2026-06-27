@@ -5,6 +5,8 @@ import com.cesg.storage.ShulkerInventoryAccess;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 
+import java.util.function.Predicate;
+
 /**
  * Exposes a shulker's internal slots for insertion while blocking per-slot extraction.
  * Whole-shulker eject uses a separate single-slot handler on the station.
@@ -12,9 +14,24 @@ import net.neoforged.neoforge.items.IItemHandler;
 public class ShulkerContentsHandler implements IItemHandler {
     private IItemHandler delegate = new net.neoforged.neoforge.items.ItemStackHandler(0);
     private int maxInsertSlotExclusive = Integer.MAX_VALUE;
+    private Predicate<ItemStack> itemFilter = stack -> true;
+    private TransferBudget transferBudget = TransferBudget.UNLIMITED;
 
     public void setDelegate(IItemHandler delegate) {
         this.delegate = delegate;
+    }
+
+    public IItemHandler getDelegate() {
+        return delegate;
+    }
+
+    public void setItemFilter(Predicate<ItemStack> itemFilter) {
+        this.itemFilter = itemFilter;
+    }
+
+    /** Binds the station's speed-scaled throughput limiter; only throttles real (non-simulated) inserts. */
+    public void setTransferBudget(TransferBudget transferBudget) {
+        this.transferBudget = transferBudget == null ? TransferBudget.UNLIMITED : transferBudget;
     }
 
     /**
@@ -39,9 +56,26 @@ public class ShulkerContentsHandler implements IItemHandler {
     public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         if (ShulkerInventoryAccess.isShulkerBox(stack))
             return stack;
+        if (!itemFilter.test(stack))
+            return stack;
         if (slot >= maxInsertSlotExclusive)
             return stack;
-        return delegate.insertItem(slot, stack, simulate);
+        if (simulate)
+            return delegate.insertItem(slot, stack, true);
+
+        int allowance = transferBudget.available();
+        if (allowance <= 0)
+            return stack;
+
+        int requested = Math.min(allowance, stack.getCount());
+        ItemStack leftover = delegate.insertItem(slot, stack.copyWithCount(requested), false);
+        int inserted = requested - leftover.getCount();
+        if (inserted <= 0)
+            return stack;
+
+        transferBudget.consume(inserted);
+        int remaining = stack.getCount() - inserted;
+        return remaining <= 0 ? ItemStack.EMPTY : stack.copyWithCount(remaining);
     }
 
     @Override

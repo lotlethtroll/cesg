@@ -1,9 +1,14 @@
 package com.cesg.upgrades;
 
-import net.minecraft.world.item.Item;
 
-public class FilterUpgradeItem extends Item {
+
+public class FilterUpgradeItem extends ShulkerUpgradeItem {
+
     public FilterUpgradeItem(Properties properties) {
+
         super(properties);
+
     }
+
 }
+

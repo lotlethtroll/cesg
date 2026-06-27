@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_tunnel"
+    },
+    "F": {
+      "item": "create:brass_funnel"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    " F ",
+    "IRI",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:filter_upgrade"
+  }
+}

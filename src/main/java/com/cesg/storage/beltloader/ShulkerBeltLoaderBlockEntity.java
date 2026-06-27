@@ -5,6 +5,7 @@ import java.util.List;
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.storage.ShulkerInventoryAccess;
 import com.cesg.storage.station.AbstractShulkerStationBlockEntity;
+import com.cesg.storage.station.FilterGoggleTooltip;
 import com.cesg.storage.station.StationFullnessMode;
 import com.cesg.storage.station.StationGoggleTooltip;
 import com.cesg.storage.station.StationRetentionMode;
@@ -12,7 +13,6 @@ import com.cesg.storage.util.BeltItemLoadingProcessing;
 import com.cesg.storage.util.ShulkerContentsHandler;
 import com.cesg.util.CESGLang;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -47,7 +47,6 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
     }
 
     private final ShulkerContentsHandler fillHandler = new ShulkerContentsHandler();
-    public FilteringBehaviour filtering;
 
     private TubePhase tubePhase = TubePhase.RETRACTED;
     private int tubeAnimTicks;
@@ -56,6 +55,7 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
 
     public ShulkerBeltLoaderBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        fillHandler.setTransferBudget(transferBudget());
     }
 
     public ShulkerBeltLoaderBlockEntity(BlockPos pos, BlockState state) {
@@ -64,10 +64,13 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        behaviours.add(filtering = new FilteringBehaviour(this, new BeltLoaderFilterSlotPositioning())
-                .withPredicate(stack -> !ShulkerInventoryAccess.isShulkerBox(stack)));
         behaviours.add(BeltItemLoadingProcessing.create(this, this::processBeltItem));
         super.addBehaviours(behaviours);
+    }
+
+    @Override
+    protected void syncItemFilterToHandlers() {
+        fillHandler.setItemFilter(itemFilterPredicate());
     }
 
     @Override
@@ -285,11 +288,6 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
         CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.placement", ChatFormatting.GRAY);
-        ItemStack filter = filtering.getFilter();
-        if (filter.isEmpty())
-            CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.filter_all", ChatFormatting.WHITE);
-        else
-            CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.filter_set", ChatFormatting.WHITE, filter.getHoverName());
 
         StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.loader.station");
         CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.retention", ChatFormatting.WHITE,
@@ -304,7 +302,7 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
             StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.loader.station");
         }
 
-        CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.filter_hint", ChatFormatting.DARK_GRAY);
+        FilterGoggleTooltip.appendStationFilter(this, tooltip, isPlayerSneaking, true);
         CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
     }

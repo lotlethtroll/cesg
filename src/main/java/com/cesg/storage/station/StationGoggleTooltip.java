@@ -3,11 +3,13 @@ package com.cesg.storage.station;
 import java.util.List;
 
 import com.cesg.storage.ShulkerInventoryAccess;
+import com.cesg.upgrades.EnhancedShulkerUpgradeTooltip;
 import com.cesg.util.CESGLang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 public final class StationGoggleTooltip {
     private StationGoggleTooltip() {}
@@ -41,11 +43,19 @@ public final class StationGoggleTooltip {
             CESGLang.forGoggles(tooltip, prefix + ".contents", ChatFormatting.AQUA,
                     be.getHeldShulker().getHoverName().getString(), occupied, total);
 
+            appendHeldShulkerUpgrades(be.getHeldShulker(), tooltip);
+
             if (!be.isPowered())
                 CESGLang.forGoggles(tooltip, prefix + ".unpowered", ChatFormatting.GRAY);
         }
 
         if (!be.getStationName().isEmpty())
             CESGLang.forGoggles(tooltip, "cesg.goggles.station.names", ChatFormatting.WHITE, be.getStationName());
+    }
+
+    private static void appendHeldShulkerUpgrades(ItemStack shulker, List<Component> tooltip) {
+        if (ShulkerInventoryAccess.getTier(shulker) < 2)
+            return;
+        EnhancedShulkerUpgradeTooltip.appendGoggleTooltip(shulker, tooltip);
     }
 }

@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.storage.ShulkerInventoryAccess;
-import com.cesg.storage.beltloader.BeltLoaderFilterSlotPositioning;
 import com.cesg.storage.station.AbstractShulkerStationBlockEntity;
+import com.cesg.storage.station.FilterGoggleTooltip;
 import com.cesg.storage.station.StationFullnessMode;
 import com.cesg.storage.station.StationGoggleTooltip;
 import com.cesg.storage.station.StationRetentionMode;
@@ -13,7 +13,6 @@ import com.cesg.storage.util.ShulkerExtractContentsHandler;
 import com.cesg.util.CESGLang;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -52,7 +51,6 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     }
 
     private final ShulkerExtractContentsHandler extractHandler = new ShulkerExtractContentsHandler();
-    public FilteringBehaviour filtering;
 
     private TubePhase tubePhase = TubePhase.RETRACTED;
     private int tubeAnimTicks;
@@ -61,6 +59,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
 
     public ShulkerBeltUnloaderBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        extractHandler.setTransferBudget(transferBudget());
     }
 
     public ShulkerBeltUnloaderBlockEntity(BlockPos pos, BlockState state) {
@@ -69,9 +68,12 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
 
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-        behaviours.add(filtering = new FilteringBehaviour(this, new BeltLoaderFilterSlotPositioning())
-                .withPredicate(stack -> !ShulkerInventoryAccess.isShulkerBox(stack)));
         super.addBehaviours(behaviours);
+    }
+
+    @Override
+    protected void syncItemFilterToHandlers() {
+        extractHandler.setItemFilter(itemFilterPredicate());
     }
 
     @Override
@@ -159,8 +161,13 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     }
 
     private void pushOntoBelt(DirectBeltInputBehaviour belt, int slot) {
-        ItemStack available = extractHandler.extractItem(slot, 64, true);
-        if (available.isEmpty() || !filtering.test(available))
+        ItemStack inSlot = extractHandler.getStackInSlot(slot);
+        if (inSlot.isEmpty() || !filtering.test(inSlot))
+            return;
+
+        int extractAmount = inSlot.getCount();
+        ItemStack available = extractHandler.extractItem(slot, extractAmount, true);
+        if (available.isEmpty())
             return;
 
         ItemStack remainder = belt.handleInsertion(available, Direction.UP, true);
@@ -303,11 +310,6 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
         CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.placement", ChatFormatting.GRAY);
-        ItemStack filter = filtering.getFilter();
-        if (filter.isEmpty())
-            CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.filter_all", ChatFormatting.WHITE);
-        else
-            CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.filter_set", ChatFormatting.WHITE, filter.getHoverName());
 
         StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.unloader.station");
         CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.retention", ChatFormatting.WHITE,
@@ -322,7 +324,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
             StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.unloader.station");
         }
 
-        CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.filter_hint", ChatFormatting.DARK_GRAY);
+        FilterGoggleTooltip.appendStationFilter(this, tooltip, isPlayerSneaking, false);
         CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
     }

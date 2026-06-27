@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "cesg:enhanced_shulker_box_dye",
+  "ingredients": [
+    {
+      "item": "cesg:enhanced_shulker_box"
+    },
+    {
+      "item": "minecraft:blue_dye"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:enhanced_blue_shulker_box"
+  }
+}

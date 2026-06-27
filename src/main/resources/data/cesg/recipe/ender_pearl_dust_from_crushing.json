@@ -1,0 +1,14 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "minecraft:ender_pearl"
+    }
+  ],
+  "processing_time": 250,
+  "results": [
+    {
+      "id": "cesg:ender_pearl_dust"
+    }
+  ]
+}

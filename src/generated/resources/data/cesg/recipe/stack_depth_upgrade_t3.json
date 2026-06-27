@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cesg:stack_depth_upgrade_t2"
+    },
+    {
+      "item": "create:brass_casing"
+    },
+    {
+      "item": "minecraft:ender_pearl"
+    },
+    {
+      "item": "cesg:shulker_shell"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:stack_depth_upgrade_t3"
+  }
+}

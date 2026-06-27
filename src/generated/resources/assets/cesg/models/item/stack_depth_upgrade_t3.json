@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cesg:item/stack_depth_upgrade_t3"
+  }
+}

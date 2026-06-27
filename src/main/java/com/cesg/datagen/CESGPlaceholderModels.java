@@ -7,17 +7,17 @@ import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class CESGPlaceholderModels {
     private CESGPlaceholderModels() {}
-
-    private static ResourceLocation create(String path) {
-        return ResourceLocation.fromNamespaceAndPath("create", path);
-    }
 
     private static ResourceLocation mc(String path) {
         return ResourceLocation.fromNamespaceAndPath("minecraft", path);
@@ -83,8 +83,14 @@ public final class CESGPlaceholderModels {
         prov.withExistingParent(ctx.getName(), cesg("block/shulker_belt_unloader/item"));
     }
 
-    public static void shulkerDuplicationAid(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
-        prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(), mc("block/end_stone")));
+    public static void shulkerCage(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
+        // Parent supplies the geometry (outer cube + inner faces so the bars show from both sides);
+        // here we just bind the texture and cutout render type.
+        prov.simpleBlock(ctx.getEntry(),
+                prov.models().withExistingParent(ctx.getName(), cesg("block/shulker_cage_frame"))
+                        .renderType("minecraft:cutout")
+                        .texture("all", cesg("block/shulker_cage"))
+                        .texture("particle", cesg("block/shulker_cage")));
     }
 
     public static void endGateway(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
@@ -95,24 +101,69 @@ public final class CESGPlaceholderModels {
         prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(), mc("block/obsidian")));
     }
 
-    public static void enhancedShulker(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), mc("item/purple_shulker_box"));
+    public static void enhancedShulkerBox(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov,
+            @Nullable DyeColor color) {
+        ResourceLocation model = vanillaShulkerBlockModel(color);
+        prov.getVariantBuilder(ctx.getEntry()).forAllStates(state -> {
+            Direction facing = state.getValue(ShulkerBoxBlock.FACING);
+            int x = 0;
+            int y = 0;
+            switch (facing) {
+                case DOWN -> x = 180;
+                case UP -> x = 0;
+                case NORTH -> y = 0;
+                case SOUTH -> y = 180;
+                case WEST -> y = 270;
+                case EAST -> y = 90;
+            }
+            return ConfiguredModel.builder()
+                    .modelFile(prov.models().getExistingFile(model))
+                    .rotationX(x)
+                    .rotationY(y)
+                    .build();
+        });
     }
 
-    public static void stackDepthUpgrade(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), create("item/cogwheel"));
+    public static void enhancedShulkerBoxItem(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov,
+            @Nullable DyeColor color) {
+        prov.withExistingParent(ctx.getName(), vanillaShulkerItemModel(color));
+    }
+
+    private static ResourceLocation vanillaShulkerBlockModel(@Nullable DyeColor color) {
+        if (color == null)
+            return mc("block/shulker_box");
+        return mc("block/" + color.getName() + "_shulker_box");
+    }
+
+    private static ResourceLocation vanillaShulkerItemModel(@Nullable DyeColor color) {
+        if (color == null)
+            return mc("item/shulker_box");
+        return mc("item/" + color.getName() + "_shulker_box");
+    }
+
+    public static void stackDepthUpgrade(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov, int tier) {
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/stack_depth_upgrade_t" + tier));
     }
 
     public static void filterUpgrade(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), create("item/filter"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/filter_upgrade"));
     }
 
     public static void compactingUpgrade(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), create("item/iron_sheet"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/compacting_upgrade"));
     }
 
     public static void shulkerShell(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
-        prov.withExistingParent(ctx.getName(), mc("item/shulker_shell"));
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/shulker_shell"));
+    }
+
+    public static void enderPearlDust(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
+        prov.withExistingParent(ctx.getName(), mc("item/generated"))
+                .texture("layer0", cesg("item/ender_pearl_dust"));
     }
 
     public static void gatewayBindingItem(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {

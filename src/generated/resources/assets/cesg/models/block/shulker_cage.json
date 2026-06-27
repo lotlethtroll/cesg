@@ -1,0 +1,8 @@
+{
+  "parent": "cesg:block/shulker_cage_frame",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "cesg:block/shulker_cage",
+    "particle": "cesg:block/shulker_cage"
+  }
+}

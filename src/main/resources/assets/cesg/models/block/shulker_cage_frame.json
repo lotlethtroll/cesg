@@ -1,0 +1,55 @@
+{
+  "__comment": "Cage geometry: an outer cube (outward faces) plus six inward-facing slabs so the bars are visible from both sides when looking through the transparent gaps. Parented to block/block for the standard 3D item display transforms. Textures (#all/#particle) and render_type are supplied by the child model block/shulker_cage.",
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "down" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "up" },
+        "north": { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "north" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "south" },
+        "west":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "west" },
+        "east":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "east" }
+      }
+    },
+    {
+      "__comment": "inner east wall, faces west (toward a viewer looking in from the west)",
+      "from": [15, 0, 0],
+      "to": [16, 16, 16],
+      "faces": { "west": { "uv": [0, 0, 16, 16], "texture": "#all" } }
+    },
+    {
+      "__comment": "inner west wall, faces east",
+      "from": [0, 0, 0],
+      "to": [1, 16, 16],
+      "faces": { "east": { "uv": [0, 0, 16, 16], "texture": "#all" } }
+    },
+    {
+      "__comment": "inner south wall, faces north",
+      "from": [0, 0, 15],
+      "to": [16, 16, 16],
+      "faces": { "north": { "uv": [0, 0, 16, 16], "texture": "#all" } }
+    },
+    {
+      "__comment": "inner north wall, faces south",
+      "from": [0, 0, 0],
+      "to": [16, 16, 1],
+      "faces": { "south": { "uv": [0, 0, 16, 16], "texture": "#all" } }
+    },
+    {
+      "__comment": "inner top, faces down",
+      "from": [0, 15, 0],
+      "to": [16, 16, 16],
+      "faces": { "down": { "uv": [0, 0, 16, 16], "texture": "#all" } }
+    },
+    {
+      "__comment": "inner bottom, faces up",
+      "from": [0, 0, 0],
+      "to": [16, 1, 16],
+      "faces": { "up": { "uv": [0, 0, 16, 16], "texture": "#all" } }
+    }
+  ]
+}
