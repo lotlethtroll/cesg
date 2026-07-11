@@ -1,0 +1,8 @@
+{
+  "parent": "cesg:block/gateway_conduit_hub",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "fluid": "cesg:block/teleport_essence_still",
+    "particle": "cesg:block/teleport_essence_still"
+  }
+}

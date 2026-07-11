@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_ingot"
+    },
+    "E": {
+      "item": "minecraft:end_stone_bricks"
+    },
+    "P": {
+      "item": "minecraft:ender_pearl"
+    }
+  },
+  "pattern": [
+    "EBE",
+    "BPB",
+    "EBE"
+  ],
+  "result": {
+    "count": 4,
+    "id": "cesg:gateway_frame"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cesg:magnet_upgrade_t1"
+    },
+    {
+      "item": "create:electron_tube"
+    },
+    {
+      "item": "create:brass_ingot"
+    },
+    {
+      "item": "cesg:shulker_shell"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:magnet_upgrade_t2"
+  }
+}

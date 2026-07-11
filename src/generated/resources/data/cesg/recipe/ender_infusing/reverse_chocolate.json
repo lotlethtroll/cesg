@@ -1,0 +1,22 @@
+{
+  "type": "cesg:ender_infusing",
+  "input": {
+    "amount": 250,
+    "fluid": "create:chocolate"
+  },
+  "processing_time": 12,
+  "result": {
+    "amount": 250,
+    "id": "minecraft:milk"
+  },
+  "result_items": [
+    {
+      "count": 1,
+      "id": "minecraft:sugar"
+    },
+    {
+      "count": 1,
+      "id": "minecraft:cocoa_beans"
+    }
+  ]
+}

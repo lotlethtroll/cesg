@@ -54,6 +54,12 @@ public class ShulkerExtractContentsHandler implements IItemHandler {
         return stack;
     }
 
+    /**
+     * CONTRACT: simulation must never promise more than execution delivers. Create's extraction
+     * helpers trust the simulated stack and spawn it even when the real extract returns less — a
+     * budget (or unpowered station) applied only to the execute path therefore DUPES items
+     * (simulate: full stack, execute: nothing, funnel emits the simulated stack forever).
+     */
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
         if (countOccupiedSlots() <= minOccupiedSlotsForExtract)
@@ -61,14 +67,16 @@ public class ShulkerExtractContentsHandler implements IItemHandler {
         ItemStack inSlot = delegate.getStackInSlot(slot);
         if (!inSlot.isEmpty() && !itemFilter.test(inSlot))
             return ItemStack.EMPTY;
-        if (simulate)
-            return delegate.extractItem(slot, amount, true);
 
         int allowance = transferBudget.available();
         if (allowance <= 0)
             return ItemStack.EMPTY;
+        int capped = Math.min(amount, allowance);
 
-        ItemStack extracted = delegate.extractItem(slot, Math.min(amount, allowance), false);
+        if (simulate)
+            return delegate.extractItem(slot, capped, true);
+
+        ItemStack extracted = delegate.extractItem(slot, capped, false);
         transferBudget.consume(extracted.getCount());
         return extracted;
     }

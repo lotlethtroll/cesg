@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_ingot"
+    },
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "D": {
+      "item": "cesg:ender_pearl_dust"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    }
+  },
+  "pattern": [
+    "GGG",
+    "DED",
+    "BCB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:storage_terminal"
+  }
+}

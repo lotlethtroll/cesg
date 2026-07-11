@@ -1,0 +1,21 @@
+{
+  "type": "cesg:ender_infusing",
+  "catalysts": [
+    {
+      "count": 1,
+      "item": "minecraft:sugar"
+    },
+    {
+      "count": 1,
+      "item": "minecraft:cocoa_beans"
+    }
+  ],
+  "input": {
+    "amount": 250,
+    "tag": "c:milk"
+  },
+  "result": {
+    "amount": 250,
+    "id": "create:chocolate"
+  }
+}

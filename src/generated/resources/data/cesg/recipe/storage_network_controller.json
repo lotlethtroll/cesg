@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "D": {
+      "item": "cesg:ender_pearl_dust"
+    },
+    "S": {
+      "item": "minecraft:shulker_shell"
+    }
+  },
+  "pattern": [
+    "DSD",
+    "SCS",
+    "DSD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:storage_network_controller"
+  }
+}

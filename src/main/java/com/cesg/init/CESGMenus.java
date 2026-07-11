@@ -18,6 +18,10 @@ public class CESGMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<EnhancedShulkerMenu>> ENHANCED_SHULKER =
             MENUS.register("enhanced_shulker", () -> IMenuTypeExtension.create(EnhancedShulkerMenu::new));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.cesg.storage.network.StorageTerminalMenu>> STORAGE_TERMINAL =
+            MENUS.register("storage_terminal",
+                    () -> IMenuTypeExtension.create(com.cesg.storage.network.StorageTerminalMenu::new));
+
     static void register(IEventBus modEventBus) {
         MENUS.register(modEventBus);
     }

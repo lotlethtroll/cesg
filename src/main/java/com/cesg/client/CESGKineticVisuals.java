@@ -53,5 +53,23 @@ public final class CESGKineticVisuals {
                 })
                 .neverSkipVanillaRender()
                 .apply();
+
+        SimpleBlockEntityVisualizer.builder(CESGBlockEntities.CROSS_DIMENSIONAL_GATEWAY_CORE.get())
+                .factory((ctx, be, pt) -> {
+                    Direction shaftFace = be.getBlockState().getValue(DirectionalKineticBlock.FACING).getOpposite();
+                    return new OrientedRotatingVisual<>(ctx, be, pt, Direction.SOUTH, shaftFace,
+                            Models.partial(AllPartialModels.SHAFT_HALF));
+                })
+                .neverSkipVanillaRender()
+                .apply();
+
+        SimpleBlockEntityVisualizer.builder(CESGBlockEntities.END_GATEWAY.get())
+                .factory((ctx, be, pt) -> {
+                    Direction shaftFace = be.getBlockState().getValue(DirectionalKineticBlock.FACING).getOpposite();
+                    return new OrientedRotatingVisual<>(ctx, be, pt, Direction.SOUTH, shaftFace,
+                            Models.partial(AllPartialModels.SHAFT_HALF));
+                })
+                .neverSkipVanillaRender()
+                .apply();
     }
 }

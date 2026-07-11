@@ -1,0 +1,18 @@
+{
+  "type": "cesg:ender_infusing",
+  "input": {
+    "amount": 250,
+    "fluid": "cesg:teleport_essence"
+  },
+  "processing_time": 12,
+  "result": {
+    "amount": 250,
+    "id": "cesg:liquid_ender_pearl"
+  },
+  "result_items": [
+    {
+      "count": 1,
+      "id": "minecraft:chorus_fruit"
+    }
+  ]
+}

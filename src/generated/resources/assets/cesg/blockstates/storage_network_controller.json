@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cesg:block/storage_network_controller"
+    }
+  }
+}

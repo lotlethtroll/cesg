@@ -1,44 +1,51 @@
 package com.cesg.gateways;
 
 import com.cesg.gateways.teleport.TeleportResolver;
-
-import com.mojang.serialization.MapCodec;
+import com.cesg.init.CESGBlockEntities;
+import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
+import com.simibubi.create.foundation.block.IBE;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-import org.jetbrains.annotations.Nullable;
-
-public class EndGatewayBlock extends BaseEntityBlock {
-    private static final MapCodec<EndGatewayBlock> MAP_CODEC = simpleCodec(EndGatewayBlock::new);
+/**
+ * Fabricated End Gateway: a kinetic block with a shaft socket on the back (rotation input). Inert
+ * unless it is actually spinning — only a powered gateway will whisk a player to the central island.
+ */
+public class EndGatewayBlock extends DirectionalKineticBlock implements IBE<EndGatewayBlockEntity> {
 
     public EndGatewayBlock(Properties properties) {
         super(properties);
     }
 
     @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return MAP_CODEC;
-    }
-
-    @Nullable
-    @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new EndGatewayBlockEntity(pos, state);
+    public Class<EndGatewayBlockEntity> getBlockEntityClass() {
+        return EndGatewayBlockEntity.class;
     }
 
     @Override
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+    public BlockEntityType<? extends EndGatewayBlockEntity> getBlockEntityType() {
+        return CESGBlockEntities.END_GATEWAY.get();
+    }
+
+    @Override
+    public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
+        return face == state.getValue(FACING).getOpposite();
+    }
+
+    @Override
+    public Direction.Axis getRotationAxis(BlockState state) {
+        return state.getValue(FACING).getAxis();
     }
 
     @Override
@@ -47,7 +54,13 @@ public class EndGatewayBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
 
         if (!serverLevel.dimension().equals(Level.END)) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("cesg.gateway.end_only"), true);
+            player.displayClientMessage(Component.translatable("cesg.gateway.end_only"), true);
+            return InteractionResult.FAIL;
+        }
+
+        EndGatewayBlockEntity gateway = getBlockEntity(level, pos);
+        if (gateway == null || gateway.getSpeed() == 0) {
+            player.displayClientMessage(Component.translatable("cesg.gateway.unpowered"), true);
             return InteractionResult.FAIL;
         }
 

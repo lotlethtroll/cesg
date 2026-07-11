@@ -1,5 +1,25 @@
 {
   "values": [
-    "cesg:shulker_cage"
+    "cesg:shulker_cage",
+    "cesg:gateway_frame",
+    "cesg:gateway_port",
+    "cesg:storage_network_controller",
+    "cesg:storage_terminal",
+    "cesg:smooth_end_stone",
+    "cesg:smooth_end_stone_stairs",
+    "cesg:smooth_end_stone_slab",
+    "cesg:smooth_end_stone_wall",
+    "cesg:polished_end_stone",
+    "cesg:polished_end_stone_stairs",
+    "cesg:polished_end_stone_slab",
+    "cesg:polished_end_stone_wall",
+    "cesg:smooth_purpur",
+    "cesg:smooth_purpur_stairs",
+    "cesg:smooth_purpur_slab",
+    "cesg:smooth_purpur_wall",
+    "cesg:polished_purpur",
+    "cesg:polished_purpur_stairs",
+    "cesg:polished_purpur_slab",
+    "cesg:polished_purpur_wall"
   ]
 }

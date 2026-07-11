@@ -1,0 +1,57 @@
+{
+  "__comment": "Conduit beam toward NORTH (rotated for other directions). No end faces: runs read as one continuous pipe.",
+  "render_type": "minecraft:translucent",
+  "elements": [
+    {
+      "from": [
+        5.5,
+        5.5,
+        0
+      ],
+      "to": [
+        10.5,
+        10.5,
+        5
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            5.5,
+            0,
+            10.5,
+            5
+          ],
+          "texture": "#fluid"
+        },
+        "down": {
+          "uv": [
+            5.5,
+            0,
+            10.5,
+            5
+          ],
+          "texture": "#fluid"
+        },
+        "west": {
+          "uv": [
+            5.5,
+            0,
+            10.5,
+            5
+          ],
+          "texture": "#fluid"
+        },
+        "east": {
+          "uv": [
+            5.5,
+            0,
+            10.5,
+            5
+          ],
+          "texture": "#fluid"
+        }
+      }
+    }
+  ]
+}

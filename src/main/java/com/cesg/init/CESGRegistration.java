@@ -5,6 +5,8 @@ import com.cesg.farming.ShulkerCageBlock;
 import com.cesg.farming.ShulkerCageBlockItem;
 import com.cesg.gateways.CrossDimensionalGatewayCoreBlock;
 import com.cesg.gateways.EndGatewayBlock;
+import com.cesg.gateways.GatewayFrameBlock;
+import com.cesg.gateways.GatewayPortalBlock;
 import com.cesg.storage.beltloader.ShulkerBeltLoaderBlock;
 import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlock;
 import com.cesg.storage.loader.ShulkerLoaderBlock;
@@ -38,6 +40,7 @@ public class CESGRegistration {
     /** Base Stress Units drawn per RPM. Stationary stations are MEDIUM impact, belt variants HIGH. */
     private static final double STATION_STRESS_IMPACT = 4.0;
     private static final double BELT_STATION_STRESS_IMPACT = 8.0;
+    private static final double ENDER_INFUSER_STRESS_IMPACT = 8.0;
 
     public static final BlockEntry<ShulkerLoaderBlock> SHULKER_LOADER = CESG.REGISTRATE.block("shulker_loader", ShulkerLoaderBlock::new)
             .initialProperties(SharedProperties::stone)
@@ -82,7 +85,7 @@ public class CESGRegistration {
                         Direction facing = state.getValue(DirectionalKineticBlock.FACING);
                         return face != facing && face != facing.getOpposite();
                     })))
-            .item()
+            .item(com.cesg.storage.station.BeltStationBlockItem::new)
             .model(CESGPlaceholderModels::shulkerBeltLoaderItem)
             .build()
             .register();
@@ -98,7 +101,7 @@ public class CESGRegistration {
                         Direction facing = state.getValue(DirectionalKineticBlock.FACING);
                         return face != facing && face != facing.getOpposite();
                     })))
-            .item()
+            .item(com.cesg.storage.station.BeltStationBlockItem::new)
             .model(CESGPlaceholderModels::shulkerBeltUnloaderItem)
             .build()
             .register();
@@ -128,6 +131,30 @@ public class CESGRegistration {
             .model(CESGPlaceholderModels::compactingUpgrade)
             .register();
 
+    public static final ItemEntry<com.cesg.upgrades.SmeltingUpgradeItem> SMELTING_UPGRADE = CESG.REGISTRATE
+            .item("smelting_upgrade", com.cesg.upgrades.SmeltingUpgradeItem::new)
+            .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                    .texture("layer0", CESG.id("item/smelting_upgrade")))
+            .register();
+
+    public static final ItemEntry<com.cesg.upgrades.VoidUpgradeItem> VOID_UPGRADE = CESG.REGISTRATE
+            .item("void_upgrade", com.cesg.upgrades.VoidUpgradeItem::new)
+            .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                    .texture("layer0", CESG.id("item/void_upgrade")))
+            .register();
+
+    public static final ItemEntry<com.cesg.upgrades.MagnetUpgradeItem> MAGNET_UPGRADE_T1 = magnetUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.MagnetUpgradeItem> MAGNET_UPGRADE_T2 = magnetUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.MagnetUpgradeItem> MAGNET_UPGRADE_T3 = magnetUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.MagnetUpgradeItem> magnetUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("magnet_upgrade_t" + tier, props -> new com.cesg.upgrades.MagnetUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/magnet_upgrade_t" + tier)))
+                .register();
+    }
+
     public static final ItemEntry<ShulkerShellItem> SHULKER_SHELL = CESG.REGISTRATE.item("shulker_shell", ShulkerShellItem::new)
             .model(CESGPlaceholderModels::shulkerShell)
             .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.shulker_shell"))
@@ -151,14 +178,13 @@ public class CESGRegistration {
                     .build()
                     .register();
 
-    public static final ItemEntry<net.minecraft.world.item.Item> TELEPORT_ESSENCE_BUCKET = CESGFluids.TELEPORT_ESSENCE_BUCKET;
-    public static final ItemEntry<net.minecraft.world.item.Item> LIQUID_EYE_OF_ENDER_BUCKET = CESGFluids.LIQUID_EYE_OF_ENDER_BUCKET;
 
     public static final BlockEntry<EndGatewayBlock> END_GATEWAY = CESG.REGISTRATE.block("end_gateway", EndGatewayBlock::new)
             .initialProperties(() -> Blocks.END_STONE)
-            .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).lightLevel(s -> 8))
+            .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).lightLevel(s -> 8).noOcclusion())
             .blockstate(CESGPlaceholderModels::endGateway)
             .item()
+            .model(CESGPlaceholderModels::endGatewayItem)
             .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.end_gateway"))
             .build()
             .register();
@@ -169,9 +195,39 @@ public class CESGRegistration {
                     .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).lightLevel(s -> 10).noOcclusion())
                     .blockstate(CESGPlaceholderModels::crossDimensionalGatewayCore)
                     .item()
+                    .model(CESGPlaceholderModels::crossDimensionalGatewayCoreItem)
                     .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.cross_dimensional_gateway_core"))
                     .build()
                     .register();
+
+    public static final BlockEntry<GatewayFrameBlock> GATEWAY_FRAME = CESG.REGISTRATE.block("gateway_frame", GatewayFrameBlock::new)
+            .initialProperties(() -> Blocks.END_STONE_BRICKS)
+            .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion()
+                    .lightLevel(s -> s.getValue(GatewayFrameBlock.LIT) ? 7 : 0))
+            .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+            .blockstate(CESGPlaceholderModels::gatewayFrame)
+            // Wave 2: frames merge into one brass-outlined window (lit + unlit sheets).
+            .onRegister(CreateRegistrate.connectedTextures(() -> new com.cesg.client.GatewayFrameCT()))
+            .item()
+            .build()
+            .register();
+
+    public static final BlockEntry<com.cesg.gateways.GatewayPortBlock> GATEWAY_PORT =
+            CESG.REGISTRATE.block("gateway_port", com.cesg.gateways.GatewayPortBlock::new)
+                    .initialProperties(() -> Blocks.END_STONE_BRICKS)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE))
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    .blockstate(CESGPlaceholderModels::gatewayPort)
+                    .item()
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_port"))
+                    .build()
+                    .register();
+
+    public static final BlockEntry<GatewayPortalBlock> GATEWAY_PORTAL = CESG.REGISTRATE.block("gateway_portal", GatewayPortalBlock::new)
+            .initialProperties(() -> Blocks.NETHER_PORTAL)
+            .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(s -> 11).noLootTable())
+            .blockstate(CESGPlaceholderModels::gatewayPortal)
+            .register();
 
     public static final ItemEntry<GatewayBindingItem> GATEWAY_BINDING_ITEM = CESG.REGISTRATE.item("gateway_binding_item",
                     GatewayBindingItem::new)
@@ -185,9 +241,71 @@ public class CESGRegistration {
             .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.emergency_eye_charge"))
             .register();
 
+    public static final BlockEntry<com.cesg.machine.EnderInfuserBlock> ENDER_INFUSER =
+            CESG.REGISTRATE.block("ender_infuser", com.cesg.machine.EnderInfuserBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(s -> 7))
+                    .blockstate(CESGPlaceholderModels::enderInfuser)
+                    .onRegister(block -> BlockStressValues.IMPACTS.register(block, () -> ENDER_INFUSER_STRESS_IMPACT))
+                    .item()
+                    .model(CESGPlaceholderModels::enderInfuserItem)
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.ender_infuser"))
+                    .build()
+                    .register();
+
+    // Ender Barrel: crafted in twinned pairs sharing one 27-slot pool (works across dimensions).
+    public static final BlockEntry<com.cesg.storage.enderbarrel.EnderBarrelBlock> ENDER_BARREL =
+            CESG.REGISTRATE.block("ender_barrel", com.cesg.storage.enderbarrel.EnderBarrelBlock::new)
+                    .initialProperties(() -> Blocks.BARREL)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noLootTable())
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_AXE)
+                    .blockstate(com.cesg.datagen.CESGPlaceholderModels::enderBarrel)
+                    .item(com.cesg.storage.enderbarrel.EnderBarrelBlockItem::new)
+                    .onRegisterAfter(Registries.ITEM,
+                            item -> ItemDescription.useKey(item, "block.cesg.ender_barrel"))
+                    .build()
+                    .register();
+
+    // Phase 6D storage network: controller anchors the block-adjacency cluster; terminal is the UI.
+    public static final BlockEntry<com.cesg.storage.network.StorageNetworkControllerBlock> STORAGE_NETWORK_CONTROLLER =
+            CESG.REGISTRATE.block("storage_network_controller", com.cesg.storage.network.StorageNetworkControllerBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(s -> 7))
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    // Hand-authored frame-and-core model (src/main/resources), brass casing via Create.
+                    .blockstate((ctx, prov) -> prov.simpleBlock(ctx.getEntry(),
+                            prov.models().getExistingFile(net.minecraft.resources.ResourceLocation
+                                    .fromNamespaceAndPath(CESG.MOD_ID, "block/storage_network_controller"))))
+                    // Real Create casing connectivity: bordered alone, merging into banks side-by-side.
+                    // EncasedCTBehaviour only connects blocks that BOTH have a CasingConnectivity
+                    // entry, so the casingConnectivity registration below is load-bearing.
+                    .onRegister(CreateRegistrate.connectedTextures(() -> new EncasedCTBehaviour(AllSpriteShifts.BRASS_CASING)))
+                    .onRegister(CreateRegistrate.casingConnectivity((block, cc) -> cc.makeCasing(block, AllSpriteShifts.BRASS_CASING)))
+                    .item()
+                    .onRegisterAfter(Registries.ITEM,
+                            item -> ItemDescription.useKey(item, "block.cesg.storage_network_controller"))
+                    .build()
+                    .register();
+
+    public static final BlockEntry<com.cesg.storage.network.StorageTerminalBlock> STORAGE_TERMINAL =
+            CESG.REGISTRATE.block("storage_terminal", com.cesg.storage.network.StorageTerminalBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(s -> 5))
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    // Hand-authored console model, rotated to the FACING chosen at placement.
+                    .blockstate((ctx, prov) -> prov.horizontalBlock(ctx.getEntry(),
+                            prov.models().getExistingFile(net.minecraft.resources.ResourceLocation
+                                    .fromNamespaceAndPath(CESG.MOD_ID, "block/storage_terminal"))))
+                    .item()
+                    .onRegisterAfter(Registries.ITEM,
+                            item -> ItemDescription.useKey(item, "block.cesg.storage_terminal"))
+                    .build()
+                    .register();
+
     public static void register(IEventBus modEventBus) {
         CESGCreativeTabs.TABS.register(modEventBus);
         EnhancedShulkerBoxes.register();
+        com.cesg.decoration.CESGDecoratives.register();
         CESGBlockEntities.register(modEventBus);
         CESGFluids.register();
         CESGMenus.register(modEventBus);

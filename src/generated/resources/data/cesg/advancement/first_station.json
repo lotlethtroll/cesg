@@ -1,0 +1,38 @@
+{
+  "parent": "cesg:root",
+  "criteria": {
+    "has_station": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "cesg:shulker_loader",
+              "cesg:shulker_unloader",
+              "cesg:shulker_belt_loader",
+              "cesg:shulker_belt_unloader"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancement.cesg.first_station.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "cesg:shulker_loader"
+    },
+    "title": {
+      "translate": "advancement.cesg.first_station"
+    }
+  },
+  "requirements": [
+    [
+      "has_station"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

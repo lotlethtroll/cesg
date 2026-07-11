@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "cesg:block/smooth_purpur_slab"
+    },
+    "type=double": {
+      "model": "cesg:block/smooth_purpur"
+    },
+    "type=top": {
+      "model": "cesg:block/smooth_purpur_slab_top"
+    }
+  }
+}

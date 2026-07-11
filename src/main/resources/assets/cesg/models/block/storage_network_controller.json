@@ -1,0 +1,96 @@
+{
+  "parent": "minecraft:block/block",
+  "credit": "CESG storage network controller: brass frame with a suspended ender core",
+  "textures": {
+    "casing": "create:block/brass_casing",
+    "brass": "create:block/brass_block",
+    "core": "cesg:block/storage_controller_core",
+    "particle": "#casing"
+  },
+  "elements": [
+    {
+      "name": "base_plate",
+      "from": [0, 0, 0],
+      "to": [16, 3, 16],
+      "faces": {
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "north": { "uv": [0, 13, 16, 16], "texture": "#casing" },
+        "south": { "uv": [0, 13, 16, 16], "texture": "#casing" },
+        "west":  { "uv": [0, 13, 16, 16], "texture": "#casing" },
+        "east":  { "uv": [0, 13, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "top_plate",
+      "from": [0, 13, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "north": { "uv": [0, 0, 16, 3], "texture": "#casing" },
+        "south": { "uv": [0, 0, 16, 3], "texture": "#casing" },
+        "west":  { "uv": [0, 0, 16, 3], "texture": "#casing" },
+        "east":  { "uv": [0, 0, 16, 3], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "pillar_nw",
+      "from": [0, 3, 0],
+      "to": [3, 13, 3],
+      "faces": {
+        "north": { "uv": [0, 3, 3, 13], "texture": "#brass" },
+        "south": { "uv": [0, 3, 3, 13], "texture": "#brass" },
+        "west":  { "uv": [13, 3, 16, 13], "texture": "#brass" },
+        "east":  { "uv": [13, 3, 16, 13], "texture": "#brass" }
+      }
+    },
+    {
+      "name": "pillar_ne",
+      "from": [13, 3, 0],
+      "to": [16, 13, 3],
+      "faces": {
+        "north": { "uv": [13, 3, 16, 13], "texture": "#brass" },
+        "south": { "uv": [13, 3, 16, 13], "texture": "#brass" },
+        "west":  { "uv": [0, 3, 3, 13], "texture": "#brass" },
+        "east":  { "uv": [0, 3, 3, 13], "texture": "#brass" }
+      }
+    },
+    {
+      "name": "pillar_sw",
+      "from": [0, 3, 13],
+      "to": [3, 13, 16],
+      "faces": {
+        "north": { "uv": [0, 3, 3, 13], "texture": "#brass" },
+        "south": { "uv": [0, 3, 3, 13], "texture": "#brass" },
+        "west":  { "uv": [0, 3, 3, 13], "texture": "#brass" },
+        "east":  { "uv": [13, 3, 16, 13], "texture": "#brass" }
+      }
+    },
+    {
+      "name": "pillar_se",
+      "from": [13, 3, 13],
+      "to": [16, 13, 16],
+      "faces": {
+        "north": { "uv": [13, 3, 16, 13], "texture": "#brass" },
+        "south": { "uv": [13, 3, 16, 13], "texture": "#brass" },
+        "west":  { "uv": [13, 3, 16, 13], "texture": "#brass" },
+        "east":  { "uv": [0, 3, 3, 13], "texture": "#brass" }
+      }
+    },
+    {
+      "name": "core",
+      "from": [4.5, 4.5, 4.5],
+      "to": [11.5, 11.5, 11.5],
+      "shade": false,
+      "faces": {
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#core" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#core" },
+        "north": { "uv": [0, 0, 16, 16], "texture": "#core" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#core" },
+        "west":  { "uv": [0, 0, 16, 16], "texture": "#core" },
+        "east":  { "uv": [0, 0, 16, 16], "texture": "#core" }
+      }
+    }
+  ]
+}

@@ -5,6 +5,12 @@ plugins {
     id 'idea'
 }
 
+// OneDrive cloud placeholders in build/ break Gradle on Windows (reparse points, undeletable outputs).
+def localAppData = System.getenv('LOCALAPPDATA')
+if (localAppData != null) {
+    layout.buildDirectory.set(file("${localAppData}/gradle-builds/${rootProject.name}"))
+}
+
 tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
@@ -22,10 +28,13 @@ repositories {
     maven { url = "https://maven.createmod.net" }
     maven { url = "https://maven.ithundxr.dev/snapshots" }
     maven { url = "https://maven.modrinth.com" }
+    maven { url = "https://maven.terraformersmc.com/releases" } // EMI
+    maven { url = "https://maven.blamejared.com" } // JEI
 }
 
 base {
-    archivesName = mod_id
+    // Jar naming convention: cesg-<mc version>-<mod version>.jar (CurseForge/Modrinth style).
+    archivesName = "${mod_id}-${minecraft_version}"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -86,6 +95,15 @@ dependencies {
     compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
     localRuntime("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
     implementation("com.tterrag.registrate:Registrate:${registrate_version}")
+
+    // EMI recipe viewer: compile against the API, ship the full mod only in the dev runtime.
+    compileOnly("dev.emi:emi-neoforge:${emi_version}:api")
+    localRuntime("dev.emi:emi-neoforge:${emi_version}")
+
+    // JEI: compile against the API; full mod in the dev runtime (alongside EMI) for plugin testing.
+    compileOnly("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
+    localRuntime("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -110,7 +128,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     inputs.properties replaceProperties
     expand replaceProperties
     from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+    into layout.buildDirectory.dir("generated/sources/modMetadata")
 }
 
 sourceSets.main.resources.srcDir generateModMetadata

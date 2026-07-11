@@ -5,6 +5,7 @@ import com.cesg.client.CESGMenuScreens;
 import com.cesg.client.CESGPartialModels;
 import com.cesg.client.CESGFluidRenderers;
 import com.cesg.client.EnhancedShulkerBoxRenderer;
+import com.cesg.client.GatewayCoreRenderer;
 import com.cesg.client.ShulkerBeltLoaderRenderer;
 import com.cesg.client.ShulkerBeltUnloaderRenderer;
 import com.cesg.client.ShulkerCageRenderer;
@@ -36,6 +37,13 @@ public class CESGClient {
             CESGFluidRenderers.register();
             CESGPartialModels.init();
             CESGKineticVisuals.register();
+            net.createmod.ponder.foundation.PonderIndex.addPlugin(new com.cesg.ponder.CESGPonderPlugin());
+            net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(
+                    com.cesg.init.CESGRegistration.GATEWAY_PORTAL.get(),
+                    net.minecraft.client.renderer.RenderType.translucent());
+            net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(
+                    com.cesg.init.CESGRegistration.END_GATEWAY.get(),
+                    net.minecraft.client.renderer.RenderType.translucent());
         });
     }
 
@@ -46,11 +54,16 @@ public class CESGClient {
         event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_BELT_LOADER.get(), ShulkerBeltLoaderRenderer::new);
         event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_BELT_UNLOADER.get(), ShulkerBeltUnloaderRenderer::new);
         event.registerBlockEntityRenderer(CESGBlockEntities.SHULKER_CAGE.get(), ShulkerCageRenderer::new);
+        event.registerBlockEntityRenderer(CESGBlockEntities.CROSS_DIMENSIONAL_GATEWAY_CORE.get(), GatewayCoreRenderer::new);
+        event.registerBlockEntityRenderer(CESGBlockEntities.END_GATEWAY.get(), GatewayCoreRenderer::new);
+        event.registerBlockEntityRenderer(CESGBlockEntities.ENDER_INFUSER.get(),
+                com.cesg.client.EnderInfuserRenderer::new);
     }
 
     private static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(ModelResourceLocation.standalone(CESGPartialModels.BELT_LOADER_TUBE.modelLocation()));
         event.register(ModelResourceLocation.standalone(CESGPartialModels.BELT_UNLOADER_TUBE.modelLocation()));
         event.register(ModelResourceLocation.standalone(CESGPartialModels.EXTRACTOR_NOZZLE.modelLocation()));
+        event.register(ModelResourceLocation.standalone(CESGPartialModels.GATEWAY_CORE_COG.modelLocation()));
     }
 }

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_casing"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "S": {
+      "item": "cesg:shulker_shell"
+    },
+    "T": {
+      "item": "create:electron_tube"
+    }
+  },
+  "pattern": [
+    " T ",
+    "IBI",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:magnet_upgrade_t1"
+  }
+}

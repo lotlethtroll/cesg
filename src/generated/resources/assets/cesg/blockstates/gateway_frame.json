@@ -1,0 +1,213 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "cesg:block/gateway_frame"
+      },
+      "when": {
+        "lit": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_frame_lit"
+      },
+      "when": {
+        "lit": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_hub_eye"
+      },
+      "when": {
+        "fuel": "eye"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye"
+      },
+      "when": {
+        "fuel": "eye",
+        "link_north": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "y": 180
+      },
+      "when": {
+        "fuel": "eye",
+        "link_south": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "y": 90
+      },
+      "when": {
+        "fuel": "eye",
+        "link_east": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "y": 270
+      },
+      "when": {
+        "fuel": "eye",
+        "link_west": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "x": 270
+      },
+      "when": {
+        "fuel": "eye",
+        "link_up": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "x": 90
+      },
+      "when": {
+        "fuel": "eye",
+        "link_down": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_hub_essence"
+      },
+      "when": {
+        "fuel": "essence"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_essence"
+      },
+      "when": {
+        "fuel": "essence",
+        "link_north": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_essence",
+        "y": 180
+      },
+      "when": {
+        "fuel": "essence",
+        "link_south": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_essence",
+        "y": 90
+      },
+      "when": {
+        "fuel": "essence",
+        "link_east": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_essence",
+        "y": 270
+      },
+      "when": {
+        "fuel": "essence",
+        "link_west": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_essence",
+        "x": 270
+      },
+      "when": {
+        "fuel": "essence",
+        "link_up": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_essence",
+        "x": 90
+      },
+      "when": {
+        "fuel": "essence",
+        "link_down": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_collar_core"
+      },
+      "when": {
+        "fuel": "essence|eye",
+        "link_north": "core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_collar_core",
+        "y": 180
+      },
+      "when": {
+        "fuel": "essence|eye",
+        "link_south": "core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_collar_core",
+        "y": 90
+      },
+      "when": {
+        "fuel": "essence|eye",
+        "link_east": "core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_collar_core",
+        "y": 270
+      },
+      "when": {
+        "fuel": "essence|eye",
+        "link_west": "core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_collar_core",
+        "x": 270
+      },
+      "when": {
+        "fuel": "essence|eye",
+        "link_up": "core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_collar_core",
+        "x": 90
+      },
+      "when": {
+        "fuel": "essence|eye",
+        "link_down": "core"
+      }
+    }
+  ]
+}

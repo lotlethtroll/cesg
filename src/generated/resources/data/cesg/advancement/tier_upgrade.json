@@ -1,0 +1,38 @@
+{
+  "parent": "cesg:enhanced_shulker",
+  "criteria": {
+    "has_tier_upgrade": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "cesg:stack_depth_upgrade_t1",
+              "cesg:stack_depth_upgrade_t2",
+              "cesg:stack_depth_upgrade_t3"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancement.cesg.tier_upgrade.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "cesg:stack_depth_upgrade_t1"
+    },
+    "title": {
+      "translate": "advancement.cesg.tier_upgrade"
+    }
+  },
+  "requirements": [
+    [
+      "has_tier_upgrade"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -52,6 +52,12 @@ public class ShulkerContentsHandler implements IItemHandler {
         return delegate.getStackInSlot(slot);
     }
 
+    /**
+     * CONTRACT: simulation must never accept more than execution will. Callers that trust the
+     * simulated remainder (Create funnels/arms) take that many items from the source; a budget
+     * applied only to the execute path then silently VOIDS the difference. Mirror of the dupe fixed
+     * in {@link ShulkerExtractContentsHandler#extractItem}.
+     */
     @Override
     public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
         if (ShulkerInventoryAccess.isShulkerBox(stack))
@@ -60,21 +66,21 @@ public class ShulkerContentsHandler implements IItemHandler {
             return stack;
         if (slot >= maxInsertSlotExclusive)
             return stack;
-        if (simulate)
-            return delegate.insertItem(slot, stack, true);
 
         int allowance = transferBudget.available();
         if (allowance <= 0)
             return stack;
-
         int requested = Math.min(allowance, stack.getCount());
-        ItemStack leftover = delegate.insertItem(slot, stack.copyWithCount(requested), false);
-        int inserted = requested - leftover.getCount();
-        if (inserted <= 0)
+        int untouched = stack.getCount() - requested;
+
+        ItemStack leftover = delegate.insertItem(slot, stack.copyWithCount(requested), simulate);
+        int accepted = requested - leftover.getCount();
+        if (accepted <= 0)
             return stack;
 
-        transferBudget.consume(inserted);
-        int remaining = stack.getCount() - inserted;
+        if (!simulate)
+            transferBudget.consume(accepted);
+        int remaining = untouched + leftover.getCount();
         return remaining <= 0 ? ItemStack.EMPTY : stack.copyWithCount(remaining);
     }
 

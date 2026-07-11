@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_ingot"
+    },
+    "D": {
+      "item": "cesg:ender_pearl_dust"
+    },
+    "E": {
+      "item": "minecraft:end_stone_bricks"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    }
+  },
+  "pattern": [
+    "EDE",
+    "BHB",
+    "EBE"
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:gateway_port"
+  }
+}

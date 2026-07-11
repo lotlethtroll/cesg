@@ -1,0 +1,8 @@
+{
+  "parent": "cesg:block/gateway_conduit_collar",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "collar": "cesg:block/cross_dimensional_gateway_core_side",
+    "particle": "cesg:block/cross_dimensional_gateway_core_side"
+  }
+}

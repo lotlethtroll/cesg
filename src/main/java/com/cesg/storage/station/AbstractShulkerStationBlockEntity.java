@@ -219,22 +219,36 @@ public abstract class AbstractShulkerStationBlockEntity extends KineticBlockEnti
         if (side != null && isPowered() && canExposeShulkerForEject(side))
             return ejectHandlers[side.ordinal()];
 
-        return getHeldItemHandler();
+        return exposesContentsToSides() ? getHeldItemHandler() : emptyHandler();
+    }
+
+    /**
+     * Whether side capabilities expose the docked shulker's CONTENTS. Stationary stations do — that
+     * is their whole job. Belt stations with a dedicated tube can override to false so items move
+     * exclusively through the tube; docking (empty station) and finished-box eject stay available
+     * to funnels/hoppers regardless.
+     */
+    protected boolean exposesContentsToSides() {
+        return true;
     }
 
     protected static IItemHandler emptyHandler() {
         return EMPTY;
     }
 
+    /**
+     * Once the eject condition is met, the finished box is extractable from ANY side — funnels,
+     * chutes, hoppers, and pipes all qualify (previously only Create funnels in extract orientation
+     * counted, which silently ignored chutes/hoppers). Insert-mode funnels simply never pull, and the
+     * eject handler rejects all inserts, so no dupe or re-insert path opens up.
+     */
     @Override
     public boolean canExposeShulkerForEject(Direction side) {
         if (level == null)
             return false;
         if (getRetentionMode() != StationRetentionMode.AUTO_EJECT)
             return false;
-        if (!meetsEjectCondition())
-            return false;
-        return StationFunnelConnection.hasOutputFunnel(level, worldPosition, side);
+        return meetsEjectCondition();
     }
 
     protected void rebuildContentsHandlers() {

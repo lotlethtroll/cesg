@@ -16,6 +16,6 @@ public class CESGCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.cesg.main"))
-                    .icon(() -> new ItemStack(CESGRegistration.SHULKER_LOADER.get()))
+                    .icon(() -> new ItemStack(CESGRegistration.END_GATEWAY.get()))
                     .build());
 }

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "cesg:block/gateway_portal_ns"
+    },
+    "axis=z": {
+      "model": "cesg:block/gateway_portal_ew"
+    }
+  }
+}

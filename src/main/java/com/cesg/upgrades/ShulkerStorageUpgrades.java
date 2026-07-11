@@ -38,6 +38,22 @@ public final class ShulkerStorageUpgrades {
         return false;
     }
 
+    public static boolean hasSmeltingUpgrade(Iterable<ItemStack> upgradeSlots) {
+        for (ItemStack stack : upgradeSlots) {
+            if (!stack.isEmpty() && stack.is(CESGRegistration.SMELTING_UPGRADE))
+                return true;
+        }
+        return false;
+    }
+
+    public static boolean hasVoidUpgrade(Iterable<ItemStack> upgradeSlots) {
+        for (ItemStack stack : upgradeSlots) {
+            if (!stack.isEmpty() && stack.is(CESGRegistration.VOID_UPGRADE))
+                return true;
+        }
+        return false;
+    }
+
     public static boolean isValidFilterConfiguration(ItemStack stack) {
         return !stack.isEmpty() && !ShulkerInventoryAccess.isShulkerBox(stack);
     }

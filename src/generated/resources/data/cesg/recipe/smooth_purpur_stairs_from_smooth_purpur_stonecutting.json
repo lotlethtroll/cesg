@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "cesg:smooth_purpur"
+  },
+  "result": {
+    "count": 1,
+    "id": "cesg:smooth_purpur_stairs"
+  }
+}

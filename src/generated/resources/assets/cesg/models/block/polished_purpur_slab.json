@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "cesg:block/polished_purpur",
+    "side": "cesg:block/polished_purpur",
+    "top": "cesg:block/polished_purpur"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "cesg:ender_infusing",
+  "input": {
+    "amount": 250,
+    "fluid": "cesg:liquid_eye_of_ender"
+  },
+  "processing_time": 12,
+  "result": {
+    "amount": 250,
+    "id": "cesg:teleport_essence"
+  },
+  "result_items": [
+    {
+      "count": 1,
+      "id": "minecraft:blaze_powder"
+    }
+  ]
+}

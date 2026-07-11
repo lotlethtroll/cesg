@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cesg:block/storage_terminal",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cesg:block/storage_terminal"
+    },
+    "facing=south": {
+      "model": "cesg:block/storage_terminal",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "cesg:block/storage_terminal",
+      "y": 270
+    }
+  }
+}

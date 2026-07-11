@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_casing"
+    },
+    "D": {
+      "item": "cesg:ender_pearl_dust"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "pattern": [
+    " O ",
+    "IDI",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:void_upgrade"
+  }
+}

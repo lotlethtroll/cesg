@@ -15,6 +15,7 @@ public class CESGMenuScreens {
         @net.neoforged.bus.api.SubscribeEvent
         public static void onRegister(RegisterMenuScreensEvent event) {
             event.register(CESGMenus.ENHANCED_SHULKER.get(), EnhancedShulkerScreen::new);
+            event.register(CESGMenus.STORAGE_TERMINAL.get(), StorageTerminalScreen::new);
         }
     }
 }

@@ -1,0 +1,33 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "cesg:block/ender_infuser",
+      "uvlock": true,
+      "x": 90
+    },
+    "facing=east": {
+      "model": "cesg:block/ender_infuser",
+      "uvlock": true,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cesg:block/ender_infuser",
+      "uvlock": true
+    },
+    "facing=south": {
+      "model": "cesg:block/ender_infuser",
+      "uvlock": true,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "cesg:block/ender_infuser",
+      "uvlock": true,
+      "x": 270
+    },
+    "facing=west": {
+      "model": "cesg:block/ender_infuser",
+      "uvlock": true,
+      "y": 270
+    }
+  }
+}

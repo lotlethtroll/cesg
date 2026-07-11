@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "minecraft:blast_furnace"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "S": {
+      "item": "cesg:shulker_shell"
+    },
+    "Z": {
+      "item": "minecraft:blaze_powder"
+    }
+  },
+  "pattern": [
+    " Z ",
+    "IFI",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:smelting_upgrade"
+  }
+}

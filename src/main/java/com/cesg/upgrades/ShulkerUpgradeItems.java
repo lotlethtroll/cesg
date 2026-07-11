@@ -14,13 +14,26 @@ public final class ShulkerUpgradeItems {
         return !stack.isEmpty() && StackDepthUpgradeItem.isStackDepthUpgrade(stack.getItem());
     }
 
-    /** True for stack depth (any tier), filter, and compacting upgrade items. */
+    /** True for stack depth (any tier), filter, compacting, smelting, and void upgrade items. */
     public static boolean isUpgradeItem(ItemStack stack) {
         if (stack.isEmpty())
             return false;
         return isStackDepthUpgrade(stack)
                 || stack.is(CESGRegistration.FILTER_UPGRADE.get())
-                || stack.is(CESGRegistration.COMPACTING_UPGRADE.get());
+                || stack.is(CESGRegistration.COMPACTING_UPGRADE.get())
+                || stack.is(CESGRegistration.SMELTING_UPGRADE.get())
+                || stack.is(CESGRegistration.VOID_UPGRADE.get())
+                || stack.getItem() instanceof MagnetUpgradeItem;
+    }
+
+    /** Highest magnet module tier installed, or 0. Like stack depth, only the best tier applies. */
+    public static int highestInstalledMagnetTier(Iterable<ItemStack> upgradeSlots) {
+        int best = 0;
+        for (ItemStack stack : upgradeSlots) {
+            if (stack.getItem() instanceof MagnetUpgradeItem magnet)
+                best = Math.max(best, magnet.getModuleTier());
+        }
+        return best;
     }
 
     /** Items allowed in sidebar upgrade slots (same as {@link #isUpgradeItem}). */

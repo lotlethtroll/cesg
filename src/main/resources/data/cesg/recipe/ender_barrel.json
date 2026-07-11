@@ -1,0 +1,19 @@
+{
+  "type": "cesg:ender_barrel_pairing",
+  "category": "misc",
+  "pattern": [
+    "OPO",
+    "DBD",
+    "OPO"
+  ],
+  "key": {
+    "O": { "item": "minecraft:obsidian" },
+    "P": { "item": "minecraft:ender_pearl" },
+    "D": { "item": "cesg:ender_pearl_dust" },
+    "B": { "item": "minecraft:barrel" }
+  },
+  "result": {
+    "id": "cesg:ender_barrel",
+    "count": 2
+  }
+}

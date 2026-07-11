@@ -1,0 +1,27 @@
+{
+  "parent": "cesg:gateway_built",
+  "criteria": {
+    "traveled": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancement.cesg.gateway_travel.desc"
+    },
+    "frame": "challenge",
+    "icon": {
+      "count": 1,
+      "id": "cesg:gateway_binding_item"
+    },
+    "title": {
+      "translate": "advancement.cesg.gateway_travel"
+    }
+  },
+  "requirements": [
+    [
+      "traveled"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

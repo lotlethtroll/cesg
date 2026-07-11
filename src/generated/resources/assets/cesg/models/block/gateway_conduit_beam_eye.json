@@ -1,0 +1,8 @@
+{
+  "parent": "cesg:block/gateway_conduit_beam",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "fluid": "cesg:block/liquid_eye_of_ender_still",
+    "particle": "cesg:block/liquid_eye_of_ender_still"
+  }
+}

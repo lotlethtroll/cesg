@@ -35,13 +35,18 @@ public class CESG {
                     new ItemDescription.Modifier(item, FontHelper.Palette.STANDARD_CREATE)
                             .andThen(TooltipModifier.mapNull(KineticStats.create(item))));
 
-    public CESG(IEventBus modEventBus) {
+    public CESG(IEventBus modEventBus, net.neoforged.fml.ModContainer modContainer) {
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, CESGConfig.SPEC);
         REGISTRATE.registerEventListeners(modEventBus);
         CESGRegistration.register(modEventBus);
         CESGRecipes.register(modEventBus);
         CESGCapabilities.register(modEventBus);
         CESGDataComponents.register(modEventBus);
+        com.cesg.init.CESGEffects.register(modEventBus);
+        com.cesg.init.CESGPotions.register(modEventBus);
+        modEventBus.addListener(com.cesg.init.CESGPotions::addToCreativeTab);
 
+        modEventBus.addListener(com.cesg.gateways.GatewayChunkLoader::registerControllers);
         modEventBus.addListener(this::gatherData);
 
         LOGGER.info("Create: End Storage & Gateways initialized");

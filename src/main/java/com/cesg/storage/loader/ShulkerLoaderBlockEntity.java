@@ -78,21 +78,12 @@ public class ShulkerLoaderBlockEntity extends AbstractShulkerStationBlockEntity 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
-        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.loader.station");
-        CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.retention", ChatFormatting.WHITE,
-                Component.translatable(getRetentionMode().getTranslationKey()));
-
-        if (getRetentionMode() == StationRetentionMode.AUTO_EJECT) {
-            CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.eject_when", ChatFormatting.WHITE,
-                    Component.translatable(getFullnessMode().getTranslationKey() + ".load"));
-            if (getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD)
-                CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.threshold_load", ChatFormatting.WHITE,
-                        getThreshold());
-            StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.loader.station");
+        StationGoggleTooltip.appendStationTooltip(this, tooltip, isPlayerSneaking,
+                "cesg.goggles.loader.station", ".load", ".threshold_load");
+        if (isPlayerSneaking) {
+            appendFilterGoggleTooltip(tooltip, true);
+            CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.config_hint", ChatFormatting.DARK_GRAY);
         }
-
-        appendFilterGoggleTooltip(tooltip, isPlayerSneaking);
-        CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
     }
 

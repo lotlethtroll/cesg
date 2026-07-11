@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cesg:block/gateway_port"
+    }
+  }
+}

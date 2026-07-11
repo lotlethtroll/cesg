@@ -58,7 +58,8 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
         this.storageColumns = EnhancedShulkerGuiLayout.columns(storageSlotCount);
         this.storageRows = EnhancedShulkerGuiLayout.rows(storageSlotCount);
         this.upgradeSlotCount = contents.upgradeSlotCount();
-        this.hasFilterConfigSlot = handler.hasFilterUpgrade();
+        // Slot always exists with a sidebar; isActive() shows/hides it live with the upgrade.
+        this.hasFilterConfigSlot = upgradeSlotCount > 0;
         checkContainerSize(container, handler.getSlots());
 
         container.startOpen(playerInventory.player);
@@ -72,10 +73,14 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
 
         if (hasFilterConfigSlot) {
             addSlot(new FilterConfigSlot(handler, UPGRADE_SLOT_X, getFilterConfigSlotY()));
+            addSlot(new VoidConfigSlot(handler, UPGRADE_SLOT_X, getVoidConfigSlotY()));
         }
 
         if (handler.hasCompactingUpgrade())
             handler.compactInventoryFully();
+
+        if (handler.hasSmeltingUpgrade())
+            handler.smeltInventoryFully();
 
         this.handler.setSlotSyncListener(this::refreshStorageSlots);
 
@@ -136,12 +141,120 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
         return getStorageSlotLeft() + Math.max(0, (storageWidth - playerWidth) / 2);
     }
 
+    /**
+     * Shift-click insert into the box via the handler, so smelting/void modules apply in the GUI
+     * exactly as in automation. Mutates {@code stack} to the (raw-form) remainder like
+     * {@code moveItemStackTo} would; voided overflow counts as moved.
+     */
+    private boolean moveIntoStorage(ItemStack stack) {
+        if (stack.isEmpty())
+            return false;
+        int before = stack.getCount();
+        ItemStack remainder = net.neoforged.neoforge.items.ItemHandlerHelper
+                .insertItemStacked(handler, stack.copy(), false);
+        if (remainder.getCount() >= before)
+            return false;
+        stack.setCount(remainder.getCount());
+        return true;
+    }
+
+    /**
+     * The filter slot is a GHOST slot (Create-style): clicking with an item stores a COPY as
+     * configuration — nothing is consumed — and an empty-hand click clears it. Intercepting the
+     * click here keeps every vanilla path (pickup, swap, drag) from moving a real item in or out,
+     * which is also what previously DESTROYED the configured item when the upgrade was removed.
+     */
+    @Override
+    public void clicked(int slotId, int button, net.minecraft.world.inventory.ClickType clickType, Player player) {
+        // CRASH GUARD: vanilla SWAP moves the slot stack RAW into the player inventory — an
+        // oversized stack (stack-depth modules, e.g. 512) crashes the game. Emulate a safe swap:
+        // move one vanilla-sized bite into an empty hotbar/offhand slot, never the whole stack.
+        if (clickType == net.minecraft.world.inventory.ClickType.SWAP
+                && slotId >= storageStartIndex() && slotId < storageEndIndex()) {
+            Slot slot = slots.get(slotId);
+            ItemStack inSlot = slot.getItem();
+            if (inSlot.getCount() > inSlot.getMaxStackSize()) {
+                int invIndex = button == 40 ? net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND : button;
+                if (player.getInventory().getItem(invIndex).isEmpty()) {
+                    ItemStack taken = handler.extractItem(slot.getContainerSlot(), inSlot.getMaxStackSize(), false);
+                    player.getInventory().setItem(invIndex, taken);
+                }
+                return;
+            }
+        }
+        // Same guard for creative middle-click clone: clamp the copy to a legal stack.
+        if (clickType == net.minecraft.world.inventory.ClickType.CLONE
+                && slotId >= storageStartIndex() && slotId < storageEndIndex()
+                && player.hasInfiniteMaterials() && getCarried().isEmpty()) {
+            ItemStack inSlot = slots.get(slotId).getItem();
+            if (!inSlot.isEmpty()) {
+                setCarried(inSlot.copyWithCount(Math.min(inSlot.getCount(), inSlot.getMaxStackSize())));
+                return;
+            }
+        }
+        if (slotId >= 0 && slotId == getFilterSlotIndex() && isFilterSlotActive()) {
+            ItemStack carried = getCarried();
+            if (carried.isEmpty() || ShulkerStorageUpgrades.isValidFilterConfiguration(carried))
+                ((net.neoforged.neoforge.items.IItemHandlerModifiable) handler.getFilterStackHandler())
+                        .setStackInSlot(0, carried);
+            return;
+        }
+        if (slotId >= 0 && slotId == getVoidSlotIndex() && isVoidSlotActive()) {
+            ItemStack carried = getCarried();
+            if (carried.isEmpty() || ShulkerStorageUpgrades.isValidFilterConfiguration(carried))
+                handler.setVoidFilter(carried);
+            return;
+        }
+        super.clicked(slotId, button, clickType, player);
+    }
+
+    /** Cadence for the live smelt pass while the GUI is open (visible auto-conversion). */
+    private static final int OPEN_SMELT_INTERVAL = 20;
+    private int openSmeltCountdown;
+
+    /**
+     * While the box is open, contents converge to their smelted form VISIBLY (once a second)
+     * instead of only on close/reopen. Near-free when already converged (terminal-item cache).
+     */
+    @Override
+    public void broadcastChanges() {
+        if (handler.hasSmeltingUpgrade() && --openSmeltCountdown <= 0) {
+            openSmeltCountdown = OPEN_SMELT_INTERVAL;
+            handler.smeltInventoryFully();
+        }
+        super.broadcastChanges();
+    }
+
+    /** Index of the filter configuration slot in {@link #slots}, or -1 when this tier has no sidebar. */
+    public int getFilterSlotIndex() {
+        return hasFilterConfigSlot ? upgradeSlotCount : -1;
+    }
+
+    /** True while a Filter Upgrade is installed — drives live visibility of the filter config slot. */
+    public boolean isFilterSlotActive() {
+        return hasFilterConfigSlot && handler.hasFilterUpgrade();
+    }
+
     public boolean hasFilterConfigSlot() {
         return hasFilterConfigSlot;
     }
 
     public int getFilterConfigSlotY() {
         return UPGRADE_SLOT_Y + upgradeSlotCount * UPGRADE_SLOT_HEIGHT + FILTER_SLOT_GAP;
+    }
+
+    public int getVoidConfigSlotY() {
+        return getFilterConfigSlotY() + UPGRADE_SLOT_HEIGHT + FILTER_SLOT_GAP;
+    }
+
+    /** Index of the void-list config slot, or -1 when this tier has no sidebar. */
+    public int getVoidSlotIndex() {
+        return hasFilterConfigSlot ? upgradeSlotCount + 1 : -1;
+    }
+
+    /** True while a Void Upgrade is installed — drives live visibility of the void config slot. */
+    public boolean isVoidSlotActive() {
+        return hasFilterConfigSlot && handler.hasVoidUpgrade();
     }
 
     public int getImageWidth() {
@@ -207,7 +320,7 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
     }
 
     private int storageStartIndex() {
-        return upgradeSlotCount + (hasFilterConfigSlot ? 1 : 0);
+        return upgradeSlotCount + (hasFilterConfigSlot ? 2 : 0); // filter + void config slots
     }
 
     private int storageEndIndex() {
@@ -237,21 +350,15 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
         int storageEnd = storageEndIndex();
 
         if (index < upgradeSlotCount) {
-            if (!moveItemStackTo(stack, storageStart, storageEnd, false)
+            if (!moveIntoStorage(stack)
                     && !moveItemStackTo(stack, storageEnd, slots.size(), true))
                 return ItemStack.EMPTY;
-        } else if (index == filterIndex) {
-            if (!moveItemStackTo(stack, storageEnd, slots.size(), true))
-                return ItemStack.EMPTY;
+        } else if (index == filterIndex || index == getVoidSlotIndex()) {
+            return ItemStack.EMPTY; // ghost slots: hold configuration, not real items
         } else if (index < storageEnd) {
             if (ShulkerUpgradeItems.isUpgradeItem(stack)
                     && moveItemStackTo(stack, 0, upgradeSlotCount, false)) {
                 // upgrade module into sidebar
-            } else if (handler.hasFilterUpgrade()
-                    && ShulkerStorageUpgrades.isValidFilterConfiguration(stack)
-                    && filterIndex >= 0
-                    && moveItemStackTo(stack, filterIndex, filterIndex + 1, false)) {
-                // filter configuration
             } else if (!moveItemStackTo(stack, storageEnd, slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
@@ -259,12 +366,7 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
             if (ShulkerUpgradeItems.isUpgradeItem(stack)
                     && moveItemStackTo(stack, 0, upgradeSlotCount, false)) {
                 // upgrade module placed in sidebar
-            } else if (handler.hasFilterUpgrade()
-                    && ShulkerStorageUpgrades.isValidFilterConfiguration(stack)
-                    && filterIndex >= 0
-                    && moveItemStackTo(stack, filterIndex, filterIndex + 1, false)) {
-                // filter configuration
-            } else if (!moveItemStackTo(stack, storageStart, storageEnd, false)) {
+            } else if (!moveIntoStorage(stack)) {
                 return ItemStack.EMPTY;
             }
         }
@@ -298,7 +400,43 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return handler.hasFilterUpgrade() && ShulkerStorageUpgrades.isValidFilterConfiguration(stack);
+            return false; // ghost slot: configured via the menu's click interception only
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            return false;
+        }
+
+        // The slot exists from menu construction; it appears the moment a Filter Upgrade is
+        // installed (no close/reopen needed) and hides again when the upgrade is removed.
+        @Override
+        public boolean isActive() {
+            return handler.hasFilterUpgrade();
+        }
+    }
+
+    private static class VoidConfigSlot extends SlotItemHandler {
+        private final EnhancedShulkerItemStackHandler handler;
+
+        public VoidConfigSlot(EnhancedShulkerItemStackHandler handler, int x, int y) {
+            super((net.neoforged.neoforge.items.IItemHandlerModifiable) handler.getVoidFilterHandler(), 0, x, y);
+            this.handler = handler;
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false; // ghost slot: configured via the menu's click interception only
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            return false;
+        }
+
+        @Override
+        public boolean isActive() {
+            return handler.hasVoidUpgrade();
         }
     }
 
@@ -310,6 +448,18 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             return ShulkerUpgradeItems.isValidForUpgradeSlot(stack);
+        }
+
+        // One module per slot: multiples of the same upgrade never stack their effect (the highest
+        // tier wins), so letting a whole stack sit in a slot only wastes the player's items.
+        @Override
+        public int getMaxStackSize() {
+            return 1;
+        }
+
+        @Override
+        public int getMaxStackSize(ItemStack stack) {
+            return 1;
         }
     }
 }

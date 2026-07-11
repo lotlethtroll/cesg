@@ -221,6 +221,19 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
         return tubePhase != TubePhase.RETRACTED;
     }
 
+    /** Ponder-only: drive the hose extension directly (0 = retracted, 1 = extended); see belt loader BE. */
+    public void ponderSetTubeProgress(float progress) {
+        progress = Mth.clamp(progress, 0f, 1f);
+        if (progress <= 0f) {
+            tubePhase = TubePhase.RETRACTED;
+        } else if (progress >= 1f) {
+            tubePhase = TubePhase.EXTENDED;
+        } else {
+            tubePhase = TubePhase.EXTENDING;
+            tubeAnimTicks = prevTubeAnimTicks = Math.round(progress * EXTEND_CYCLE);
+        }
+    }
+
     public float getTubeExtension(float partialTicks) {
         return switch (tubePhase) {
             case RETRACTED -> 0f;
@@ -242,6 +255,16 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     protected AABB createRenderBoundingBox() {
         float padding = 2f / 16f;
         return new AABB(worldPosition).expandTowards(0, -(MAX_TUBE_REACH + padding), 0);
+    }
+
+    /**
+     * The tube IS the output: docked contents leave exclusively through the bottom onto the belt.
+     * Side automation can still dock boxes and pull the finished (ejectable) box, but never drain
+     * the contents sideways past the tube.
+     */
+    @Override
+    protected boolean exposesContentsToSides() {
+        return false;
     }
 
     @Override
@@ -309,23 +332,13 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
-        CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.placement", ChatFormatting.GRAY);
-
-        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.unloader.station");
-        CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.retention", ChatFormatting.WHITE,
-                Component.translatable(getRetentionMode().getTranslationKey()));
-
-        if (getRetentionMode() == StationRetentionMode.AUTO_EJECT) {
-            CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.eject_when", ChatFormatting.WHITE,
-                    Component.translatable(getFullnessMode().getTranslationKey() + ".unload"));
-            if (getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD)
-                CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.threshold_unload", ChatFormatting.WHITE,
-                        getThreshold());
-            StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.unloader.station");
+        StationGoggleTooltip.appendStationTooltip(this, tooltip, isPlayerSneaking,
+                "cesg.goggles.unloader.station", ".unload", ".threshold_unload");
+        if (isPlayerSneaking) {
+            CESGLang.forGoggles(tooltip, "cesg.goggles.belt_unloader.placement", ChatFormatting.GRAY);
+            FilterGoggleTooltip.appendStationFilter(this, tooltip, true, false);
+            CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.config_hint", ChatFormatting.DARK_GRAY);
         }
-
-        FilterGoggleTooltip.appendStationFilter(this, tooltip, isPlayerSneaking, false);
-        CESGLang.forGoggles(tooltip, "cesg.goggles.unloader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
     }
 }

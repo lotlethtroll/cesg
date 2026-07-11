@@ -29,20 +29,35 @@ public class CESGLangProvider extends LanguageProvider {
         add("block.cesg.shulker_cage.tooltip.condition2", "When powered in the End");
         add("block.cesg.shulker_cage.tooltip.behaviour2",
                 "A _redstone-powered_ cage fires on a nearby _occupied cage_, knocking a _Shulker Shell_ loose on a short cooldown.");
-        add("block.cesg.shulker_cage.tooltip.condition3", "When releasing");
+        add("block.cesg.shulker_cage.tooltip.condition3", "When struck by a shulker bullet");
         add("block.cesg.shulker_cage.tooltip.behaviour3",
+                "Any real _shulker bullet_ hitting an occupied cage in the _End_ knocks a _shell_ loose (same cooldown) — wild shulker crossfire is free shells.");
+        add("block.cesg.shulker_cage.tooltip.condition4", "When releasing");
+        add("block.cesg.shulker_cage.tooltip.behaviour4",
                 "_Right-click_ an occupied cage with an _empty hand_ to free the shulker.");
         add("block.cesg.end_gateway", "Fabricated End Gateway");
         add("block.cesg.end_gateway.tooltip.summary",
                 "_End-only gateway_ — right-click to return to the _central island_.");
         add("block.cesg.cross_dimensional_gateway_core", "Cross-Dimensional Gateway Core");
         add("block.cesg.cross_dimensional_gateway_core.tooltip.summary",
-                "_Powered gateway hub_ — bind to a partner, fuel with essence, and travel across dimensions.");
+                "Controls a _Gateway Frame_ ring. _Power_, _fuel_, and _bind_ it, then _walk through_ the portal to travel.");
+        add("block.cesg.gateway_port", "Gateway Port");
+        add("block.cesg.gateway_port.tooltip.summary",
+                "Cross-gateway logistics endpoint. Place beside a _Gateway Frame_ or _Core_; piped-in items and fluids emerge from a Gateway Port on the bound partner ring while the gateway is powered and fueled.");
+        add("cesg.goggles.port.title", "Gateway Port");
+        add("cesg.goggles.port.outgoing", "Outgoing: %s items, %s mB");
+        add("cesg.goggles.port.incoming", "Incoming: %s items, %s mB");
+        add("block.cesg.gateway_frame", "Gateway Frame");
+        add("block.cesg.gateway_frame.tooltip.summary",
+                "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal.");
+        add("block.cesg.gateway_portal", "Gateway Portal");
 
         add("block.cesg.enhanced_shulker_box", "Shulker Box");
         add("item.cesg.enhanced_shulker_box", "Shulker Box");
         add("cesg.enhanced_shulker.upgrades", "Upgrades");
-        add("cesg.enhanced_shulker.tier", " - Tier %s");
+        add("cesg.enhanced_shulker.tier_name.2", "Enhanced");
+        add("cesg.enhanced_shulker.tier_name.3", "Reinforced");
+        add("cesg.enhanced_shulker.tier_name.4", "Ultimate");
         for (DyeColor color : DyeColor.values()) {
             String id = "enhanced_" + color.getName() + "_shulker_box";
             String name = capitalize(color.getName()) + " Shulker Box";
@@ -55,6 +70,11 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.stack_depth_upgrade_t3", "Stack Depth Upgrade Mk III");
         add("item.cesg.filter_upgrade", "Filter Upgrade");
         add("item.cesg.compacting_upgrade", "Compacting Upgrade");
+        add("item.cesg.smelting_upgrade", "Smelting Upgrade");
+        add("item.cesg.void_upgrade", "Void Upgrade");
+        add("item.cesg.magnet_upgrade_t1", "Magnet Upgrade Mk I");
+        add("item.cesg.magnet_upgrade_t2", "Magnet Upgrade Mk II");
+        add("item.cesg.magnet_upgrade_t3", "Magnet Upgrade Mk III");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.summary",
                 "_Raises stack limits to 128_ per slot when installed in an _Enhanced Shulker_.");
         add("item.cesg.stack_depth_upgrade_t2.tooltip.summary",
@@ -65,6 +85,16 @@ public class CESGLangProvider extends LanguageProvider {
                 "_Restricts_ which items can enter storage when installed in an _Enhanced Shulker_.");
         add("item.cesg.compacting_upgrade.tooltip.summary",
                 "_Combines_ partial stacks automatically when installed in an _Enhanced Shulker_.");
+        add("item.cesg.smelting_upgrade.tooltip.summary",
+                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged.");
+        add("item.cesg.magnet_upgrade_t1.tooltip.summary",
+                "A PLACED box pulls in dropped items it can accept within _4 blocks_. Only the highest-tier magnet module applies.");
+        add("item.cesg.magnet_upgrade_t2.tooltip.summary",
+                "A PLACED box pulls in dropped items it can accept within _7 blocks_, faster. Only the highest-tier magnet module applies.");
+        add("item.cesg.magnet_upgrade_t3.tooltip.summary",
+                "A PLACED box pulls in dropped items it can accept within _10 blocks_, fastest. Only the highest-tier magnet module applies.");
+        add("item.cesg.void_upgrade.tooltip.summary",
+                "Overflow of item types the box already stores is _destroyed_ instead of rejected. Types the box does not store are still rejected normally — a full box is not a trash can. Click the module's _crimson config slot_ with an item to void ONLY matching overflow (independent of the storage filter).");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.condition1", "When installed");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.behaviour1",
                 "Only modules in the _upgrade sidebar_ activate; spares kept in main storage are _inert_.");
@@ -76,7 +106,7 @@ public class CESGLangProvider extends LanguageProvider {
                 "Only the _highest-tier_ stack depth module applies if several are installed.");
         add("item.cesg.filter_upgrade.tooltip.condition1", "When installed");
         add("item.cesg.filter_upgrade.tooltip.behaviour1",
-                "Configure the _filter slot_ below upgrade modules with any item or _Create filter_. Station filters still apply first.");
+                "Click the _filter slot_ with any item or _Create filter_ to set it as configuration — the item is _not consumed_. Empty-hand click clears. Station filters still apply first.");
         add("item.cesg.compacting_upgrade.tooltip.condition1", "When installed");
         add("item.cesg.compacting_upgrade.tooltip.behaviour1",
                 "_Merges partial stacks_ immediately in the GUI; automation merges up to _64 items_ per pass.");
@@ -86,9 +116,9 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.enhanced_shulker.tooltip.no_upgrades", "No upgrades installed");
         add("cesg.enhanced_shulker.tooltip.upgrades_header", "Installed upgrades:");
 
-        add("cesg.recipe.enhanced_shulker_tier_2", "Upgrade Shulker to Enhanced Tier 2");
-        add("cesg.recipe.enhanced_shulker_tier_3", "Upgrade Enhanced Shulker to Tier 3");
-        add("cesg.recipe.enhanced_shulker_tier_4", "Upgrade Enhanced Shulker to Tier 4");
+        add("cesg.recipe.enhanced_shulker_tier_2", "Upgrade to Enhanced Shulker Box");
+        add("cesg.recipe.enhanced_shulker_tier_3", "Upgrade to Reinforced Shulker Box");
+        add("cesg.recipe.enhanced_shulker_tier_4", "Upgrade to Ultimate Shulker Box");
         add("cesg.enhanced_shulker.tooltip.upgrade_line", "• %s");
         add("cesg.goggles.enhanced_shulker.no_upgrades", "Upgrades: none installed");
         add("cesg.goggles.enhanced_shulker.tier_slots", "Tier %s — %s slots, %s upgrade slot(s)");
@@ -112,16 +142,21 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.ender_pearl_dust", "Ender Pearl Dust");
         add("block.cesg.liquid_ender_pearl", "Liquid Ender Pearl");
         add("fluid_type.cesg.liquid_ender_pearl", "Liquid Ender Pearl");
-        add("item.cesg.liquid_ender_pearl_bucket", "Bucket of Liquid Ender Pearl");
-        add("item.cesg.teleport_essence_bucket", "Bucket of Teleport Essence");
-        add("item.cesg.teleport_essence_bucket.tooltip.summary",
-                "_Gateway fuel precursor_ — pour onto a _Cross-Dimensional Gateway Core_ (+500 mB).");
-        add("item.cesg.liquid_eye_of_ender_bucket", "Bucket of Liquid Eye of Ender");
-        add("item.cesg.liquid_eye_of_ender_bucket.tooltip.summary",
-                "_Advanced gateway fuel_ — pour onto a _Cross-Dimensional Gateway Core_ (+1000 mB).");
-
+        add("fluid.cesg.liquid_ender_pearl", "Liquid Ender Pearl");
         add("fluid.cesg.teleport_essence", "Teleport Essence");
         add("fluid.cesg.liquid_eye_of_ender", "Liquid Eye of Ender");
+        add("item.cesg.liquid_ender_pearl_bucket", "Bucket of Liquid Ender Pearl");
+
+        add("block.cesg.teleport_essence", "Teleport Essence");
+        add("fluid_type.cesg.teleport_essence", "Teleport Essence");
+        add("item.cesg.teleport_essence_bucket", "Bucket of Teleport Essence");
+        add("item.cesg.teleport_essence_bucket.tooltip.summary",
+                "_Same-dimension gateway fuel_ — mix _Liquid Ender Pearl_ + _Chorus Fruit_ in a heated basin.");
+        add("block.cesg.liquid_eye_of_ender", "Liquid Eye of Ender");
+        add("fluid_type.cesg.liquid_eye_of_ender", "Liquid Eye of Ender");
+        add("item.cesg.liquid_eye_of_ender_bucket", "Bucket of Liquid Eye of Ender");
+        add("item.cesg.liquid_eye_of_ender_bucket.tooltip.summary",
+                "_Cross-dimensional gateway fuel_ — mix _Teleport Essence_ + _Blaze Powder_ in a heated basin.");
 
         add("cesg.station.retention.label", "Shulker Retention");
         add("cesg.station.retention.hold", "Hold");
@@ -149,11 +184,9 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.loader.station.retention", "Retention: %s");
         add("cesg.goggles.loader.station.eject_when", "Eject when: %s");
         add("cesg.goggles.loader.station.threshold_load", "Eject after: %s full slot(s)");
-        add("cesg.goggles.loader.station.funnel_connected", "Eject funnel: %s");
-        add("cesg.goggles.loader.station.eject_funnel_hint", "Attach an extracting funnel to eject");
-        add("cesg.goggles.loader.station.funnel_wrong_mode_hint",
-                "Funnel is feeding the station; point the output belt away to eject");
-        add("cesg.goggles.loader.station.ready_to_eject", "Ready for funnel extraction");
+        add("cesg.goggles.loader.station.eject_funnel_hint",
+                "Finished box can be pulled from any side (funnel, chute, hopper)");
+        add("cesg.goggles.loader.station.ready_to_eject", "Ready to eject — extract from any side");
         add("cesg.goggles.loader.station.config_hint", "Sneak + use or use a wrench to configure");
 
         add("cesg.goggles.unloader.station.empty", "No shulker docked");
@@ -163,13 +196,14 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.unloader.station.retention", "Retention: %s");
         add("cesg.goggles.unloader.station.eject_when", "Eject when: %s");
         add("cesg.goggles.unloader.station.threshold_unload", "Eject with: %s slot(s) remaining");
-        add("cesg.goggles.unloader.station.funnel_connected", "Eject funnel: %s");
-        add("cesg.goggles.unloader.station.eject_funnel_hint", "Attach an extracting funnel to eject");
-        add("cesg.goggles.unloader.station.funnel_wrong_mode_hint",
-                "Funnel is feeding the station; point the output belt away to eject");
-        add("cesg.goggles.unloader.station.ready_to_eject", "Ready for funnel extraction");
+        add("cesg.goggles.unloader.station.eject_funnel_hint",
+                "Finished box can be pulled from any side (funnel, chute, hopper)");
+        add("cesg.goggles.unloader.station.ready_to_eject", "Ready to eject — extract from any side");
         add("cesg.goggles.unloader.station.config_hint", "Sneak + use or use a wrench to configure");
 
+        add("cesg.goggles.station.sneak_hint", "Hold [Sneak] for settings & filters");
+        add("cesg.station.needs_belt",
+                "Belt stations sit two blocks above a Create belt — aim at the belt to place");
         add("cesg.goggles.station.filter_all", "Filter: accepts all items");
         add("cesg.goggles.station.filter_set", "Filter: %s");
         add("cesg.goggles.station.filter_hint",
@@ -214,11 +248,13 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.emergency_eye_charge.tooltip.summary",
                 "_Consumable escape_ — teleports you to the _End central island_ from any dimension.");
         add("cesg.goggles.end_gateway.summary", "End-only return to the central island");
-        add("cesg.goggles.gateway.fuel", "Gateway fluid: %s/%s mB");
-        add("cesg.goggles.gateway.bound", "Bound to partner gateway");
+        add("cesg.goggles.gateway.essence", "Teleport Essence: %s/%s mB");
+        add("cesg.goggles.gateway.eye", "Liquid Eye of Ender: %s/%s mB");
+        add("cesg.goggles.gateway.same_dimension", "Bound (same dimension — uses Teleport Essence)");
+        add("cesg.goggles.gateway.cross_dimension", "Bound (cross-dimensional — uses Liquid Eye of Ender)");
         add("cesg.goggles.gateway.unbound", "Unbound — imprint and apply a binding crystal");
         add("cesg.goggles.gateway.unpowered", "Unpowered — connect a spinning shaft");
-        add("cesg.goggles.gateway.travel_cost", "Travel cost: %s mB per use");
+        add("cesg.goggles.gateway.travel_cost", "Travel cost: %s mB per entity");
 
         add("cesg.gateway.end_only", "Native gateway physics only function in the End");
         add("cesg.gateway.central_island", "Routed to central island");
@@ -226,14 +262,149 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.gateway.unpowered", "Gateway requires kinetic power");
         add("cesg.gateway.unbound", "Gateway is not bound to a partner");
         add("cesg.gateway.need_fuel", "Gateway requires fuel");
+        add("cesg.gateway.no_frame", "No gateway frame — build a complete Gateway Frame rectangle (corners included) with the Core as one of its blocks");
+        add("block.cesg.ender_infuser", "Ender Infuser");
+        add("cesg.goggles.ender_infuser.input", "Input: %s (%s/%s mB)");
+        add("cesg.goggles.ender_infuser.output", "Output: %s (%s/%s mB)");
+        add("cesg.goggles.ender_infuser.catalyst", "Catalyst: %sx %s");
+        add("cesg.goggles.ender_infuser.producing", "Producing: %s");
+        add("cesg.goggles.ender_infuser.no_recipe", "No matching recipe — check fluid + catalyst");
+        add("cesg.goggles.ender_infuser.unpowered", "Requires kinetic power");
+        add("cesg.goggles.ender_infuser.empty", "empty");
+
+        add("cesg.gateway.ready", "Gateway ready — walk through the portal to travel");
+        add("cesg.gateway.teleport_resistant", "Warp Resistance blocks all teleportation");
         add("cesg.gateway.denied", "Travel denied");
+
+        // Teleport potions (6F)
+        add("effect.cesg.teleport", "Teleportation");
+        add("effect.cesg.teleport_resistance", "Warp Resistance");
+        add("cesg.tooltip.warp_resistance",
+                "Resists teleportation — ender pearls, blinks, enderman grabs, and gateway travel. Walking through Nether/End portals still works.");
+        add("item.minecraft.potion.effect.teleport", "Potion of Teleportation");
+        add("item.minecraft.splash_potion.effect.teleport", "Splash Potion of Teleportation");
+        add("item.minecraft.lingering_potion.effect.teleport", "Lingering Potion of Teleportation");
+        add("item.minecraft.tipped_arrow.effect.teleport", "Arrow of Teleportation");
+        add("item.minecraft.potion.effect.teleport_resistance", "Potion of Warp Resistance");
+        add("item.minecraft.splash_potion.effect.teleport_resistance", "Splash Potion of Warp Resistance");
+        add("item.minecraft.lingering_potion.effect.teleport_resistance", "Lingering Potion of Warp Resistance");
+        add("item.minecraft.tipped_arrow.effect.teleport_resistance", "Arrow of Warp Resistance");
+
+        // Ponder scenes (6C) — header = scene title, text_N matches showText() order in CESGPonderScenes
+        add("cesg.ponder.shulker_loader.header", "Shulker Loader");
+        add("cesg.ponder.shulker_loader.text_1", "The Shulker Loader accepts a shulker box, docking it in place");
+        add("cesg.ponder.shulker_loader.text_2", "Items arrive by belt and funnel to fill the docked shulker");
+        add("cesg.ponder.shulker_loader.text_3", "When full, the loaded shulker ejects onto an output belt");
+        add("cesg.ponder.shulker_unloader.header", "Shulker Unloader");
+        add("cesg.ponder.shulker_unloader.text_1", "A full shulker box docks in the Shulker Unloader");
+        add("cesg.ponder.shulker_unloader.text_2", "Its contents are pushed out the front of the funnel onto a belt");
+        add("cesg.ponder.shulker_unloader.text_3", "The empty shulker then drops down into storage below");
+        add("cesg.ponder.shulker_belt_loader.header", "Shulker Belt Loader");
+        add("cesg.ponder.shulker_belt_loader.text_1", "The Shulker Belt Loader sits two blocks above a belt");
+        add("cesg.ponder.shulker_belt_loader.text_2", "Its hose extends down to draw items off the belt into a shulker");
+        add("cesg.ponder.shulker_belt_loader.text_3", "The filled shulker then drops from the funnel onto an item drain");
+        add("cesg.ponder.shulker_belt_unloader.header", "Shulker Belt Unloader");
+        add("cesg.ponder.shulker_belt_unloader.text_1", "A full shulker box is fed into the Belt Unloader from above");
+        add("cesg.ponder.shulker_belt_unloader.text_2", "Its hose extends down toward the belt below");
+        add("cesg.ponder.shulker_belt_unloader.text_3", "It drops the shulker's contents onto the belt to be carried away");
+        add("cesg.ponder.cross_dimensional_gateway_core.header", "Cross-Dimensional Gateway Core");
+        add("cesg.ponder.cross_dimensional_gateway_core.text_1", "Build a vertical Gateway Frame ring with the Core as one of its blocks");
+        add("cesg.ponder.cross_dimensional_gateway_core.text_2", "Pump Liquid Eye of Ender into any frame to fuel and light the ring");
+        add("cesg.ponder.cross_dimensional_gateway_core.text_3", "Powered and bound, the interior opens into a portal");
         add("cesg.gateway.invalid_partner", "Invalid partner gateway");
         add("cesg.gateway.crystal_imprinted", "Binding crystal imprinted with this gateway");
         add("cesg.gateway.crystal_empty", "Binding crystal is empty — sneak + use on a gateway to imprint");
         add("cesg.gateway.crystal_self", "Cannot bind a gateway to itself");
-        add("cesg.gateway.bound_success", "Gateway bound to partner");
         add("cesg.gateway.fuel_added", "Added %s mB of gateway fuel");
         add("cesg.gateway.fuel_full", "Gateway fuel tank is full");
+        add("cesg.gateway.fuel_drained", "Drained %s mB of gateway fuel");
+        add("cesg.gateway.tank_empty", "Not enough fuel to fill a bucket");
+
+        // Phase 6A: channels + destination picker.
+        add("cesg.gateway.bound_success_channel", "Gateway bound on channel %s (partner channel %s)");
+        add("cesg.gateway.bound_success_channel_replaced",
+                "Gateway bound on channel %s (partner channel %s) — previous binding replaced");
+        add("cesg.gateway.channel_screen", "Gateway Destination");
+        add("cesg.gateway.channel_current", "Active channel: %s");
+        add("cesg.gateway.channel_unbound", "Unbound channel");
+        add("cesg.gateway.channel_bound", "Bound: %s (%s, %s, %s)");
+        add("cesg.gateway.channel_bound_named", "Bound: %s — %s (%s, %s, %s)");
+        add("cesg.gateway.name_hint", "Name this gateway...");
+        add("cesg.goggles.gateway.destination", "Destination: %s");
+        add("cesg.crystal.empty", "Not imprinted — sneak + use on a Gateway Core");
+        add("cesg.crystal.target_named", "Imprinted: %s");
+        add("cesg.crystal.location", "Location: %s (%s, %s, %s)");
+        add("cesg.crystal.channel", "Return channel: %s");
+        add("cesg.goggles.gateway.channel", "Active channel: %s");
+        add("cesg.goggles.gateway.chunkloading", "Keeping this gateway and its destination loaded");
+        add("cesg.gateway.chunkload_on", "Load Destination: ON");
+        add("cesg.gateway.chunkload_off", "Load Destination: OFF");
+        add("cesg.gateway.chunkload_tooltip",
+                "While ON, this gateway keeps its own chunk and the bound destination's chunk loaded and ticking — Gateway Port transfers keep flowing with nobody on either side. Follows the active channel: switching destinations moves the loading with it.");
+        add("cesg.goggles.gateway.partner_live", "Partner gateway is powered and fueled");
+        add("cesg.goggles.gateway.partner_offline", "Partner gateway is unpowered or out of fuel");
+
+        // EMI recipe-viewer category title.
+        add("emi.category.cesg.ender_infusing", "Ender Infusing");
+        // JEI recipe-viewer category title + shared fluid-amount tooltip line.
+        add("cesg.recipe.category.ender_infusing", "Ender Infusing");
+        add("cesg.recipe.ender_infusing.amount", "%s mB");
+
+        // Ender Barrel.
+        add("block.cesg.ender_barrel", "Ender Barrel");
+        add("block.cesg.ender_barrel.tooltip.summary",
+                "Crafted as twins: both barrels of a pair share the SAME 27 slots, across any distance or dimension. Hoppers and pipes work at either end, and barrels join _Storage Networks_ (each pair counted once). Unlike an Ender Chest, each pair is its own private pool — craft more pairs for more channels.");
+        add("cesg.barrel.pair", "Pair: #%s");
+        add("cesg.barrel.unpaired", "Unpaired — placing one tags the rest of the stack as its twins");
+
+        // Storage network (6D).
+        add("block.cesg.storage_network_controller", "Storage Network Controller");
+        add("block.cesg.storage_network_controller.tooltip.summary",
+                "Anchors a storage network. _Enhanced Shulker Boxes_, _Shulker Stations_, and _Storage Terminals_ touching the controller (or each other) join the network automatically.");
+        add("block.cesg.storage_terminal", "Storage Terminal");
+        add("block.cesg.storage_terminal.tooltip.summary",
+                "Searchable window into a storage network. Click items to withdraw; shift-click your inventory to deposit. Must touch a network that contains a _Storage Network Controller_.");
+        add("cesg.network.status", "Network: %s member blocks, %s inventories, %s item types");
+        add("cesg.network.no_controller", "No Storage Network Controller connected");
+        add("cesg.network.terminal_title", "Storage Terminal");
+        add("cesg.network.search", "Search");
+        add("cesg.network.crafting", "Crafting");
+        add("cesg.network.clear_craft", "Clear crafting grid (return to storage)");
+        add("cesg.network.count", "%s in network");
+        add("cesg.network.box_locked", "This box is part of a storage network — use a Storage Terminal, or pick the box up");
+
+        // Advancements (6C).
+        add("advancement.cesg.root", "Create: End Storage & Gateways");
+        add("advancement.cesg.root.desc", "Shulker logistics and cross-dimensional travel, the Create way");
+        add("advancement.cesg.first_station", "Boxing Day");
+        add("advancement.cesg.first_station.desc", "Craft any shulker station");
+        add("advancement.cesg.enhanced_shulker", "Bigger on the Inside");
+        add("advancement.cesg.enhanced_shulker.desc", "Craft an Enhanced Shulker Box");
+        add("advancement.cesg.tier_upgrade", "Deep Storage");
+        add("advancement.cesg.tier_upgrade.desc", "Craft a Stack Depth Upgrade");
+        add("advancement.cesg.gateway_built", "Gateway Engineer");
+        add("advancement.cesg.gateway_built.desc", "Craft a Cross-Dimensional Gateway Core");
+        add("advancement.cesg.gateway_travel", "Interdimensional Commuter");
+        add("advancement.cesg.gateway_travel.desc", "Travel to another dimension through a bound gateway");
+        // Name our item tag so EMI doesn't warn about an untranslated tag.
+        add("tag.item.cesg.enhanced_shulker", "Enhanced Shulker Boxes");
+
+        decorativeNames();
+    }
+
+    /** Display names for the Phase 6E smooth/polished end stone & purpur families. */
+    private void decorativeNames() {
+        decorativeFamily("smooth_end_stone", "Smooth End Stone", "Smooth End Stone");
+        decorativeFamily("polished_end_stone", "Polished End Stone", "Polished End Stone");
+        decorativeFamily("smooth_purpur", "Smooth Purpur Block", "Smooth Purpur");
+        decorativeFamily("polished_purpur", "Polished Purpur Block", "Polished Purpur");
+    }
+
+    private void decorativeFamily(String id, String baseName, String variantPrefix) {
+        add("block.cesg." + id, baseName);
+        add("block.cesg." + id + "_stairs", variantPrefix + " Stairs");
+        add("block.cesg." + id + "_slab", variantPrefix + " Slab");
+        add("block.cesg." + id + "_wall", variantPrefix + " Wall");
     }
 
     private static String capitalize(String value) {

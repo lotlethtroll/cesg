@@ -36,12 +36,18 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 public class ShulkerCageBlockEntity extends BlockEntity implements IHaveGoggleInformation {
-    /** Matches vanilla shulker duplication cooldown (~5 seconds). */
-    public static final int COOLDOWN_TICKS = 100;
     /** Block radius a powered cage searches for a partner cage to fire on. */
     private static final int FIRE_RANGE = 4;
+
+    /** Harvest cooldown (default matches vanilla shulker duplication, ~5s) — configurable (Phase 6C). */
+    public static int cooldownTicks() {
+        return com.cesg.CESGConfig.shulkerCageCooldown();
+    }
+
     /** A ready cage only scans for a partner this often, to bound the neighbour search cost. */
-    private static final int FIRE_ATTEMPT_INTERVAL = 20;
+    private static int fireAttemptInterval() {
+        return com.cesg.CESGConfig.shulkerCageFireInterval();
+    }
 
     @Nullable
     private CompoundTag trappedShulkerTag;
@@ -138,7 +144,7 @@ public class ShulkerCageBlockEntity extends BlockEntity implements IHaveGoggleIn
             serverLevel.sendParticles(ParticleTypes.PORTAL, worldPosition.getX() + 0.5,
                     worldPosition.getY() + 0.6, worldPosition.getZ() + 0.5, 6, 0.3, 0.3, 0.3, 0.0);
         level.playSound(null, worldPosition, SoundEvents.SHULKER_HURT, SoundSource.HOSTILE, 0.8F, 1.0F);
-        cooldown = COOLDOWN_TICKS;
+        cooldown = cooldownTicks();
         setChanged();
         return true;
     }
@@ -176,7 +182,7 @@ public class ShulkerCageBlockEntity extends BlockEntity implements IHaveGoggleIn
             be.cooldown--;
             return;
         }
-        if (level.getGameTime() % FIRE_ATTEMPT_INTERVAL == 0)
+        if (level.getGameTime() % fireAttemptInterval() == 0)
             be.tryPoweredFire(level, pos);
     }
 
@@ -196,7 +202,7 @@ public class ShulkerCageBlockEntity extends BlockEntity implements IHaveGoggleIn
             return;
 
         level.playSound(null, pos, SoundEvents.SHULKER_SHOOT, SoundSource.HOSTILE, 0.7F, 1.0F);
-        cooldown = COOLDOWN_TICKS;
+        cooldown = cooldownTicks();
         setChanged();
     }
 

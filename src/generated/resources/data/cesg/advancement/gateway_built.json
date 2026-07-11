@@ -1,0 +1,34 @@
+{
+  "parent": "cesg:root",
+  "criteria": {
+    "has_gateway_core": {
+      "conditions": {
+        "items": [
+          {
+            "items": "cesg:cross_dimensional_gateway_core"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancement.cesg.gateway_built.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "cesg:cross_dimensional_gateway_core"
+    },
+    "title": {
+      "translate": "advancement.cesg.gateway_built"
+    }
+  },
+  "requirements": [
+    [
+      "has_gateway_core"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

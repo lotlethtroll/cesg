@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_gateway_frame": {
+      "conditions": {
+        "items": [
+          {
+            "items": "cesg:gateway_frame"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "cesg:gateway_port"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_gateway_frame"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "cesg:gateway_port"
+    ]
+  }
+}

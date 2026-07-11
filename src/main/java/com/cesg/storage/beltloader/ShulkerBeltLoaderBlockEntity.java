@@ -28,6 +28,16 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEntity {
+
+    /**
+     * Belt-intake ONLY: docked boxes fill exclusively from the belt below — side funnels/hoppers
+     * cannot insert past the intake. Docking (empty station) and finished-box eject still work.
+     */
+    @Override
+    protected boolean exposesContentsToSides() {
+        return false;
+    }
+
     /**
      * Distance the spout drops from the nozzle ring at full extension. The loader always sits exactly
      * two blocks above the belt (Create's belt-processing rule), so a block item travelling below tops
@@ -197,6 +207,23 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
         return tubePhase != TubePhase.RETRACTED;
     }
 
+    /**
+     * Ponder-only: drive the hose extension directly (0 = retracted, 1 = fully extended). The normal
+     * animation advances on the server tick, which Ponder's client-side scene level never runs, so scenes
+     * step this each keyframe to show the tube extend/retract.
+     */
+    public void ponderSetTubeProgress(float progress) {
+        progress = Mth.clamp(progress, 0f, 1f);
+        if (progress <= 0f) {
+            tubePhase = TubePhase.RETRACTED;
+        } else if (progress >= 1f) {
+            tubePhase = TubePhase.EXTENDED;
+        } else {
+            tubePhase = TubePhase.EXTENDING;
+            tubeAnimTicks = prevTubeAnimTicks = Math.round(progress * EXTEND_CYCLE);
+        }
+    }
+
     public float getTubeExtension(float partialTicks) {
         return switch (tubePhase) {
             case RETRACTED -> 0;
@@ -287,23 +314,13 @@ public class ShulkerBeltLoaderBlockEntity extends AbstractShulkerStationBlockEnt
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 
-        CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.placement", ChatFormatting.GRAY);
-
-        StationGoggleTooltip.appendHeldHeader(this, tooltip, "cesg.goggles.loader.station");
-        CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.retention", ChatFormatting.WHITE,
-                Component.translatable(getRetentionMode().getTranslationKey()));
-
-        if (getRetentionMode() == StationRetentionMode.AUTO_EJECT) {
-            CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.eject_when", ChatFormatting.WHITE,
-                    Component.translatable(getFullnessMode().getTranslationKey() + ".load"));
-            if (getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD)
-                CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.threshold_load", ChatFormatting.WHITE,
-                        getThreshold());
-            StationGoggleTooltip.appendEjectFunnelTooltip(this, tooltip, "cesg.goggles.loader.station");
+        StationGoggleTooltip.appendStationTooltip(this, tooltip, isPlayerSneaking,
+                "cesg.goggles.loader.station", ".load", ".threshold_load");
+        if (isPlayerSneaking) {
+            CESGLang.forGoggles(tooltip, "cesg.goggles.belt_loader.placement", ChatFormatting.GRAY);
+            FilterGoggleTooltip.appendStationFilter(this, tooltip, true, true);
+            CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.config_hint", ChatFormatting.DARK_GRAY);
         }
-
-        FilterGoggleTooltip.appendStationFilter(this, tooltip, isPlayerSneaking, true);
-        CESGLang.forGoggles(tooltip, "cesg.goggles.loader.station.config_hint", ChatFormatting.DARK_GRAY);
         return true;
     }
 }

@@ -1,0 +1,17 @@
+{
+  "type": "cesg:ender_infusing",
+  "catalysts": [
+    {
+      "count": 1,
+      "item": "cesg:ender_pearl_dust"
+    }
+  ],
+  "input": {
+    "amount": 250,
+    "fluid": "minecraft:water"
+  },
+  "result": {
+    "amount": 250,
+    "id": "cesg:liquid_ender_pearl"
+  }
+}

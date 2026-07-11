@@ -1,0 +1,9 @@
+{
+  "parent": "cesg:block/cross_dimensional_gateway_core/block",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "front": "cesg:block/cross_dimensional_gateway_core_lit_eye",
+    "particle": "cesg:block/cross_dimensional_gateway_core_side_lit_eye",
+    "side": "cesg:block/cross_dimensional_gateway_core_side_lit_eye"
+  }
+}

@@ -1,6 +1,7 @@
 package com.cesg.init;
 
 import com.cesg.CESG;
+import com.cesg.datagen.CESGAdvancementProvider;
 import com.cesg.datagen.CESGLangProvider;
 import com.cesg.datagen.CESGRecipeProvider;
 
@@ -14,5 +15,7 @@ public class CESGData {
 
         generator.addProvider(event.includeClient(), new CESGLangProvider(output));
         generator.addProvider(event.includeServer(), new CESGRecipeProvider(output, lookup));
+        generator.addProvider(event.includeServer(),
+                new CESGAdvancementProvider(output, lookup, event.getExistingFileHelper()));
     }
 }

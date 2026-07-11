@@ -4,6 +4,8 @@ import com.cesg.CESG;
 import com.cesg.farming.ShulkerCageBlockEntity;
 import com.cesg.gateways.CrossDimensionalGatewayCoreBlockEntity;
 import com.cesg.gateways.EndGatewayBlockEntity;
+import com.cesg.gateways.GatewayFrameBlockEntity;
+import com.cesg.machine.EnderInfuserBlockEntity;
 import com.cesg.storage.beltloader.ShulkerBeltLoaderBlockEntity;
 import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
 import com.cesg.storage.loader.ShulkerLoaderBlockEntity;
@@ -56,6 +58,28 @@ public class CESGBlockEntities {
             BLOCK_ENTITIES.register("cross_dimensional_gateway_core",
                     () -> BlockEntityType.Builder.of(CrossDimensionalGatewayCoreBlockEntity::new,
                                     CESGRegistration.CROSS_DIMENSIONAL_GATEWAY_CORE.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.cesg.gateways.GatewayPortBlockEntity>> GATEWAY_PORT =
+            BLOCK_ENTITIES.register("gateway_port",
+                    () -> BlockEntityType.Builder.of(com.cesg.gateways.GatewayPortBlockEntity::new,
+                                    CESGRegistration.GATEWAY_PORT.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GatewayFrameBlockEntity>> GATEWAY_FRAME =
+            BLOCK_ENTITIES.register("gateway_frame",
+                    () -> BlockEntityType.Builder.of(GatewayFrameBlockEntity::new, CESGRegistration.GATEWAY_FRAME.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnderInfuserBlockEntity>> ENDER_INFUSER =
+            BLOCK_ENTITIES.register("ender_infuser",
+                    () -> BlockEntityType.Builder.of(EnderInfuserBlockEntity::new, CESGRegistration.ENDER_INFUSER.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.cesg.storage.enderbarrel.EnderBarrelBlockEntity>> ENDER_BARREL =
+            BLOCK_ENTITIES.register("ender_barrel",
+                    () -> BlockEntityType.Builder.of(com.cesg.storage.enderbarrel.EnderBarrelBlockEntity::new,
+                                    CESGRegistration.ENDER_BARREL.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnhancedShulkerBoxBlockEntity>> ENHANCED_SHULKER_BOX =

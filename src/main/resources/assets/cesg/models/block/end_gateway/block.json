@@ -1,0 +1,150 @@
+{
+  "credit": "Cosmic-field cube (5 faces) with Create-style recessed gearbox back socket for the SHAFT_HALF rotation input",
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "field": "cesg:block/end_gateway",
+    "casing": "create:block/brass_casing",
+    "gearbox": "create:block/brass_gearbox",
+    "particle": "cesg:block/end_gateway"
+  },
+  "elements": [
+    {
+      "name": "Front",
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#field", "cullface": "north" }
+      }
+    },
+    {
+      "name": "Side Left",
+      "from": [0, 0, 0],
+      "to": [0.95, 16, 16],
+      "faces": {
+        "west": { "uv": [0, 0, 16, 16], "texture": "#field", "cullface": "west" }
+      }
+    },
+    {
+      "name": "Side Right",
+      "from": [15.05, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "east": { "uv": [0, 0, 16, 16], "texture": "#field", "cullface": "east" }
+      }
+    },
+    {
+      "name": "Top",
+      "from": [0, 15.05, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 16], "texture": "#field", "cullface": "up" }
+      }
+    },
+    {
+      "name": "Bottom",
+      "from": [0, 0, 0],
+      "to": [16, 0.95, 16],
+      "faces": {
+        "down": { "uv": [0, 0, 16, 16], "texture": "#field", "cullface": "down" }
+      }
+    },
+    {
+      "name": "Core",
+      "from": [0.95, 0.95, 0.95],
+      "to": [15.05, 15.05, 15.05],
+      "faces": {
+        "south": { "uv": [1, 2, 15, 14], "texture": "#gearbox", "cullface": "south" },
+        "north": { "uv": [1, 2, 15, 14], "texture": "#casing" }
+      }
+    },
+    {
+      "__comment": "inner east wall of left panel, faces into cavity",
+      "from": [0.95, 0, 0],
+      "to": [1, 16, 16],
+      "faces": {
+        "east": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "__comment": "inner west wall of right panel",
+      "from": [15, 0, 0],
+      "to": [15.05, 16, 16],
+      "faces": {
+        "west": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "__comment": "inner bottom of top panel",
+      "from": [0, 15, 0],
+      "to": [16, 15.05, 16],
+      "faces": {
+        "down": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "__comment": "inner top of bottom panel",
+      "from": [0, 0.95, 0],
+      "to": [16, 1, 16],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "__comment": "inner back of front panel",
+      "from": [0, 0, 0.95],
+      "to": [16, 16, 1],
+      "faces": {
+        "south": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "__comment": "inner front of back trim lip",
+      "from": [0, 0, 15],
+      "to": [16, 16, 15.05],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Left",
+      "from": [0, 0, 0.95],
+      "to": [0.95, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 1, 16], "texture": "#casing" },
+        "south": { "uv": [0, 0, 1, 16], "texture": "#casing", "cullface": "south" },
+        "east": { "uv": [0, 0, 16, 1], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Right",
+      "from": [15.05, 0, 0.95],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [15, 0, 16, 16], "texture": "#casing" },
+        "south": { "uv": [15, 0, 16, 16], "texture": "#casing", "cullface": "south" },
+        "west": { "uv": [0, 0, 16, 1], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Bottom",
+      "from": [0.95, 0, 0.95],
+      "to": [15.05, 0.95, 16],
+      "faces": {
+        "north": { "uv": [1, 0, 15, 1], "texture": "#casing" },
+        "south": { "uv": [1, 0, 15, 1], "texture": "#casing", "cullface": "south" },
+        "up": { "uv": [1, 0, 15, 1], "texture": "#casing" }
+      }
+    },
+    {
+      "name": "Back Top",
+      "from": [0.95, 15.05, 0.95],
+      "to": [15.05, 16, 16],
+      "faces": {
+        "north": { "uv": [1, 15, 15, 16], "texture": "#casing" },
+        "south": { "uv": [1, 15, 15, 16], "texture": "#casing", "cullface": "south" },
+        "down": { "uv": [1, 15, 15, 16], "texture": "#casing" }
+      }
+    }
+  ]
+}

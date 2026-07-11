@@ -49,6 +49,19 @@ public class EnhancedShulkerContainer implements Container {
         return true;
     }
 
+    /**
+     * GUI cursor-placement routed through the handler so smelting/void modules apply to manual
+     * inserts exactly as they do to automation. Returns what stays on the cursor (raw form).
+     */
+    public ItemStack insertViaHandler(int slot, ItemStack offered) {
+        return handler.insertItem(slot, offered, false);
+    }
+
+    /** Module transform for player-driven direct sets (hotbar swap places whole stacks). */
+    public ItemStack transformForStorage(ItemStack stack) {
+        return handler.transformForStorage(stack);
+    }
+
     @Override
     public ItemStack getItem(int slot) {
         return handler.getStackInSlot(slot);

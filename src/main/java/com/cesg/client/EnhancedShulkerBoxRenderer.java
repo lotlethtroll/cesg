@@ -9,11 +9,10 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -45,9 +44,7 @@ public class EnhancedShulkerBoxRenderer implements BlockEntityRenderer<EnhancedS
         @Nullable DyeColor color = blockEntity.getBlockState().getBlock() instanceof ShulkerBoxBlock shulkerBox
                 ? shulkerBox.getColor()
                 : null;
-        Material material = color == null
-                ? Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION
-                : Sheets.SHULKER_TEXTURE_LOCATION.get(color.getId());
+        ResourceLocation texture = enhancedTexture(color);
 
         float progress = blockEntity.getOpenNess(partialTick);
         ModelPart lid = model.getLid();
@@ -60,9 +57,15 @@ public class EnhancedShulkerBoxRenderer implements BlockEntityRenderer<EnhancedS
         poseStack.mulPose(direction.getRotation());
         poseStack.scale(1.0F, -1.0F, -1.0F);
         poseStack.translate(0.0F, -1.0F, 0.0F);
-        VertexConsumer vertexConsumer = material.buffer(buffer, RenderType::entityCutoutNoCull);
+        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
         model.renderToBuffer(poseStack, vertexConsumer, packedLight, packedOverlay);
         poseStack.popPose();
+    }
+
+    /** Vanilla shulker entity texture — the enhanced box keeps the plain shulker look (no teal tint). */
+    private static ResourceLocation enhancedTexture(@Nullable DyeColor color) {
+        String name = color == null ? "shulker" : "shulker_" + color.getName();
+        return ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/shulker/" + name + ".png");
     }
 
     @Override

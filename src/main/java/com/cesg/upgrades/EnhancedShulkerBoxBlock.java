@@ -43,6 +43,14 @@ public class EnhancedShulkerBoxBlock extends ShulkerBoxBlock {
 
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (blockEntity instanceof EnhancedShulkerBoxBlockEntity box && player instanceof ServerPlayer serverPlayer) {
+            // Boxes belonging to a storage network are terminal-only: direct GUIs and network
+            // operations write competing snapshots to the same contents component, so individual
+            // access requires picking the box up (or breaking the network link).
+            if (com.cesg.storage.network.StorageNetwork.scan(level, pos).operational()) {
+                serverPlayer.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable("cesg.network.box_locked"), true);
+                return InteractionResult.CONSUME;
+            }
             box.openScreen(serverPlayer);
             PiglinAi.angerNearbyPiglins(serverPlayer, true);
             serverPlayer.awardStat(Stats.OPEN_SHULKER_BOX);

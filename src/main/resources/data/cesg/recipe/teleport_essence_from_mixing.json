@@ -1,0 +1,20 @@
+{
+  "type": "create:mixing",
+  "heat_requirement": "heated",
+  "ingredients": [
+    {
+      "item": "minecraft:chorus_fruit"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 250,
+      "fluid": "cesg:liquid_ender_pearl"
+    }
+  ],
+  "results": [
+    {
+      "amount": 250,
+      "id": "cesg:teleport_essence"
+    }
+  ]
+}

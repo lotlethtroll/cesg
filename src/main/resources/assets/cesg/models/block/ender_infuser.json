@@ -1,0 +1,69 @@
+{
+  "credit": "Solid copper machine, copper-framed front window into a dark chamber (fluid drawn by EnderInfuserRenderer); solid copper-gearbox back for the kinetic input.",
+  "parent": "minecraft:block/block",
+  "textures": {
+    "copper": "minecraft:block/copper_block",
+    "inner": "minecraft:block/netherite_block",
+    "gearbox": "cesg:block/copper_gearbox",
+    "particle": "minecraft:block/copper_block"
+  },
+  "elements": [
+    {
+      "name": "Bottom",
+      "from": [0, 0, 0],
+      "to": [16, 3, 16],
+      "faces": {
+        "down": { "uv": [0, 0, 16, 16], "texture": "#copper", "cullface": "down" },
+        "up": { "uv": [3, 3, 13, 13], "texture": "#inner" },
+        "north": { "uv": [0, 13, 16, 16], "texture": "#copper" },
+        "south": { "uv": [0, 13, 16, 16], "texture": "#copper", "cullface": "south" },
+        "east": { "uv": [0, 13, 16, 16], "texture": "#copper" },
+        "west": { "uv": [0, 13, 16, 16], "texture": "#copper" }
+      }
+    },
+    {
+      "name": "Top",
+      "from": [0, 13, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 16], "texture": "#copper", "cullface": "up" },
+        "down": { "uv": [3, 3, 13, 13], "texture": "#inner" },
+        "north": { "uv": [0, 0, 16, 3], "texture": "#copper" },
+        "south": { "uv": [0, 0, 16, 3], "texture": "#copper", "cullface": "south" },
+        "east": { "uv": [0, 0, 16, 3], "texture": "#copper" },
+        "west": { "uv": [0, 0, 16, 3], "texture": "#copper" }
+      }
+    },
+    {
+      "name": "Left",
+      "from": [0, 3, 0],
+      "to": [3, 13, 16],
+      "faces": {
+        "west": { "uv": [0, 0, 16, 16], "texture": "#copper", "cullface": "west" },
+        "east": { "uv": [0, 3, 16, 13], "texture": "#inner" },
+        "north": { "uv": [13, 3, 16, 13], "texture": "#copper" },
+        "south": { "uv": [0, 3, 3, 13], "texture": "#copper", "cullface": "south" }
+      }
+    },
+    {
+      "name": "Right",
+      "from": [13, 3, 0],
+      "to": [16, 13, 16],
+      "faces": {
+        "east": { "uv": [0, 0, 16, 16], "texture": "#copper", "cullface": "east" },
+        "west": { "uv": [0, 3, 16, 13], "texture": "#inner" },
+        "north": { "uv": [0, 3, 3, 13], "texture": "#copper" },
+        "south": { "uv": [13, 3, 16, 13], "texture": "#copper", "cullface": "south" }
+      }
+    },
+    {
+      "name": "BackWall",
+      "from": [3, 3, 8],
+      "to": [13, 13, 16],
+      "faces": {
+        "north": { "uv": [3, 3, 13, 13], "texture": "#inner" },
+        "south": { "uv": [3, 3, 13, 13], "texture": "#gearbox", "cullface": "south" }
+      }
+    }
+  ]
+}

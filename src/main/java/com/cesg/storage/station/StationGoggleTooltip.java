@@ -7,49 +7,64 @@ import com.cesg.upgrades.EnhancedShulkerUpgradeTooltip;
 import com.cesg.util.CESGLang;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public final class StationGoggleTooltip {
     private StationGoggleTooltip() {}
 
-    public static void appendEjectFunnelTooltip(AbstractShulkerStationBlockEntity be, List<Component> tooltip,
-            String prefix) {
-        List<Direction> funnelSides = StationFunnelConnection.findOutputFunnels(be.getLevel(), be.getBlockPos());
-        if (funnelSides.isEmpty()) {
-            List<Direction> attached = StationFunnelConnection.findFunnelsFacingStation(be.getLevel(), be.getBlockPos());
-            if (attached.isEmpty())
-                CESGLang.forGoggles(tooltip, prefix + ".eject_funnel_hint", ChatFormatting.GRAY);
-            else
-                CESGLang.forGoggles(tooltip, prefix + ".funnel_wrong_mode_hint", ChatFormatting.YELLOW);
-        } else {
-            for (Direction funnelSide : funnelSides)
-                CESGLang.forGoggles(tooltip, prefix + ".funnel_connected", ChatFormatting.WHITE,
-                        Component.translatable(funnelSide.getSerializedName()));
+    /**
+     * Shared station tooltip with a compact/detailed split: plain goggles show the essentials
+     * (what's docked, power, ready-to-eject) plus a sneak hint; sneaking adds configuration,
+     * upgrade, and hint lines. Keeps four near-identical station tooltips in one place.
+     *
+     * @param fullnessSuffix  ".load" / ".unload" — picked by station direction
+     * @param thresholdKey    prefix-relative threshold line key (".threshold_load" / ".threshold_unload")
+     */
+    public static void appendStationTooltip(AbstractShulkerStationBlockEntity be, List<Component> tooltip,
+            boolean sneaking, String prefix, String fullnessSuffix, String thresholdKey) {
+        appendHeldHeader(be, tooltip, prefix, sneaking);
 
-            if (be.hasHeldShulker() && be.meetsEjectConditionPublic() && be.isPowered())
-                CESGLang.forGoggles(tooltip, prefix + ".ready_to_eject", ChatFormatting.GREEN);
+        boolean autoEject = be.getRetentionMode() == StationRetentionMode.AUTO_EJECT;
+        if (autoEject && be.hasHeldShulker() && be.meetsEjectConditionPublic() && be.isPowered())
+            CESGLang.forGoggles(tooltip, prefix + ".ready_to_eject", ChatFormatting.GREEN);
+
+        if (!sneaking) {
+            CESGLang.forGoggles(tooltip, "cesg.goggles.station.sneak_hint", ChatFormatting.DARK_GRAY);
+            return;
+        }
+
+        CESGLang.forGoggles(tooltip, prefix + ".retention", ChatFormatting.WHITE,
+                Component.translatable(be.getRetentionMode().getTranslationKey()));
+        if (autoEject) {
+            CESGLang.forGoggles(tooltip, prefix + ".eject_when", ChatFormatting.WHITE,
+                    Component.translatable(be.getFullnessMode().getTranslationKey() + fullnessSuffix));
+            if (be.getFullnessMode() == StationFullnessMode.SLOT_THRESHOLD)
+                CESGLang.forGoggles(tooltip, prefix + thresholdKey, ChatFormatting.WHITE, be.getThreshold());
+            CESGLang.forGoggles(tooltip, prefix + ".eject_funnel_hint", ChatFormatting.GRAY);
         }
     }
 
-    public static void appendHeldHeader(AbstractShulkerStationBlockEntity be, List<Component> tooltip, String prefix) {
+    private static void appendHeldHeader(AbstractShulkerStationBlockEntity be, List<Component> tooltip,
+            String prefix, boolean sneaking) {
         if (be.getHeldShulker().isEmpty()) {
             CESGLang.forGoggles(tooltip, prefix + ".empty", ChatFormatting.GRAY);
-            CESGLang.forGoggles(tooltip, prefix + ".dock_via_funnel", ChatFormatting.DARK_GRAY);
+            if (sneaking)
+                CESGLang.forGoggles(tooltip, prefix + ".dock_via_funnel", ChatFormatting.DARK_GRAY);
         } else {
             int occupied = ShulkerInventoryAccess.countOccupiedSlots(be.getHeldShulker());
             int total = ShulkerInventoryAccess.getSlotCount(be.getHeldShulker());
             CESGLang.forGoggles(tooltip, prefix + ".contents", ChatFormatting.AQUA,
                     be.getHeldShulker().getHoverName().getString(), occupied, total);
 
-            appendHeldShulkerUpgrades(be.getHeldShulker(), tooltip);
+            if (sneaking)
+                appendHeldShulkerUpgrades(be.getHeldShulker(), tooltip);
 
             if (!be.isPowered())
                 CESGLang.forGoggles(tooltip, prefix + ".unpowered", ChatFormatting.GRAY);
         }
 
-        if (!be.getStationName().isEmpty())
+        if (sneaking && !be.getStationName().isEmpty())
             CESGLang.forGoggles(tooltip, "cesg.goggles.station.names", ChatFormatting.WHITE, be.getStationName());
     }
 

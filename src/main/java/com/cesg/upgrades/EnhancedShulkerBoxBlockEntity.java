@@ -77,6 +77,15 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
         }, buf -> EnhancedShulkerMenu.writeMenuData(buf, stack, worldPosition));
     }
 
+    /**
+     * True while any player has this box's screen open. External writers (the storage network) must
+     * stay out then: the open menu holds a snapshot handler over the same item stack, and two
+     * component-backed handlers writing snapshots clobber each other (dupe/void).
+     */
+    public boolean isViewed() {
+        return openCount > 0;
+    }
+
     public void startOpen(Player player) {
         if (player.isSpectator())
             return;
@@ -103,6 +112,69 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, EnhancedShulkerBoxBlockEntity blockEntity) {
         blockEntity.tickAnimation();
+        blockEntity.magnetTick(level);
+    }
+
+    // --- Magnet module: pull in dropped items the box can accept ---
+
+    private static final int MAGNET_SCAN_INTERVAL = 4;
+    private Object magnetContentsRef;
+    private int magnetTier;
+    private EnhancedShulkerBlockItemHandler magnetHandler;
+
+    /** Installed magnet tier, cached against the contents component identity (recomputed on change). */
+    private int installedMagnetTier() {
+        ItemStack stack = getShulkerStack();
+        Object contents = stack.get(com.cesg.init.CESGDataComponents.ENHANCED_SHULKER.get());
+        if (contents != magnetContentsRef) {
+            magnetContentsRef = contents;
+            magnetTier = ShulkerUpgradeItems.highestInstalledMagnetTier(
+                    EnhancedShulkerUpgradeTooltip.getInstalledUpgrades(stack));
+        }
+        return magnetTier;
+    }
+
+    private void magnetTick(Level level) {
+        if (level.isClientSide || level.getGameTime() % MAGNET_SCAN_INTERVAL != 0)
+            return;
+        int tier = installedMagnetTier();
+        if (tier <= 0 || isViewed())
+            return;
+
+        if (magnetHandler == null)
+            magnetHandler = new EnhancedShulkerBlockItemHandler(this);
+        double radius = MagnetUpgradeItem.radiusForTier(tier);
+        double pull = MagnetUpgradeItem.pullStrengthForTier(tier) * MAGNET_SCAN_INTERVAL;
+        net.minecraft.world.phys.Vec3 center = net.minecraft.world.phys.Vec3.atCenterOf(worldPosition);
+        net.minecraft.world.phys.AABB range = new net.minecraft.world.phys.AABB(worldPosition).inflate(radius);
+
+        for (net.minecraft.world.entity.item.ItemEntity drop : level.getEntitiesOfClass(
+                net.minecraft.world.entity.item.ItemEntity.class, range,
+                e -> e.isAlive() && !e.hasPickUpDelay())) {
+            ItemStack stack = drop.getItem();
+            if (com.cesg.storage.ShulkerInventoryAccess.isShulkerBox(stack))
+                continue;
+            // Only attract what the box would actually take, so items never orbit a full box.
+            ItemStack simulated = net.neoforged.neoforge.items.ItemHandlerHelper
+                    .insertItemStacked(magnetHandler, stack.copy(), true);
+            if (simulated.getCount() >= stack.getCount())
+                continue;
+
+            if (drop.position().distanceTo(center) < 1.25) {
+                ItemStack remainder = net.neoforged.neoforge.items.ItemHandlerHelper
+                        .insertItemStacked(magnetHandler, stack.copy(), false);
+                if (remainder.getCount() != stack.getCount()) {
+                    if (remainder.isEmpty())
+                        drop.discard();
+                    else
+                        drop.setItem(remainder);
+                }
+            } else {
+                net.minecraft.world.phys.Vec3 motion = center.subtract(drop.position()).normalize().scale(pull);
+                drop.setDeltaMovement(drop.getDeltaMovement().scale(0.75).add(motion));
+                drop.hasImpulse = true;
+            }
+        }
     }
 
     public static void clientTick(Level level, BlockPos pos, BlockState state, EnhancedShulkerBoxBlockEntity blockEntity) {

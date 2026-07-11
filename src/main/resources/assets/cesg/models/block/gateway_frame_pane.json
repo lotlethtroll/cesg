@@ -1,0 +1,19 @@
+{
+  "__comment": "Plain translucent cube like vanilla glass (interior faces removed - with connected textures they only added visible clutter through the glass). Texture #all supplied by child models.",
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:translucent",
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "down" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "up" },
+        "north": { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "north" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "south" },
+        "west":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "west" },
+        "east":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "east" }
+      }
+    }
+  ]
+}

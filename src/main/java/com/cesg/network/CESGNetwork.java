@@ -16,5 +16,11 @@ public final class CESGNetwork {
         PayloadRegistrar registrar = event.registrar("1");
         registrar.playToServer(StationConfigurationPacket.TYPE, StationConfigurationPacket.STREAM_CODEC,
                 StationConfigurationPacket::handle);
+        registrar.playToServer(SetGatewayChannelPacket.TYPE, SetGatewayChannelPacket.STREAM_CODEC,
+                SetGatewayChannelPacket::handle);
+        registrar.playToClient(TerminalContentPacket.TYPE, TerminalContentPacket.STREAM_CODEC,
+                TerminalContentPacket::handle);
+        registrar.playToServer(TerminalActionPacket.TYPE, TerminalActionPacket.STREAM_CODEC,
+                TerminalActionPacket::handle);
     }
 }
