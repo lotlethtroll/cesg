@@ -2,10 +2,15 @@ modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
 
+issueTrackerURL="https://codeberg.org/lotleth/cesg/issues"
+
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
+authors="lotleth"
+displayURL="https://codeberg.org/lotleth/cesg"
+logoFile="logo.png"
 description='''
 Industrial End storage, shulker automation, and dimensional gateways for Create.
 '''
