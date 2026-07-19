@@ -13,6 +13,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
+## [Unreleased]
+
+### Changed
+- Enhanced / Reinforced / Ultimate Shulker Boxes now show subtle corner-bracket
+  trim on the lid top, colored by tier (ender teal / andesite / brass), in world
+  and in the item preview; all 17 colors
+- Reinforced (tier 3) upgrade recipe reworked to a full 3×3: 2 ender pearls
+  (top corners), 5 processed shells, 1 andesite casing (bottom center) around
+  the Enhanced box
+- Ultimate (tier 4) upgrade recipe reworked to a full 3×3: 2 eyes of ender
+  (top corners), 5 processed shells, 1 brass casing (bottom center) around the
+  Reinforced box
+
 ## [1.0.0] — 2026-07-11
 
 First release. Requires NeoForge 1.21.1 and Create 6.0.10.

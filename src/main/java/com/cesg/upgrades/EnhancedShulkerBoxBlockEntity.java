@@ -6,6 +6,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -29,6 +32,8 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
     private static final int EVENT_SET_OPEN_COUNT = 1;
 
     private ItemStack shulkerStack = ItemStack.EMPTY;
+    /** Tier received via update tag on the client, where the full shulker stack is not synced. */
+    private int clientTier = -1;
     private int openCount;
     private float progress;
     private float progressOld;
@@ -51,6 +56,13 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
             EnhancedShulkerBoxItem.ensureContents(shulkerStack);
         }
         setChanged();
+        if (level != null && !level.isClientSide)
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    }
+
+    /** Tier for rendering; on the client this comes from the update tag rather than the stack. */
+    public int displayTier() {
+        return clientTier > 0 ? clientTier : EnhancedShulkerUpgrades.tierOf(getShulkerStack());
     }
 
     private ItemStack defaultStackForBlock() {
@@ -216,5 +228,23 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
         shulkerStack = tag.contains("ShulkerStack")
                 ? ItemStack.parse(registries, tag.getCompound("ShulkerStack")).orElse(ItemStack.EMPTY)
                 : ItemStack.EMPTY;
+        // "Tier" is only present in the client update tag (see getUpdateTag); disk loads carry the
+        // full stack instead.
+        if (tag.contains("Tier"))
+            clientTier = tag.getInt("Tier");
+    }
+
+    /** Client sync carries only the tier — the stored items stay server-side. */
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = super.getUpdateTag(registries);
+        tag.putInt("Tier", EnhancedShulkerUpgrades.tierOf(getShulkerStack()));
+        return tag;
+    }
+
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 }

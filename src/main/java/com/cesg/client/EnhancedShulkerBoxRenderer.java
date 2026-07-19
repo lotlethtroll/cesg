@@ -1,6 +1,8 @@
 package com.cesg.client;
 
+import com.cesg.CESG;
 import com.cesg.upgrades.EnhancedShulkerBoxBlockEntity;
+import com.cesg.upgrades.EnhancedShulkerUpgrades;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
@@ -44,7 +46,7 @@ public class EnhancedShulkerBoxRenderer implements BlockEntityRenderer<EnhancedS
         @Nullable DyeColor color = blockEntity.getBlockState().getBlock() instanceof ShulkerBoxBlock shulkerBox
                 ? shulkerBox.getColor()
                 : null;
-        ResourceLocation texture = enhancedTexture(color);
+        ResourceLocation texture = enhancedTexture(color, blockEntity.displayTier());
 
         float progress = blockEntity.getOpenNess(partialTick);
         ModelPart lid = model.getLid();
@@ -62,10 +64,14 @@ public class EnhancedShulkerBoxRenderer implements BlockEntityRenderer<EnhancedS
         poseStack.popPose();
     }
 
-    /** Vanilla shulker entity texture — the enhanced box keeps the plain shulker look (no teal tint). */
-    private static ResourceLocation enhancedTexture(@Nullable DyeColor color) {
+    /**
+     * Vanilla shulker entity texture with subtle corner-bracket trim on the lid top, colored by
+     * tier: ender teal (Enhanced), andesite (Reinforced), brass (Ultimate).
+     */
+    public static ResourceLocation enhancedTexture(@Nullable DyeColor color, int tier) {
         String name = color == null ? "shulker" : "shulker_" + color.getName();
-        return ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/shulker/" + name + ".png");
+        int clamped = Math.max(EnhancedShulkerUpgrades.MIN_TIER, Math.min(EnhancedShulkerUpgrades.MAX_TIER, tier));
+        return CESG.id("textures/entity/enhanced_shulker/" + name + "_t" + clamped + ".png");
     }
 
     @Override

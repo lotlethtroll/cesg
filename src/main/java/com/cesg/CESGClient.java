@@ -4,6 +4,7 @@ import com.cesg.client.CESGKineticVisuals;
 import com.cesg.client.CESGMenuScreens;
 import com.cesg.client.CESGPartialModels;
 import com.cesg.client.CESGFluidRenderers;
+import com.cesg.client.EnhancedShulkerBoxItemRenderer;
 import com.cesg.client.EnhancedShulkerBoxRenderer;
 import com.cesg.client.GatewayCoreRenderer;
 import com.cesg.client.ShulkerBeltLoaderRenderer;
@@ -28,6 +29,24 @@ public class CESGClient {
         modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(CESGClient::registerRenderers);
         modEventBus.addListener(CESGClient::registerAdditionalModels);
+        modEventBus.addListener(CESGClient::registerClientExtensions);
+    }
+
+    private static void registerClientExtensions(
+            net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent event) {
+        event.registerItem(new net.neoforged.neoforge.client.extensions.common.IClientItemExtensions() {
+            // Created lazily: this event fires before Minecraft's renderers are ready.
+            private EnhancedShulkerBoxItemRenderer renderer;
+
+            @Override
+            public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                if (renderer == null)
+                    renderer = new EnhancedShulkerBoxItemRenderer();
+                return renderer;
+            }
+        }, com.cesg.upgrades.EnhancedShulkerBoxes.allEntries().stream()
+                .map(entry -> entry.get().asItem())
+                .toArray(net.minecraft.world.item.Item[]::new));
     }
 
     private void clientSetup(FMLClientSetupEvent event) {

@@ -31,31 +31,31 @@ public record EnhancedShulkerTierUpgradeRecipe(int targetTier) implements Crafti
     };
 
     /**
-     * Tier 3: 4 shells, 2 pearls, 1 brass casing around a tier-2 enhanced box.
+     * Tier 3: 5 shells, 2 pearls, 1 andesite casing around a tier-2 enhanced box.
      * <pre>
      * P S P
      * S B S
-     * S C .
+     * S C S
      * </pre>
      */
     private static final GridSlot[] TIER_3 = {
             pearl(0), shell(1), pearl(2),
             shell(3), enhancedBox(4, 2), shell(5),
-            shell(6), brass(7), empty(8)
+            shell(6), andesite(7), shell(8)
     };
 
     /**
-     * Tier 4: 4 shells, 1 ender eye, 2 brass casings around a tier-3 enhanced box.
+     * Tier 4: 5 shells, 2 ender eyes, 1 brass casing around a tier-3 enhanced box.
      * <pre>
-     * S E S
+     * E S E
      * S B S
-     * C C .
+     * S C S
      * </pre>
      */
     private static final GridSlot[] TIER_4 = {
-            shell(0), enderEye(1), shell(2),
+            enderEye(0), shell(1), enderEye(2),
             shell(3), enhancedBox(4, 3), shell(5),
-            brass(6), brass(7), empty(8)
+            shell(6), brass(7), shell(8)
     };
 
     @Override
@@ -135,30 +135,6 @@ public record EnhancedShulkerTierUpgradeRecipe(int targetTier) implements Crafti
         boolean matches(ItemStack stack);
     }
 
-    private static GridSlot empty(int index) {
-        return new GridSlot() {
-            @Override
-            public int index() {
-                return index;
-            }
-
-            @Override
-            public boolean empty() {
-                return true;
-            }
-
-            @Override
-            public Ingredient ingredient() {
-                return Ingredient.EMPTY;
-            }
-
-            @Override
-            public boolean matches(ItemStack stack) {
-                return stack.isEmpty();
-            }
-        };
-    }
-
     private static GridSlot shell(int index) {
         return fixed(index, Ingredient.of(CESGRegistration.SHULKER_SHELL.get()),
                 stack -> stack.is(CESGRegistration.SHULKER_SHELL.get()));
@@ -170,6 +146,11 @@ public record EnhancedShulkerTierUpgradeRecipe(int targetTier) implements Crafti
 
     private static GridSlot enderEye(int index) {
         return fixed(index, Ingredient.of(Items.ENDER_EYE), stack -> stack.is(Items.ENDER_EYE));
+    }
+
+    private static GridSlot andesite(int index) {
+        return fixed(index, Ingredient.of(AllBlocks.ANDESITE_CASING.asItem()),
+                stack -> stack.is(AllBlocks.ANDESITE_CASING.asItem()));
     }
 
     private static GridSlot brass(int index) {
