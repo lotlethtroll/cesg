@@ -11,7 +11,7 @@ the feature set changes; the description below is the canonical listing copy.
 | Slug | `create-end-storage-gateways` |
 | Summary | Industrial End storage, shulker logistics, and fueled dimensional gateways for Create. |
 | Icon | `docs/publishing/project-icon-400.png` (400×400; same art as the in-jar `logo.png`) |
-| License | All Rights Reserved |
+| License | MIT |
 | Source / issues | https://codeberg.org/lotleth/cesg (issues: `/issues`) |
 | Environment | Required on **both** client and server |
 

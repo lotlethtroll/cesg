@@ -84,4 +84,4 @@ The jar is written to the Gradle `libs` output directory as
 
 ## License
 
-All Rights Reserved.
+[MIT](LICENSE)
