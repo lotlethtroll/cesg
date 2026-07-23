@@ -44,12 +44,13 @@ public final class CESGConfig {
 
         builder.push("battery");
         BATTERY_CAPACITY = builder
-                .comment("Capacity of EACH Gateway Flux Battery fuel tank (Teleport Essence and Liquid",
-                        "Eye of Ender are stored separately), in mB.")
-                .defineInRange("capacityMb", 16000, 1000, 1_000_000);
+                .comment("Fuel capacity per Gateway Flux Battery block, in mB. Batteries assemble into a",
+                        "W×W×H array (up to 3×3×3) that holds W*W*H times this. Single-fuel: an array",
+                        "locks to the first fuel piped in (Teleport Essence OR Liquid Eye of Ender).")
+                .defineInRange("capacityMbPerBlock", 8000, 500, 1_000_000);
         BATTERY_MAX_DRAIN = builder
-                .comment("Max fuel (mB) the battery pushes into the connected gateway Core per tick, per",
-                        "fuel type. Bounds how fast a battery can cover a burst.")
+                .comment("Max fuel (mB) the battery array pushes into the connected gateway Core per tick.",
+                        "Bounds how fast a battery can cover a burst.")
                 .defineInRange("maxDrainMbPerTick", 500, 1, 100_000);
         builder.pop();
 

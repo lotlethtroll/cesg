@@ -77,34 +77,46 @@ validate them — only launching + loading a world does. `create:haunting` and
 
 ## 7E — Gateway Flux Battery
 
-Built: 2026-07-23 (`1.1.0-dev`). New block + BE (`GatewayFluxBatteryBlock` /
-`…BlockEntity`), FluidHandler capability, `CESGConfig` `battery` section, crafting
-recipe. Design: twin fuel tanks (Essence / Eye) that Create pipes fill; every 5
-ticks it **tops up the connected ring Core's tanks** (push-only; never touches the
-Core's consume logic). Placeholder brass-cube texture pending art.
+Built: 2026-07-23 (`1.1.0-dev`), reworked same day into a **single-fuel Create-style
+multiblock**. New block + BE implementing `IMultiBlockEntityContainer.Fluid` via
+Create's `ConnectivityHandler`; FluidHandler cap delegates to the controller;
+`CESGConfig` `battery` section (per-block capacity); crafting recipe. Design: one
+tank that locks to the first fuel piped in (Essence OR Eye); batteries assemble into
+a square-base array (cap **2×2×2** / **3×3×3**) whose capacity = `blocks × perBlock`;
+the controller **tops up the connected ring Core** every 5 ticks (push-only).
+Placeholder brass-cube texture pending art.
 
 ### Load & recipe-viewer
 
 - [ ] World loads with no errors; block appears in the CESG creative tab
 - [ ] JEI/EMI shows the crafting recipe (brass + ender pearls + Create fluid tank)
 - [ ] Block places and renders (brass placeholder cube — art is a later polish)
-- [ ] Goggles on the battery show title + Essence and Eye levels (`x/y mB`)
+- [ ] Goggles show title + stored fuel `x/y mB`; on a multi, also `Array: WxWxH`
 
-### Functional — burst-smoothing
+### Functional — single-fuel + top-up
 
-- [ ] Pumping **Teleport Essence** into the battery fills the essence tank; **Liquid
-  Eye of Ender** fills the eye tank; other fluids are rejected
-- [ ] Battery placed **adjacent to a gateway ring** (frame/core) is found and tops
-  up the Core's tanks when they have headroom
-- [ ] Battery does **not** overfill the Core past its 4000 mB tank cap
+- [ ] Pumping **Teleport Essence** fills the tank; it then **rejects Liquid Eye of
+  Ender** until emptied (single-fuel lock), and vice-versa; junk fluids rejected
+- [ ] Battery adjacent to a gateway ring is found (from **any** array member) and
+  tops up the Core's matching tank; does not overfill past the 4000 mB Core cap
 - [ ] Rapid gateway travel that would drain the Core mid-burst stays fueled while
-  the battery holds reserve (the core smoothing goal)
-- [ ] Draining the battery with a pump reclaims stored fuel
-- [ ] Battery with no reachable Core just holds its fluid (no crash, no leak)
+  the array holds reserve (the core smoothing goal)
+- [ ] Draining the array with a pump reclaims stored fuel; no reachable Core = holds
+
+### Functional — MULTIBLOCK (the rework)
+
+- [ ] Four batteries in a **2×2** square merge into one array (goggle shows 2×2×1)
+- [ ] Stacking a second 2×2 layer forms **2×2×2**; a 3×3 base stacks to **3×3×3**
+- [ ] A lone 1×1 does **not** stack vertically (max height = base width)
+- [ ] Combined capacity = `block count × per-block` (goggle max scales with size)
+- [ ] Piping fuel into **any** member block fills the shared array tank
+- [ ] Breaking a member **splits** the array and redistributes fluid — **no dupe,
+  no loss** across form/split cycles (the multiblock dupe-bug check)
+- [ ] Fuel already in a small array is preserved when it grows (form absorbs it)
 
 ### Config
 
-- [ ] `battery.capacityMb` changes the per-tank capacity (goggle max reflects it)
+- [ ] `battery.capacityMbPerBlock` scales per-block capacity (goggle max reflects it)
 - [ ] `battery.maxDrainMbPerTick` throttles how fast the Core is topped up
 
 ### Art pass — DEFERRED to 7H
@@ -115,14 +127,24 @@ Core's consume logic). Placeholder brass-cube texture pending art.
 - ⚠️ **Recipe not yet signed off** — brass + ender pearls + Create fluid tank was
   authored before the sign-off rule; still awaiting user review/adjust.
 
-### Known follow-ups (polish, not blockers)
+### Deferred follow-ups (7E not fully closed until these land)
 
-- Breaking the battery currently loses stored fluid (no NBT-on-item preservation)
+- **One-click layer auto-placer** — a `GatewayFluxBatteryItem` mirroring Create's
+  `FluidTankItem.tryMultiPlace` (click the top of an array → place a whole W×W layer
+  from inventory). Core multiblock works with manual placement; this is the QoL the
+  user asked for. Needs Create's exact geometry to avoid placement bugs.
+- **Fuel governor + port cost** — `gateway.portTransferCostMb` (default 0) + a
+  reserve floor so automated Port/Bridge transfers only draw while array fuel stays
+  above the reserve, leaving charge for player travel. (The battery's unique value;
+  see PHASE7.md 7E note.)
+- Breaking a lone battery loses its stored fluid (no NBT-on-item preservation).
 
 ### Notes / follow-ups
 
-- 2026-07-23: Code-complete, `compileJava` + `runData` green. Assets generated
-  (blockstate/models/loot/recipe/lang). In-game verification pending.
+- 2026-07-23: Single-block battery built, then **reworked into the single-fuel
+  Create-style multiblock** (`IMultiBlockEntityContainer.Fluid` + `ConnectivityHandler`,
+  fetched from Create's source). `compileJava` + `runData` green. In-game
+  verification pending — the multiblock form/split checks are the priority.
 
 ## 7C — Crafting Terminal — ✅ SHIPPED IN 1.0.0
 

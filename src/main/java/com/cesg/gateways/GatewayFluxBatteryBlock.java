@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.cesg.init.CESGBlockEntities;
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.api.connectivity.ConnectivityHandler;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -15,9 +16,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Gateway Flux Battery (Phase 7E): a fuel reservoir placed beside a gateway ring. Create pipes/pumps
- * fill it, and it tops up the connected Core's tanks to smooth bursty demand. See
- * {@link GatewayFluxBatteryBlockEntity}.
+ * Gateway Flux Battery (Phase 7E): a fuel reservoir placed beside a gateway ring that tops up the Core.
+ * Assembles into a Create-fluid-tank-style multiblock (see {@link GatewayFluxBatteryBlockEntity}); place
+ * batteries adjacent / stacked and they merge into one larger tank.
  */
 public class GatewayFluxBatteryBlock extends BaseEntityBlock {
     private static final MapCodec<GatewayFluxBatteryBlock> MAP_CODEC = simpleCodec(GatewayFluxBatteryBlock::new);
@@ -48,5 +49,23 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock {
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    @Override
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        if (oldState.is(state.getBlock()) || movedByPiston)
+            return;
+        if (level.getBlockEntity(pos) instanceof GatewayFluxBatteryBlockEntity be)
+            be.updateConnectivity();
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (state.hasBlockEntity() && (state.getBlock() != newState.getBlock() || !newState.hasBlockEntity())) {
+            if (level.getBlockEntity(pos) instanceof GatewayFluxBatteryBlockEntity be) {
+                level.removeBlockEntity(pos);
+                ConnectivityHandler.splitMulti(be);
+            }
+        }
     }
 }
