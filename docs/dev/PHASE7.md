@@ -135,6 +135,19 @@ order (battery before local tank) can't create a fill/drain loop with a pump.
 tank and confirm the battery covers it; verify goggle readout; verify config
 capacity knob.
 
+**PROPOSED ENHANCEMENT (user, 2026-07-22) — fuel governor / protected reserve.**
+The battery's unique value beyond storage: a **two-tier fuel priority**. Player /
+entity gateway *travel* is top priority (may draw fuel to empty); automated
+Gateway Port / Bridge transfers are lower priority, permitted only while fuel
+stays above a configurable **reserve floor** the battery protects. When the
+battery runs dry / dips below the reserve, it throttles or pauses Port item-flow
+but leaves enough charge for actual gateway travel — a safety so automation never
+strands the player. Makes the battery a *policy* block, not just a tank; a natural
+governor for the 7A Bridge / 7B routing consumers. Config: reserve floor (mB) +
+enable toggle. **Prereq:** confirm how/whether Gateway Ports currently consume
+fuel (they gate on `core.canTravel()`) to know exactly where the reserve check
+hooks in.
+
 ---
 
 ## 7C — Crafting Terminal — ALREADY SHIPPED in 1.0.0
