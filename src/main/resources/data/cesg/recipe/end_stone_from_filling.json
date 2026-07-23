@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "minecraft:stone"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 100,
+      "fluid": "cesg:liquid_ender_pearl"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:end_stone"
+    }
+  ]
+}

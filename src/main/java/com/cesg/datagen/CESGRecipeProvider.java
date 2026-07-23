@@ -251,6 +251,13 @@ public class CESGRecipeProvider extends RecipeProvider {
         // Teleport Essence and Liquid Eye of Ender are now real fluids made by heated-basin mixing
         // (see data/cesg/recipe/*_from_mixing.json); their buckets are filled from a tank, not crafted.
 
+        // End Cultivation (7G): End materials are made renewable through native Create processing,
+        // authored as static JSON (not datagen'd). Haunting sandstone -> end stone (the essence-free
+        // base path); crushing end stone -> sand + a chance of ender pearl dust; compacting 3 dust ->
+        // 1 ender pearl; optional filling stone with Liquid Ender Pearl -> end stone (premium
+        // accelerant). See data/cesg/recipe/{end_stone_from_haunting, ender_pearl_dust_from_end_stone_
+        // crushing, ender_pearl_from_compacting, end_stone_from_filling}.json.
+
         // Amethyst (structure) + Echo Shard (location imprint/recall) + Ender Eye (dimensional sight).
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_BINDING_ITEM.get())
                 .pattern(" A ")

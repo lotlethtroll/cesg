@@ -15,7 +15,18 @@ Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 
 ## [Unreleased]
 
-_Nothing yet — 1.1.0 development in progress._
+### Added
+- **End Cultivation** — End-specific materials are now renewable through native
+  Create processing, no new blocks required:
+  - Haunting (soul-fire fan) turns **sandstone into End Stone** — the renewable,
+    essence-free base path, rooted in infinitely-farmable cobblestone → sand
+  - Crushing **End Stone** yields sand plus a 15% chance of ender pearl dust
+  - Compacting **3 ender pearl dust → 1 ender pearl**, closing a renewable
+    ender-pearl loop
+  - Filling plain **stone with Liquid Ender Pearl → End Stone** as an optional
+    faster path once you have essence to spare
+  - Renewable End Stone also makes chorus farms (and therefore purpur and
+    Teleport Essence fuel) self-sustaining in any dimension
 
 ## [1.0.0] — 2026-07-21
 
