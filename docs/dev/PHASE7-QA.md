@@ -124,9 +124,12 @@ Core's consume logic). Placeholder brass-cube texture pending art.
 - 2026-07-23: Code-complete, `compileJava` + `runData` green. Assets generated
   (blockstate/models/loot/recipe/lang). In-game verification pending.
 
-## 7C — Crafting Terminal
+## 7C — Crafting Terminal — ✅ SHIPPED IN 1.0.0
 
-_Not built yet. (craft/shift-craft/JEI-fill, remainder return, viewed-box skip.)_
+The Storage Terminal already is the crafting terminal (3×3 grid + result, batch
+shift-craft with network restock, deposit-on-shift, clear-grid, searchable list).
+Nothing to build. The only remaining piece — JEI/EMI "+" recipe transfer to
+auto-fill the grid — is folded into **7F** and will be QA'd there.
 
 ## 7A — Cross-Dimensional Storage Bridge
 
@@ -143,7 +146,8 @@ _Not built yet. (in-box processing chains, tier throughput, no dupe.)_
 
 ## 7F — Polish & UX
 
-_Not built yet. (ponders render, sounds/particles, JEI+EMI complete, lang audit.)_
+_Not built yet. (ponders render, sounds/particles, JEI+EMI complete, lang audit,
+**Storage Terminal JEI/EMI "+" recipe transfer** folded in from 7C.)_
 
 ## 7H — Art Pass (collects deferred models/textures)
 

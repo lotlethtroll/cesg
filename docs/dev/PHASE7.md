@@ -37,18 +37,19 @@ Two standing rules for new content this phase:
 |-------|------|-----------|-------------|
 | 7A | Cross-Dimensional Storage Bridge | ⭐ tentpole | 3 |
 | 7B | Gateway Routing (filters + fan-out) | | 4 |
-| 7C | Crafting Terminal | | 2 |
+| 7C | Crafting Terminal — ✅ already shipped in 1.0.0; only JEI/EMI "+" transfer remains → 7F | | — |
 | 7D | Create-synergy upgrade modules (Crushing, Washing) | | 5 |
 | 7E | Gateway Battery (fuel/energy buffer) | | 1 |
 | 7G | End Cultivation (native-Create farming recipes) | | anytime (orthogonal) |
 | 7F | Polish & UX pass | | 6 (last) |
 | 7H | Art Pass (models/textures for every new block/item) | | last — collects deferred art |
 
-Build order rationale: 7E first (small, self-contained, and the Bridge/Ports
-lean on it for burst-smoothing); 7C next (well-understood pattern, unblocks
-terminal UX for everything after); 7A the big lift once terminal + battery
-exist; 7B extends 7A's routing; 7D is orthogonal and can slot anywhere; 7F last
-so ponders/particles/recipe-viewer cover the final feature set.
+Build order rationale: **7G done**, **7E done** (both verified/committed on
+`1.1-dev`). **7C's crafting terminal already shipped in 1.0.0** — only its JEI/EMI
+"+" transfer remains, folded into 7F. Remaining: 7A the big lift; 7B extends 7A's
+routing; 7D is orthogonal and can slot anywhere; 7F last so ponders / particles /
+recipe-viewer (incl. the terminal transfer handler) cover the final feature set;
+7H last collects deferred art.
 
 ---
 
@@ -136,45 +137,21 @@ capacity knob.
 
 ---
 
-## 7C — Crafting Terminal (build second)
+## 7C — Crafting Terminal — ALREADY SHIPPED in 1.0.0
 
-**Goal:** the queued 3×3 crafting grid that pulls ingredients directly from the
-Storage Network and returns leftovers to it — table-stakes once networks get big
-(and the Bridge makes them much bigger).
+Superseded 2026-07-23: the Storage Terminal built in Phase 6D **is** the crafting
+terminal. `StorageTerminalMenu` already has a 3×3 crafting grid + result slot with
+live recipe preview; `TerminalBatchCrafting.shiftCraftAll` batch-crafts while
+restocking the grid from the network (`stockToFullStacks`); shift-click deposits
+into the network; a clear-grid button returns grid items to the network; and the
+searchable network list auto-refreshes. Nothing to rebuild.
 
-**Design:**
-- New terminal variant (or a mode toggle on the existing terminal) whose menu
-  embeds a 3×3 `CraftingContainer` + result slot on top of the searchable
-  network list.
-- On craft/shift-craft, resolve the recipe, pull matching items from the network
-  handlers (respecting L4 snapshot rules), craft, and return remainders to the
-  network. Reuse `TerminalBatchCrafting` if it already does batch resolution;
-  otherwise extend it.
-- JEI/EMI "+" transfer support: clicking recipe-fill pulls from the network into
-  the grid.
-
-**New / changed classes** (`com.cesg.storage.network`):
-- `CraftingTerminalBlock` + `CraftingTerminalMenu` + `CraftingTerminalScreen`
-  (or extend `StorageTerminalBlock`/`StorageTerminalMenu`/`StorageTerminalScreen`
-  with a grid-bearing subclass)
-- Extend `TerminalBatchCrafting` for grid-recipe resolution
-- `network/TerminalActionPacket` — add a CRAFT action variant (or a new
-  `TerminalCraftPacket`)
-
-**Files to touch:**
-- `init/CESGRegistration.java`, `CESGBlockEntities.java`, `CESGMenus.java`
-- `StorageNetwork.java` — add a "pull N of stack" helper if not present
-- `compat/jei/*`, `compat/emi/*` — recipe-transfer handler registration
-- `datagen/*` — recipe (controller + crafting table + terminal), model, lang
-- `client/*` — screen registration
-
-**Risks:** recipe resolution must respect the snapshot handlers (fresh handlers
-per pull, skip viewed boxes); JEI/EMI transfer APIs differ — implement both
-behind the existing compat split. Keep the network-locked-GUI contract (Phase 6
-made networked boxes terminal-only).
-
-**Test:** craft from network stock; shift-craft a full stack; JEI "+" fill;
-confirm remainders return and viewed boxes are skipped.
+**The only remaining gap** is recipe-viewer transfer: JEI/EMI "+" to auto-fill the
+grid from network stock (and optionally R/U "show recipe/uses" on list items). The
+JEI/EMI plugins currently register only the Ender Infusing category — no terminal
+transfer handler. **This work is folded into 7F** (see "Recipe-viewer
+completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent for
+`StorageTerminalMenu`, respecting the L4 snapshot rules on any network pull.
 
 ---
 
@@ -348,6 +325,11 @@ Do this after every feature above exists, so it covers the final surface.
 - **Recipe-viewer completeness** — every new block/module/recipe shows correctly
   in both JEI and EMI; add category entries for the in-box processing modules if
   they need explaining.
+- **Storage Terminal recipe transfer (from 7C)** — add a JEI `IRecipeTransferHandler`
+  + EMI equivalent for `StorageTerminalMenu` so the "+" auto-fills the 3×3 grid from
+  network stock (optionally R/U "show recipe/uses" on list items). Pulls must
+  respect the L4 snapshot rules (fresh handlers, skip viewed boxes). The crafting
+  terminal itself already shipped in 1.0.0 — this is the only remaining piece.
 - **Config surface** — confirm all new knobs are documented and defaulted (L5).
 - **Lang audit** — every new block/item/tooltip/ponder key localized (ponder
   text does NOT auto-localize; raw keys show if missing).
