@@ -15,18 +15,9 @@ Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 
 ## [Unreleased]
 
-### Changed
-- Enhanced / Reinforced / Ultimate Shulker Boxes now show subtle corner-bracket
-  trim on the lid top, colored by tier (ender teal / andesite / brass), in world
-  and in the item preview; all 17 colors
-- Reinforced (tier 3) upgrade recipe reworked to a full 3×3: 2 ender pearls
-  (top corners), 5 processed shells, 1 andesite casing (bottom center) around
-  the Enhanced box
-- Ultimate (tier 4) upgrade recipe reworked to a full 3×3: 2 eyes of ender
-  (top corners), 5 processed shells, 1 brass casing (bottom center) around the
-  Reinforced box
+_Nothing yet — 1.1.0 development in progress._
 
-## [1.0.0] — 2026-07-11
+## [1.0.0] — 2026-07-21
 
 First release. Requires NeoForge 1.21.1 and Create 6.0.10.
 
@@ -43,6 +34,12 @@ First release. Requires NeoForge 1.21.1 and Create 6.0.10.
   dimension, networkable by pair ID
 - Storage Network: controller + terminal blocks cluster adjacent storage into one
   searchable GUI (crafting-grid terminal screen; brass-casing connected visuals)
+- Enhanced / Reinforced / Ultimate Shulker Boxes show tier-colored corner-bracket
+  lid trim (ender teal / andesite / brass) in world and in the item preview,
+  across all 17 colors
+- Tier 3 (Reinforced) and tier 4 (Ultimate) upgrades use full 3×3 recipes: the
+  lower-tier box surrounded by 5 processed shells + a tier casing (andesite /
+  brass) and 2 ender pearls / eyes of ender
 
 ### Shulker logistics (Create integration)
 - Loader / Unloader stations (kinetic, stationary) and Belt Loader / Belt Unloader
