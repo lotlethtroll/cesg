@@ -15,6 +15,20 @@ Version: MINOR (`1.1.0`) — new content, no save/recipe breakage intended. Any
 change that invalidates a 1.0 world or recipe must be flagged and re-scoped as
 MAJOR before it lands.
 
+## Content workflow (applies to every track)
+
+Two standing rules for new content this phase:
+
+- **Recipes need sign-off.** Propose any new crafting/processing recipe
+  (ingredients, pattern, output, cost/progression rationale) and get the user's
+  input BEFORE authoring the JSON / `CESGRecipeProvider` entry. Recipes are
+  balance decisions the user owns — do not finalize them unilaterally.
+- **Art is a tracked step.** Every new block/item gets an explicit
+  modelling/texture pass. Placeholder models are fine to get a functional build
+  under test, but a track is not "done" until its art is finished or the user has
+  explicitly deferred it. Follow the palette/PIL workflow in the texture art
+  direction notes. Each PHASE7-QA track section carries an **art-pass** item.
+
 ---
 
 ## Track map
@@ -28,6 +42,7 @@ MAJOR before it lands.
 | 7E | Gateway Battery (fuel/energy buffer) | | 1 |
 | 7G | End Cultivation (native-Create farming recipes) | | anytime (orthogonal) |
 | 7F | Polish & UX pass | | 6 (last) |
+| 7H | Art Pass (models/textures for every new block/item) | | last — collects deferred art |
 
 Build order rationale: 7E first (small, self-contained, and the Bridge/Ports
 lean on it for burst-smoothing); 7C next (well-understood pattern, unblocks
@@ -421,6 +436,28 @@ net-negative through the dust loop (existing `ender_pearl → 1 dust` crush mean
 ~15% dust; compact 3 dust → 1 pearl; confirm the cobblestone-only bootstrap works
 with zero pearl input; plant chorus on farmed end stone in the Overworld and
 confirm it grows/harvests.
+
+---
+
+## 7H — Art Pass (collects every deferred model/texture)
+
+**Goal:** the single home for all modelling/texture work in Phase 7. Feature
+tracks may ship a functional **placeholder** model to get under test, but each
+such placeholder is logged here as an explicit requirement, and **1.1.0 does not
+ship until 7H is complete** (or the user explicitly defers a specific item).
+
+Follow the palette / PIL recolor workflow in the texture art-direction notes;
+match Create's brass/andesite grain where a block reads as a machine.
+
+**Outstanding art requirements (grow this list as tracks defer art):**
+- **7E — Gateway Flux Battery** — replace the placeholder brass cube with a
+  bespoke model + texture: brass-cased body with two fluid windows (teal Teleport
+  Essence / green Liquid Eye of Ender) reading fill level; directional optional.
+
+(Add 7A/7B/7C/7D blocks + any new items here as they are built with placeholders.)
+
+**Done when:** every new 1.1.0 block/item has final art, item icons included, and
+no placeholder models remain in the creative tab.
 
 ---
 

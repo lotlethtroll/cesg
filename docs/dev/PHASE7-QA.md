@@ -10,6 +10,13 @@ in-game.
 verified on. Record failures inline with a `⚠️` and a follow-up. Nothing ships in
 1.1.0 until its track here is fully green.
 
+**Process (per [[feedback-content-workflow]]):** every track that adds a
+block/item carries an **Art pass** item. A feature track may be marked
+functionally green on a *placeholder* model, but the art requirement is then
+logged under **7H — Art Pass**, and 1.1.0 does not ship until 7H is complete. Any
+new crafting/processing recipe must be signed off by the user before it is
+authored; unsigned recipes are flagged here for review.
+
 Status legend: `[ ]` untested · `[x]` verified pass · `⚠️` failed / needs fix
 
 ---
@@ -100,9 +107,16 @@ Core's consume logic). Placeholder brass-cube texture pending art.
 - [ ] `battery.capacityMb` changes the per-tank capacity (goggle max reflects it)
 - [ ] `battery.maxDrainMbPerTick` throttles how fast the Core is topped up
 
+### Art pass — DEFERRED to 7H
+
+- Battery art (placeholder brass cube → bespoke model + fluid windows) is deferred
+  by the user 2026-07-23 and tracked as an explicit requirement under **7H — Art
+  Pass** below. 7E is functionally green on the placeholder; final art gates 1.1.0.
+- ⚠️ **Recipe not yet signed off** — brass + ender pearls + Create fluid tank was
+  authored before the sign-off rule; still awaiting user review/adjust.
+
 ### Known follow-ups (polish, not blockers)
 
-- Placeholder brass-cube texture — bespoke directional model w/ fluid windows (7F art)
 - Breaking the battery currently loses stored fluid (no NBT-on-item preservation)
 
 ### Notes / follow-ups
@@ -130,3 +144,17 @@ _Not built yet. (in-box processing chains, tier throughput, no dupe.)_
 ## 7F — Polish & UX
 
 _Not built yet. (ponders render, sounds/particles, JEI+EMI complete, lang audit.)_
+
+## 7H — Art Pass (collects deferred models/textures)
+
+The home for every placeholder deferred by a feature track. **1.1.0 does not ship
+until this list is complete** (or an item is explicitly dropped by the user).
+Follow the palette / PIL recolor workflow in the texture art-direction notes.
+
+- [ ] **7E — Gateway Flux Battery**: replace placeholder brass cube with a bespoke
+  model + texture — brass-cased body, two fluid windows (teal Teleport Essence /
+  green Liquid Eye of Ender) showing fill level; directional optional. _Deferred
+  2026-07-23._
+
+_(Append 7A/7B/7C/7D blocks and any new item icons here as they are built on
+placeholders.)_
