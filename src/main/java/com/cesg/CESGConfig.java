@@ -14,6 +14,8 @@ public final class CESGConfig {
     private static final ModConfigSpec.BooleanValue GATEWAY_CHUNK_LOADING;
     private static final ModConfigSpec.IntValue SHULKER_CAGE_COOLDOWN;
     private static final ModConfigSpec.IntValue SHULKER_CAGE_FIRE_INTERVAL;
+    private static final ModConfigSpec.IntValue BATTERY_CAPACITY;
+    private static final ModConfigSpec.IntValue BATTERY_MAX_DRAIN;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -40,6 +42,17 @@ public final class CESGConfig {
                 .defineInRange("fireAttemptIntervalTicks", 20, 1, 24000);
         builder.pop();
 
+        builder.push("battery");
+        BATTERY_CAPACITY = builder
+                .comment("Capacity of EACH Gateway Flux Battery fuel tank (Teleport Essence and Liquid",
+                        "Eye of Ender are stored separately), in mB.")
+                .defineInRange("capacityMb", 16000, 1000, 1_000_000);
+        BATTERY_MAX_DRAIN = builder
+                .comment("Max fuel (mB) the battery pushes into the connected gateway Core per tick, per",
+                        "fuel type. Bounds how fast a battery can cover a burst.")
+                .defineInRange("maxDrainMbPerTick", 500, 1, 100_000);
+        builder.pop();
+
         SPEC = builder.build();
     }
 
@@ -63,5 +76,13 @@ public final class CESGConfig {
 
     public static int shulkerCageFireInterval() {
         return SHULKER_CAGE_FIRE_INTERVAL.get();
+    }
+
+    public static int batteryCapacity() {
+        return BATTERY_CAPACITY.get();
+    }
+
+    public static int batteryMaxDrainPerTick() {
+        return BATTERY_MAX_DRAIN.get();
     }
 }

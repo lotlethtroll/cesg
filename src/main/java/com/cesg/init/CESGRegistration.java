@@ -223,6 +223,17 @@ public class CESGRegistration {
                     .build()
                     .register();
 
+    public static final BlockEntry<com.cesg.gateways.GatewayFluxBatteryBlock> GATEWAY_FLUX_BATTERY =
+            CESG.REGISTRATE.block("gateway_flux_battery", com.cesg.gateways.GatewayFluxBatteryBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion())
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    .blockstate(CESGPlaceholderModels::gatewayFluxBattery)
+                    .item()
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_flux_battery"))
+                    .build()
+                    .register();
+
     public static final BlockEntry<GatewayPortalBlock> GATEWAY_PORTAL = CESG.REGISTRATE.block("gateway_portal", GatewayPortalBlock::new)
             .initialProperties(() -> Blocks.NETHER_PORTAL)
             .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion().lightLevel(s -> 11).noLootTable())

@@ -70,8 +70,45 @@ validate them — only launching + loading a world does. `create:haunting` and
 
 ## 7E — Gateway Flux Battery
 
-_Not built yet. Add checklist when the track lands (fill/draw, burst-smoothing,
-goggle readout, config capacity)._
+Built: 2026-07-23 (`1.1.0-dev`). New block + BE (`GatewayFluxBatteryBlock` /
+`…BlockEntity`), FluidHandler capability, `CESGConfig` `battery` section, crafting
+recipe. Design: twin fuel tanks (Essence / Eye) that Create pipes fill; every 5
+ticks it **tops up the connected ring Core's tanks** (push-only; never touches the
+Core's consume logic). Placeholder brass-cube texture pending art.
+
+### Load & recipe-viewer
+
+- [ ] World loads with no errors; block appears in the CESG creative tab
+- [ ] JEI/EMI shows the crafting recipe (brass + ender pearls + Create fluid tank)
+- [ ] Block places and renders (brass placeholder cube — art is a later polish)
+- [ ] Goggles on the battery show title + Essence and Eye levels (`x/y mB`)
+
+### Functional — burst-smoothing
+
+- [ ] Pumping **Teleport Essence** into the battery fills the essence tank; **Liquid
+  Eye of Ender** fills the eye tank; other fluids are rejected
+- [ ] Battery placed **adjacent to a gateway ring** (frame/core) is found and tops
+  up the Core's tanks when they have headroom
+- [ ] Battery does **not** overfill the Core past its 4000 mB tank cap
+- [ ] Rapid gateway travel that would drain the Core mid-burst stays fueled while
+  the battery holds reserve (the core smoothing goal)
+- [ ] Draining the battery with a pump reclaims stored fuel
+- [ ] Battery with no reachable Core just holds its fluid (no crash, no leak)
+
+### Config
+
+- [ ] `battery.capacityMb` changes the per-tank capacity (goggle max reflects it)
+- [ ] `battery.maxDrainMbPerTick` throttles how fast the Core is topped up
+
+### Known follow-ups (polish, not blockers)
+
+- Placeholder brass-cube texture — bespoke directional model w/ fluid windows (7F art)
+- Breaking the battery currently loses stored fluid (no NBT-on-item preservation)
+
+### Notes / follow-ups
+
+- 2026-07-23: Code-complete, `compileJava` + `runData` green. Assets generated
+  (blockstate/models/loot/recipe/lang). In-game verification pending.
 
 ## 7C — Crafting Terminal
 

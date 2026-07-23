@@ -71,6 +71,12 @@ public class CESGBlockEntities {
                     () -> BlockEntityType.Builder.of(GatewayFrameBlockEntity::new, CESGRegistration.GATEWAY_FRAME.get())
                             .build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.cesg.gateways.GatewayFluxBatteryBlockEntity>> GATEWAY_FLUX_BATTERY =
+            BLOCK_ENTITIES.register("gateway_flux_battery",
+                    () -> BlockEntityType.Builder.of(com.cesg.gateways.GatewayFluxBatteryBlockEntity::new,
+                                    CESGRegistration.GATEWAY_FLUX_BATTERY.get())
+                            .build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnderInfuserBlockEntity>> ENDER_INFUSER =
             BLOCK_ENTITIES.register("ender_infuser",
                     () -> BlockEntityType.Builder.of(EnderInfuserBlockEntity::new, CESGRegistration.ENDER_INFUSER.get())

@@ -1,6 +1,5 @@
 package com.cesg.init;
 
-import com.cesg.gateways.CrossDimensionalGatewayCoreBlockEntity;
 import com.cesg.gateways.GatewayFuelHandler;
 import com.cesg.storage.station.StationCapabilities;
 import net.neoforged.bus.api.IEventBus;
@@ -33,6 +32,10 @@ public class CESGCapabilities {
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CESGBlockEntities.GATEWAY_PORT.get(),
                 (be, side) -> be.createItemHandler());
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CESGBlockEntities.GATEWAY_PORT.get(),
+                (be, side) -> be.createFluidHandler());
+
+        // Gateway Flux Battery (7E): pipes/pumps fill its two fuel reservoirs; it tops up the ring Core.
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, CESGBlockEntities.GATEWAY_FLUX_BATTERY.get(),
                 (be, side) -> be.createFluidHandler());
 
         // Placed enhanced shulker boxes: funnel/chute/hopper access to their contents. Goes inert

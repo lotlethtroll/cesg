@@ -287,6 +287,12 @@ public final class CESGPlaceholderModels {
         prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(), cesg("block/gateway_port")));
     }
 
+    /** Gateway Flux Battery (Phase 7E): brass-cased fuel reservoir. Placeholder brass cube pending art. */
+    public static void gatewayFluxBattery(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
+        prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(),
+                net.minecraft.resources.ResourceLocation.parse("create:block/brass_casing")));
+    }
+
     /** Animated ender teal-purple portal plane (custom models referencing cesg:block/gateway_portal). */
     public static void gatewayPortal(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
         ModelFile ns = prov.models().getExistingFile(cesg("block/gateway_portal_ns"));

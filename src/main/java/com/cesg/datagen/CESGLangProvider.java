@@ -47,6 +47,12 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.port.title", "Gateway Port");
         add("cesg.goggles.port.outgoing", "Outgoing: %s items, %s mB");
         add("cesg.goggles.port.incoming", "Incoming: %s items, %s mB");
+        add("block.cesg.gateway_flux_battery", "Gateway Flux Battery");
+        add("block.cesg.gateway_flux_battery.tooltip.summary",
+                "Buffers _gateway fuel_. Pipe _Teleport Essence_ and _Liquid Eye of Ender_ into it beside a _Gateway ring_; it keeps the _Core_ topped up so bursty travel and Port transfers never run the gateway dry.");
+        add("cesg.goggles.battery.title", "Gateway Flux Battery");
+        add("cesg.goggles.battery.essence", "Teleport Essence: %s/%s mB");
+        add("cesg.goggles.battery.eye", "Liquid Eye of Ender: %s/%s mB");
         add("block.cesg.gateway_frame", "Gateway Frame");
         add("block.cesg.gateway_frame.tooltip.summary",
                 "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal.");

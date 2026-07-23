@@ -248,6 +248,17 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_gateway_frame", has(CESGRegistration.GATEWAY_FRAME.get()))
                 .save(output);
 
+        // Gateway Flux Battery (7E): a Create fluid tank ringed in brass + ender pearls; buffers gateway fuel.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_FLUX_BATTERY.get())
+                .pattern("BPB")
+                .pattern("PTP")
+                .pattern("BPB")
+                .define('B', AllItems.BRASS_INGOT.get())
+                .define('P', Items.ENDER_PEARL)
+                .define('T', AllBlocks.FLUID_TANK.get())
+                .unlockedBy("has_fluid_tank", has(AllBlocks.FLUID_TANK.get()))
+                .save(output);
+
         // Teleport Essence and Liquid Eye of Ender are now real fluids made by heated-basin mixing
         // (see data/cesg/recipe/*_from_mixing.json); their buckets are filled from a tank, not crafted.
 
