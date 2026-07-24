@@ -129,6 +129,22 @@ public final class StorageNetwork {
         return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
     }
 
+    /**
+     * Member block positions of the cluster containing {@code start} (reuses the brief BFS cache).
+     * Handy for finding typed members — e.g. Storage Bridges — without re-walking per lookup.
+     */
+    public static List<BlockPos> memberPositions(Level level, BlockPos start) {
+        net.minecraft.core.GlobalPos key = net.minecraft.core.GlobalPos.of(level.dimension(), start.immutable());
+        long now = level.getGameTime();
+        CachedCluster cluster = CLUSTER_CACHE.get(key);
+        if (cluster == null || now >= cluster.expiresAt()) {
+            cluster = walkCluster(level, start, now);
+            CLUSTER_CACHE.values().removeIf(entry -> now >= entry.expiresAt());
+            CLUSTER_CACHE.put(key, cluster);
+        }
+        return cluster.members();
+    }
+
     /** Aggregated view: one entry per distinct item+components, summed across the network. */
     public static Object2IntMap<ItemStack> aggregate(Scan scan) {
         Object2IntMap<ItemStack> totals = new Object2IntLinkedOpenCustomHashMap<>(ItemStackLinkedSet.TYPE_AND_TAG);

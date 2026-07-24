@@ -168,10 +168,10 @@ auto-fill the grid — is folded into **7F** and will be QA'd there.
 
 ## 7A — Cross-Dimensional Storage Bridge
 
-Engine + assets built 2026-07-24 (`1.1.0-dev`); terminal UX + filter GUI still to
-come, so this track is **not yet functionally verifiable in-game** (no way to
-open the remote view or toggle transfer directions from a terminal). Compiles
-clean; datagen regenerated. Steps below are staged for when the UX lands.
+Engine + terminal remote section built 2026-07-24 (`1.1.0-dev`); compiles + full
+build clean, datagen regenerated. The **manual** terminal path is now testable;
+only the passive-transfer **filter/direction GUI** is still pending (its engine
+exists, just no controls). Verify in a two-dimension setup with a bound gateway.
 
 ### Placement & structure
 - [ ] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
@@ -180,18 +180,28 @@ clean; datagen regenerated. Steps below are staged for when the UX lands.
   green LIVE (partner ring has a Bridge + controller), red FAULT (bound+loaded
   but no partner Bridge / no partner controller)
 
-### Remote view (D2) — needs terminal UX
-- [ ] Local terminal shows the partner network as a **separate labeled section**,
-  visually distinct from local items
-- [ ] Partner chunk unloaded → section greys to OFFLINE (silent, not an error)
+### Remote view (D2)
+- [ ] Terminal shows a **Local / Partner** tab strip only when a Bridge is on the
+  network; a bridge-less terminal looks exactly as before
+- [ ] Partner tab's liveness dot matches the goggle status (green/grey/red)
+- [ ] Search box filters the active tab; switching tabs keeps the query
+- [ ] Partner chunk unloaded → Partner tab greys, grid shows "Partner network
+  offline" (silent, not an error); FAULT shows "No partner network found"
 
-### Transfer safety (L4) — needs terminal UX / direction toggle
-- [ ] Manual pull moves a stack partner→local; manual push moves local→partner
-- [ ] Unload the partner chunk mid-transfer: buffered items **hold** (no dupe, no
-  loss); breaking the Bridge drops the in-transit buffer
-- [ ] Passive bidirectional flush respects per-side whitelist/blacklist filters
-- [ ] Drain fuel below the battery reserve → upkeep gates transfer (idle = free)
+### Transfer via terminal
+- [ ] On the Partner tab: click withdraws remote→cursor, shift-click→inventory,
+  right-click→one; carried-stack click deposits player→remote
+- [ ] Withdraw that finds nothing (or an unfuelled gateway) costs no fuel; deposit
+  to an unfuelled gateway is rejected (no free transfer)
+- [ ] Two Bridges on one ring (same partner) do **not** double-count the partner's
+  items in the section
+- [ ] Breaking the Bridge drops the in-transit buffer (no dupe, no loss)
+- [ ] Drain fuel below the battery reserve → transfer gated (idle = free)
 - [ ] Viewed (open-GUI) shulker boxes skipped on **both** sides
+
+### Passive auto-transfer (filter/direction GUI) — pending
+- [ ] Enable push/pull + set per-side whitelist/blacklist; filtered bidirectional
+  flush moves matching items only, fuel-gated (idle = no cost)
 
 ## 7B — Gateway Routing
 

@@ -317,45 +317,54 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         return anyFilter && listed; // empty whitelist -> nothing passes
     }
 
-    // ---- Manual terminal actions (immediate, both sides loaded) -----------------------------------
+    // ---- Terminal actions on the remote section (immediate, both sides loaded) --------------------
 
-    /** Terminal pull: move up to {@code count} of {@code sample} from the REMOTE network to the LOCAL one. */
-    public int manualPull(ItemStack sample, int count) {
-        return manualMove(sample, count, true);
-    }
-
-    /** Terminal push: move up to {@code count} of {@code sample} from the LOCAL network to the REMOTE one. */
-    public int manualPush(ItemStack sample, int count) {
-        return manualMove(sample, count, false);
-    }
-
-    private int manualMove(ItemStack sample, int count, boolean pull) {
+    /**
+     * Terminal withdraw: pull up to {@code count} of {@code sample} out of the REMOTE network to hand to
+     * the player. Fuel is charged only on a successful extract (bounced back to the remote net if the
+     * gateway can't pay), so a click that finds nothing — or an unfuelled gateway — costs nothing.
+     * Returns the extracted stack ({@link ItemStack#EMPTY} if nothing moved).
+     */
+    public ItemStack terminalWithdrawRemote(ItemStack sample, int count) {
         if (!(level instanceof ServerLevel serverLevel) || sample.isEmpty() || count <= 0)
-            return 0;
+            return ItemStack.EMPTY;
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
         if (core == null || !core.canTravel())
-            return 0;
+            return ItemStack.EMPTY;
         RemoteEndpoint remote = resolveRemote(serverLevel);
         if (remote == null)
-            return 0;
+            return ItemStack.EMPTY;
+        ItemStack pulled = StorageNetwork.extract(remote.level, remote.anchor, sample, count);
+        if (pulled.isEmpty())
+            return ItemStack.EMPTY;
+        if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost())) {
+            StorageNetwork.insert(remote.level, remote.anchor, pulled); // unfuelled: put it back
+            return ItemStack.EMPTY;
+        }
+        invalidateRemoteSnapshot();
+        return pulled;
+    }
+
+    /**
+     * Terminal deposit: push {@code stack} from the player into the REMOTE network. Fuel is charged up
+     * front (an insert can't be cleanly rolled back), so an unfuelled gateway rejects the deposit
+     * outright rather than moving items for free. Returns whatever did not fit.
+     */
+    public ItemStack terminalDepositRemote(ItemStack stack) {
+        if (!(level instanceof ServerLevel serverLevel) || stack.isEmpty())
+            return stack;
+        CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
+        if (core == null || !core.canTravel())
+            return stack;
+        RemoteEndpoint remote = resolveRemote(serverLevel);
+        if (remote == null)
+            return stack;
         if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost()))
-            return 0;
-
-        Level srcLevel = pull ? remote.level : serverLevel;
-        BlockPos srcAnchor = pull ? remote.anchor : worldPosition;
-        Level dstLevel = pull ? serverLevel : remote.level;
-        BlockPos dstAnchor = pull ? worldPosition : remote.anchor;
-
-        ItemStack extracted = StorageNetwork.extract(srcLevel, srcAnchor, sample, count);
-        if (extracted.isEmpty())
-            return 0;
-        ItemStack remainder = StorageNetwork.insert(dstLevel, dstAnchor, extracted);
-        if (!remainder.isEmpty())
-            StorageNetwork.insert(srcLevel, srcAnchor, remainder); // rollback: bounce what did not fit
-        int moved = extracted.getCount() - remainder.getCount();
-        if (moved > 0)
+            return stack;
+        ItemStack remainder = StorageNetwork.insert(remote.level, remote.anchor, stack.copy());
+        if (remainder.getCount() < stack.getCount())
             invalidateRemoteSnapshot();
-        return moved;
+        return remainder;
     }
 
     // ---- Direction / filter configuration --------------------------------------------------------

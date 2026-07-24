@@ -170,21 +170,28 @@ completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent fo
 
 ## 7A — Cross-Dimensional Storage Bridge (build third — the tentpole)
 
-**Status (2026-07-24, `1.1.0-dev`): server engine + assets landed; terminal UX pending.**
+**Status (2026-07-24, `1.1.0-dev`): server engine + terminal remote section landed; passive-filter GUI pending.**
 - ✅ `StorageBridgeBlock` / `StorageBridgeBlockEntity`: `StorageNetwork` member +
   ring-attached endpoint; ring-BFS partner resolution with the Port's 3-state
-  liveness (OFFLINE/LIVE/FAULT); bidirectional passive flush + manual pull/push,
-  all modelled extract-then-insert with buffer/rollback (L4 dupe/void safety);
-  fuel-gated via `tryConsumeAutomationFuel`; break drops the in-transit buffer.
+  liveness (OFFLINE/LIVE/FAULT); bidirectional passive flush; fuel-gated via
+  `tryConsumeAutomationFuel`; break drops the in-transit buffer.
 - ✅ Registration, BE type, `bridge` config (transfer cost / max items / snapshot
-  TTL), `StorageNetwork.isMember`, brass placeholder model, lang (name + tooltip +
-  goggles), regenerated datagen (blockstate/models/loot/pickaxe tag).
-- ⬜ **Terminal remote section (D2)** — `remoteSnapshot()` / `manualPull` /
-  `manualPush` exist but have no caller; `StorageTerminalMenu`/`Screen`/
-  `TerminalContentPacket` don't yet surface the partner network.
+  TTL), `StorageNetwork.isMember`, brass placeholder model, lang, datagen.
+- ✅ **Terminal remote section (D2)** — a **Local / Partner** tab strip on the
+  terminal (shown only when a Bridge is on the network) toggles the 9×6 grid
+  between the local network and the partner snapshot. Partner tab carries a
+  liveness dot (green LIVE / grey OFFLINE / red FAULT) and shows a status line
+  when empty/offline/faulted. Clicks route across the gateway:
+  `terminalWithdrawRemote` (charge-on-success, bounce-back if unfuelled) and
+  `terminalDepositRemote` (charge-first, reject if unfuelled). One **primary
+  Bridge** (first LIVE, else first) drives the section so multiple Bridges sharing
+  a partner never double-count. Server↔client via the extended
+  `TerminalContentPacket` (+`remoteEntries`/`remoteStatus`) and new
+  `TerminalActionPacket` REMOTE_* modes.
 - ⬜ **Filter + direction GUI** — `sendFilter`/`pullFilter`/blacklist flags and
-  `setPush/PullEnabled` persist but have no in-game control (no menu/packet), so
-  passive transfer can't be configured yet.
+  `setPush/PullEnabled` (passive auto-transfer) persist but have no in-game
+  control yet, so passive bidirectional transfer can't be configured. The manual
+  terminal path above is fully usable without it.
 - ⬜ **In-game verification** — see [PHASE7-QA.md](PHASE7-QA.md) 7A steps.
 - ⬜ Bespoke art deferred to 7H.
 

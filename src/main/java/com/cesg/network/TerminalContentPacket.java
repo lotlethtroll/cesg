@@ -11,9 +11,23 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/** Server -> client: the aggregated contents of the storage network a terminal is viewing (Phase 6D). */
-public record TerminalContentPacket(int containerId, List<Entry> entries) implements CustomPacketPayload {
+/**
+ * Server -> client: the aggregated contents of the storage network a terminal is viewing (Phase 6D),
+ * plus an optional partner-network section surfaced by a Storage Bridge on the same network (Phase 7A).
+ * {@code remoteStatus} tells the client whether to show the Partner tab and how to colour it.
+ */
+public record TerminalContentPacket(int containerId, List<Entry> entries, List<Entry> remoteEntries,
+        int remoteStatus) implements CustomPacketPayload {
     public static final Type<TerminalContentPacket> TYPE = new Type<>(CESG.id("terminal_content"));
+
+    /** No Storage Bridge on the network — the client hides the Partner tab entirely. */
+    public static final int REMOTE_NONE = 0;
+    /** A Bridge exists but its partner is unbound/unloaded — greyed, silent (not an error). */
+    public static final int REMOTE_OFFLINE = 1;
+    /** Partner network linked and readable. */
+    public static final int REMOTE_LIVE = 2;
+    /** Bound + loaded, but no partner Bridge / no partner controller — a verified fault. */
+    public static final int REMOTE_FAULT = 3;
 
     /** One distinct item (components included); {@code sample} always has count 1. */
     public record Entry(ItemStack sample, int total) {
@@ -32,6 +46,8 @@ public record TerminalContentPacket(int containerId, List<Entry> entries) implem
             StreamCodec.composite(
                     ByteBufCodecs.VAR_INT, TerminalContentPacket::containerId,
                     Entry.STREAM_CODEC.apply(ByteBufCodecs.list()), TerminalContentPacket::entries,
+                    Entry.STREAM_CODEC.apply(ByteBufCodecs.list()), TerminalContentPacket::remoteEntries,
+                    ByteBufCodecs.VAR_INT, TerminalContentPacket::remoteStatus,
                     TerminalContentPacket::new);
 
     public static boolean sameEntries(List<Entry> a, List<Entry> b) {

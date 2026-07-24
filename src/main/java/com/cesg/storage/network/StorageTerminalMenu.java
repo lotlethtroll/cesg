@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.cesg.gateways.StorageBridgeBlockEntity;
+import com.cesg.gateways.StorageBridgeBlockEntity.RemoteStatus;
 import com.cesg.init.CESGMenus;
 import com.cesg.init.CESGRegistration;
 import com.cesg.network.TerminalContentPacket;
@@ -12,6 +14,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -67,6 +70,8 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
     private final Player player;
     private int refreshCountdown;
     private List<TerminalContentPacket.Entry> lastSent = List.of();
+    private List<TerminalContentPacket.Entry> lastRemoteSent = List.of();
+    private int lastRemoteStatus = TerminalContentPacket.REMOTE_NONE;
 
     public StorageTerminalMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, buf.readBlockPos());
@@ -220,9 +225,54 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
         List<TerminalContentPacket.Entry> entries = new ArrayList<>(totals.size());
         for (Object2IntMap.Entry<ItemStack> entry : totals.object2IntEntrySet())
             entries.add(new TerminalContentPacket.Entry(entry.getKey(), entry.getIntValue()));
-        if (TerminalContentPacket.sameEntries(entries, lastSent))
+
+        RemoteSection remote = gatherRemoteSection();
+        if (remote.status() == lastRemoteStatus
+                && TerminalContentPacket.sameEntries(entries, lastSent)
+                && TerminalContentPacket.sameEntries(remote.entries(), lastRemoteSent))
             return;
         lastSent = entries;
-        PacketDistributor.sendToPlayer(serverPlayer, new TerminalContentPacket(containerId, entries));
+        lastRemoteSent = remote.entries();
+        lastRemoteStatus = remote.status();
+        PacketDistributor.sendToPlayer(serverPlayer,
+                new TerminalContentPacket(containerId, entries, remote.entries(), remote.status()));
+    }
+
+    private record RemoteSection(List<TerminalContentPacket.Entry> entries, int status) {}
+
+    /**
+     * The Bridge that drives this terminal's Partner section: the first LIVE one on the network, or
+     * (failing that) the first Bridge at all so its OFFLINE/FAULT status is still surfaced. Multiple
+     * Bridges on one ring share a partner, so a single primary avoids double-counting that partner.
+     */
+    public StorageBridgeBlockEntity primaryBridge() {
+        if (!(player.level() instanceof ServerLevel level))
+            return null;
+        StorageBridgeBlockEntity fallback = null;
+        for (BlockPos pos : StorageNetwork.memberPositions(level, terminalPos)) {
+            if (!(level.getBlockEntity(pos) instanceof StorageBridgeBlockEntity bridge))
+                continue;
+            bridge.remoteSnapshot(); // refresh liveness (TTL-cached)
+            if (bridge.remoteStatus() == RemoteStatus.LIVE)
+                return bridge;
+            if (fallback == null)
+                fallback = bridge;
+        }
+        return fallback;
+    }
+
+    private RemoteSection gatherRemoteSection() {
+        StorageBridgeBlockEntity bridge = primaryBridge();
+        if (bridge == null)
+            return new RemoteSection(List.of(), TerminalContentPacket.REMOTE_NONE);
+        return new RemoteSection(bridge.remoteSnapshot(), statusCode(bridge.remoteStatus()));
+    }
+
+    private static int statusCode(RemoteStatus status) {
+        return switch (status) {
+            case LIVE -> TerminalContentPacket.REMOTE_LIVE;
+            case FAULT -> TerminalContentPacket.REMOTE_FAULT;
+            case OFFLINE -> TerminalContentPacket.REMOTE_OFFLINE;
+        };
     }
 }

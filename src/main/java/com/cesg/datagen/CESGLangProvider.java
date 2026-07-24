@@ -388,6 +388,11 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.network.clear_craft", "Clear crafting grid (return to storage)");
         add("cesg.network.count", "%s in network");
         add("cesg.network.box_locked", "This box is part of a storage network — use a Storage Terminal, or pick the box up");
+        add("cesg.network.tab.local", "Local");
+        add("cesg.network.tab.partner", "Partner");
+        add("cesg.network.remote.offline", "Partner network offline");
+        add("cesg.network.remote.fault", "No partner network found");
+        add("cesg.network.remote.empty", "Partner network is empty");
 
         // Advancements (6C).
         add("advancement.cesg.root", "Create: End Storage & Gateways");
