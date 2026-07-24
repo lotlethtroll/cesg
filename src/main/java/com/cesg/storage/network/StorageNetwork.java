@@ -47,6 +47,7 @@ public final class StorageNetwork {
     public static boolean isMember(BlockState state) {
         return state.is(CESGRegistration.STORAGE_NETWORK_CONTROLLER.get())
                 || state.is(CESGRegistration.STORAGE_TERMINAL.get())
+                || state.is(CESGRegistration.STORAGE_BRIDGE.get())
                 || state.getBlock() instanceof EnhancedShulkerBoxBlock
                 || state.getBlock() instanceof AbstractShulkerStationBlock
                 || state.getBlock() instanceof com.cesg.storage.enderbarrel.EnderBarrelBlock;

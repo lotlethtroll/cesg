@@ -287,6 +287,12 @@ public final class CESGPlaceholderModels {
         prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(), cesg("block/gateway_port")));
     }
 
+    /** Cross-Dimensional Storage Bridge (Phase 7A): placeholder cube (brass casing) pending bespoke art (7H). */
+    public static void storageBridge(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
+        prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(),
+                net.minecraft.resources.ResourceLocation.parse("create:block/brass_casing")));
+    }
+
     /** Gateway Flux Battery (Phase 7E): brass-cased fuel reservoir. Placeholder brass cube pending art. */
     public static void gatewayFluxBattery(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
         prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(),

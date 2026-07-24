@@ -223,6 +223,17 @@ public class CESGRegistration {
                     .build()
                     .register();
 
+    public static final BlockEntry<com.cesg.gateways.StorageBridgeBlock> STORAGE_BRIDGE =
+            CESG.REGISTRATE.block("storage_bridge", com.cesg.gateways.StorageBridgeBlock::new)
+                    .initialProperties(() -> Blocks.END_STONE_BRICKS)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE))
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    .blockstate(CESGPlaceholderModels::storageBridge)
+                    .item()
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.storage_bridge"))
+                    .build()
+                    .register();
+
     public static final BlockEntry<com.cesg.gateways.GatewayFluxBatteryBlock> GATEWAY_FLUX_BATTERY =
             CESG.REGISTRATE.block("gateway_flux_battery", com.cesg.gateways.GatewayFluxBatteryBlock::new)
                     .initialProperties(SharedProperties::stone)

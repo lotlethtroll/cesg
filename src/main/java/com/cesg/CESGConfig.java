@@ -18,6 +18,9 @@ public final class CESGConfig {
     private static final ModConfigSpec.IntValue BATTERY_CAPACITY;
     private static final ModConfigSpec.IntValue BATTERY_MAX_DRAIN;
     private static final ModConfigSpec.IntValue BATTERY_RESERVE_FLOOR;
+    private static final ModConfigSpec.IntValue BRIDGE_TRANSFER_COST;
+    private static final ModConfigSpec.IntValue BRIDGE_MAX_ITEMS;
+    private static final ModConfigSpec.IntValue BRIDGE_SNAPSHOT_TTL;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -68,6 +71,24 @@ public final class CESGConfig {
                 .defineInRange("reserveFloorMb", 1000, 0, 1_000_000);
         builder.pop();
 
+        builder.push("bridge");
+        BRIDGE_TRANSFER_COST = builder
+                .comment("Fuel (mB) a Cross-Dimensional Storage Bridge spends per passive transfer flush",
+                        "(every 10 ticks) when it moves items between the linked networks. Default 0 =",
+                        "bridging is free. Set >0 to make cross-dim logistics cost fuel; a Gateway Flux",
+                        "Battery on the ring then protects the travel reserve (see battery.reserveFloorMb).",
+                        "Manual pull/push through the terminal pays the same cost per action.")
+                .defineInRange("transferCostMb", 0, 0, 4000);
+        BRIDGE_MAX_ITEMS = builder
+                .comment("Max items a Storage Bridge moves per passive flush, per direction. Bounds how",
+                        "fast automated cross-network transfer runs.")
+                .defineInRange("maxItemsPerFlush", 64, 1, 4096);
+        BRIDGE_SNAPSHOT_TTL = builder
+                .comment("How long (ticks) a Storage Bridge caches the partner network's contents before",
+                        "re-scanning it across the gateway. Lower = fresher remote view, more scans.")
+                .defineInRange("snapshotTtlTicks", 40, 5, 1200);
+        builder.pop();
+
         SPEC = builder.build();
     }
 
@@ -107,5 +128,17 @@ public final class CESGConfig {
 
     public static int batteryReserveFloor() {
         return BATTERY_RESERVE_FLOOR.get();
+    }
+
+    public static int bridgeTransferCost() {
+        return BRIDGE_TRANSFER_COST.get();
+    }
+
+    public static int bridgeMaxItemsPerFlush() {
+        return BRIDGE_MAX_ITEMS.get();
+    }
+
+    public static int bridgeSnapshotTtl() {
+        return BRIDGE_SNAPSHOT_TTL.get();
     }
 }
