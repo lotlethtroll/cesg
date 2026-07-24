@@ -168,8 +168,30 @@ auto-fill the grid — is folded into **7F** and will be QA'd there.
 
 ## 7A — Cross-Dimensional Storage Bridge
 
-_Not built yet. (remote section visible, pull across, partner-unload hold with no
-dupe/loss, fuel-gated upkeep, both-side viewed-box skip.)_
+Engine + assets built 2026-07-24 (`1.1.0-dev`); terminal UX + filter GUI still to
+come, so this track is **not yet functionally verifiable in-game** (no way to
+open the remote view or toggle transfer directions from a terminal). Compiles
+clean; datagen regenerated. Steps below are staged for when the UX lands.
+
+### Placement & structure
+- [ ] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
+  Network joins the **local** network (terminal count includes it)
+- [ ] Goggles show the 3-state partner status: gray OFFLINE (unbound/unloaded),
+  green LIVE (partner ring has a Bridge + controller), red FAULT (bound+loaded
+  but no partner Bridge / no partner controller)
+
+### Remote view (D2) — needs terminal UX
+- [ ] Local terminal shows the partner network as a **separate labeled section**,
+  visually distinct from local items
+- [ ] Partner chunk unloaded → section greys to OFFLINE (silent, not an error)
+
+### Transfer safety (L4) — needs terminal UX / direction toggle
+- [ ] Manual pull moves a stack partner→local; manual push moves local→partner
+- [ ] Unload the partner chunk mid-transfer: buffered items **hold** (no dupe, no
+  loss); breaking the Bridge drops the in-transit buffer
+- [ ] Passive bidirectional flush respects per-side whitelist/blacklist filters
+- [ ] Drain fuel below the battery reserve → upkeep gates transfer (idle = free)
+- [ ] Viewed (open-GUI) shulker boxes skipped on **both** sides
 
 ## 7B — Gateway Routing
 

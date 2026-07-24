@@ -170,6 +170,24 @@ completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent fo
 
 ## 7A — Cross-Dimensional Storage Bridge (build third — the tentpole)
 
+**Status (2026-07-24, `1.1.0-dev`): server engine + assets landed; terminal UX pending.**
+- ✅ `StorageBridgeBlock` / `StorageBridgeBlockEntity`: `StorageNetwork` member +
+  ring-attached endpoint; ring-BFS partner resolution with the Port's 3-state
+  liveness (OFFLINE/LIVE/FAULT); bidirectional passive flush + manual pull/push,
+  all modelled extract-then-insert with buffer/rollback (L4 dupe/void safety);
+  fuel-gated via `tryConsumeAutomationFuel`; break drops the in-transit buffer.
+- ✅ Registration, BE type, `bridge` config (transfer cost / max items / snapshot
+  TTL), `StorageNetwork.isMember`, brass placeholder model, lang (name + tooltip +
+  goggles), regenerated datagen (blockstate/models/loot/pickaxe tag).
+- ⬜ **Terminal remote section (D2)** — `remoteSnapshot()` / `manualPull` /
+  `manualPush` exist but have no caller; `StorageTerminalMenu`/`Screen`/
+  `TerminalContentPacket` don't yet surface the partner network.
+- ⬜ **Filter + direction GUI** — `sendFilter`/`pullFilter`/blacklist flags and
+  `setPush/PullEnabled` persist but have no in-game control (no menu/packet), so
+  passive transfer can't be configured yet.
+- ⬜ **In-game verification** — see [PHASE7-QA.md](PHASE7-QA.md) 7A steps.
+- ⬜ Bespoke art deferred to 7H.
+
 **Goal:** link two Storage Networks through a bound gateway pair so a Terminal on
 one side can see and move items to/from the other side's network. Makes gateways
 permanent infrastructure, not just a travel novelty.
