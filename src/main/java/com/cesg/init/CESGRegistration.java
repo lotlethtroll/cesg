@@ -229,7 +229,7 @@ public class CESGRegistration {
                     .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion())
                     .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
                     .blockstate(CESGPlaceholderModels::gatewayFluxBattery)
-                    .item()
+                    .item(com.cesg.gateways.GatewayFluxBatteryItem::new)
                     .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_flux_battery"))
                     .build()
                     .register();

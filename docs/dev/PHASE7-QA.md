@@ -113,6 +113,10 @@ Placeholder brass-cube texture pending art.
 - [ ] Breaking a member **splits** the array and redistributes fluid — **no dupe,
   no loss** across form/split cycles (the multiblock dupe-bug check)
 - [ ] Fuel already in a small array is preserved when it grows (form absorbs it)
+- [ ] **One-click layer placer**: clicking the top (or bottom) face of a formed 2×2
+  (or 3×3) array with batteries in hand auto-places the whole W×W layer, but only
+  if the stack holds enough for the full layer; sneak-place still places one; an
+  obstructed footprint places nothing extra
 
 ### Config
 
@@ -129,10 +133,6 @@ Placeholder brass-cube texture pending art.
 
 ### Deferred follow-ups (7E not fully closed until these land)
 
-- **One-click layer auto-placer** — a `GatewayFluxBatteryItem` mirroring Create's
-  `FluidTankItem.tryMultiPlace` (click the top of an array → place a whole W×W layer
-  from inventory). Core multiblock works with manual placement; this is the QoL the
-  user asked for. Needs Create's exact geometry to avoid placement bugs.
 - **Fuel governor + port cost** — `gateway.portTransferCostMb` (default 0) + a
   reserve floor so automated Port/Bridge transfers only draw while array fuel stays
   above the reserve, leaving charge for player travel. (The battery's unique value;
