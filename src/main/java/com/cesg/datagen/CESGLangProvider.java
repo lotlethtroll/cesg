@@ -55,6 +55,14 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.battery.stored", "%s: %s/%s mB");
         add("cesg.goggles.battery.array", "Array: %sx%sx%s");
         add("cesg.goggles.battery.reserve", "Travel reserve: %s mB (automation paused below this)");
+        add("block.cesg.storage_bridge", "Cross-Dimensional Storage Bridge");
+        add("block.cesg.storage_bridge.tooltip.summary",
+                "Links two _Storage Networks_ through a bound gateway. Place beside a _Gateway Frame_ or _Core_ that is _adjacent to a Storage Network_; a matching Bridge on the partner ring surfaces that network's items on this side's _Storage Terminal_ as a separate section. Moves items _both ways_ with per-side filters while the gateway is powered and fueled.");
+        add("cesg.goggles.bridge.title", "Cross-Dimensional Storage Bridge");
+        add("cesg.goggles.bridge.status.live", "Partner network: linked");
+        add("cesg.goggles.bridge.status.offline", "Partner network: offline (unbound or unloaded)");
+        add("cesg.goggles.bridge.status.fault", "Partner network: no Bridge or controller found");
+        add("cesg.goggles.bridge.transit", "In transit: %s out, %s in");
         add("block.cesg.gateway_frame", "Gateway Frame");
         add("block.cesg.gateway_frame.tooltip.summary",
                 "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal.");
