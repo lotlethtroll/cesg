@@ -83,6 +83,12 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         return new BatteryFluidHandler(this);
     }
 
+    /** The array's stored fuel (read from the controller). Empty if the controller is unresolved. */
+    public FluidStack storedFluid() {
+        GatewayFluxBatteryBlockEntity c = controllerBE();
+        return c == null ? FluidStack.EMPTY : c.tank.getFluid();
+    }
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, GatewayFluxBatteryBlockEntity be) {
         be.lastKnownPos = pos;
         if (be.updateConnectivity)
@@ -362,6 +368,9 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         if (c.width > 1 || c.height > 1)
             CESGLang.forGoggles(tooltip, "cesg.goggles.battery.array", ChatFormatting.DARK_AQUA,
                     c.width, c.width, c.height);
+        if (CESGConfig.gatewayPortTransferCost() > 0 && CESGConfig.batteryReserveFloor() > 0)
+            CESGLang.forGoggles(tooltip, "cesg.goggles.battery.reserve", ChatFormatting.GOLD,
+                    CESGConfig.batteryReserveFloor());
         return true;
     }
 

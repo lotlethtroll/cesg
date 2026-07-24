@@ -118,10 +118,27 @@ Placeholder brass-cube texture pending art.
   if the stack holds enough for the full layer; sneak-place still places one; an
   obstructed footprint places nothing extra
 
+### Functional — fuel governor (port cost + reserve)
+
+- [ ] With `gateway.portTransferCostMb = 0` (default), Gateway Ports transfer for
+  free exactly as in 1.0 (governor inert)
+- [ ] With a port cost set and **no battery** on the ring, Ports spend that fuel
+  from the Core per flush, and may drain it to empty (no gating)
+- [ ] With a battery on the ring, automated Port transfers **pause** once combined
+  Core+battery fuel would drop below `battery.reserveFloorMb`…
+- [ ] …while **player travel still works**, drawing into that reserve (travel is
+  never gated)
+- [ ] A **dry** battery on the ring pauses automation (the safety), even though it
+  holds nothing
+- [ ] A battery holding the *other* fuel does not gate the current fuel's transfers
+- [ ] Goggles show `Travel reserve: X mB` on the battery when a port cost is set
+
 ### Config
 
 - [ ] `battery.capacityMbPerBlock` scales per-block capacity (goggle max reflects it)
 - [ ] `battery.maxDrainMbPerTick` throttles how fast the Core is topped up
+- [ ] `gateway.portTransferCostMb` sets the per-flush Port fuel cost (0 = free)
+- [ ] `battery.reserveFloorMb` sets the protected travel reserve
 
 ### Art pass — DEFERRED to 7H
 
@@ -133,10 +150,6 @@ Placeholder brass-cube texture pending art.
 
 ### Deferred follow-ups (7E not fully closed until these land)
 
-- **Fuel governor + port cost** — `gateway.portTransferCostMb` (default 0) + a
-  reserve floor so automated Port/Bridge transfers only draw while array fuel stays
-  above the reserve, leaving charge for player travel. (The battery's unique value;
-  see PHASE7.md 7E note.)
 - Breaking a lone battery loses its stored fluid (no NBT-on-item preservation).
 
 ### Notes / follow-ups

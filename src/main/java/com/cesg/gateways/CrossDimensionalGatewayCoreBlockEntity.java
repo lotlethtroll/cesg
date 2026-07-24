@@ -287,6 +287,75 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         return true;
     }
 
+    /**
+     * Fuel gate for automation (Gateway Ports now, the Storage Bridge later). Charges {@code cost} of the
+     * active fuel, but respects the Gateway Flux Battery reserve: while a battery of the relevant fuel (or
+     * a dry one) is on the ring, automation may only draw the combined Core+battery fuel down to
+     * {@link CESGConfig#batteryReserveFloor()} — that charge is left for player travel, which is never
+     * gated ({@link #consumeFuel()} ignores this). With no battery on the ring it is a plain fuel spend.
+     *
+     * @return true if the cost was paid and the transfer may proceed; false to pause automation this tick.
+     */
+    public boolean tryConsumeAutomationFuel(int cost) {
+        if (cost <= 0)
+            return true;
+        boolean crossDim = partnerIsCrossDimension();
+        int coreFuel = crossDim ? eyeMb : essenceMb;
+
+        long batteryFuel = 0;
+        boolean batteryPresent = false;
+        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
+            net.neoforged.neoforge.fluids.FluidStack fluid = battery.storedFluid();
+            if (fluid.isEmpty()) {
+                batteryPresent = true; // a dry battery still gates — that is the safety the reserve provides
+            } else if (crossDim ? GatewayFluxBatteryBlockEntity.isEye(fluid)
+                    : GatewayFluxBatteryBlockEntity.isEssence(fluid)) {
+                batteryPresent = true;
+                batteryFuel += fluid.getAmount();
+            }
+        }
+
+        if (batteryPresent && (coreFuel + batteryFuel) - cost < com.cesg.CESGConfig.batteryReserveFloor())
+            return false; // protect the reserve for travel
+        if (coreFuel < cost)
+            return false; // Core not yet topped up this tick — the battery refills it, retry next flush
+
+        if (crossDim)
+            eyeMb -= cost;
+        else
+            essenceMb -= cost;
+        notifyUpdate();
+        updateCoreFuelVisual();
+        return true;
+    }
+
+    /** Unique Gateway Flux Battery controllers whose array touches this gateway ring. */
+    private java.util.Collection<GatewayFluxBatteryBlockEntity> scanRingBatteries() {
+        java.util.Map<BlockPos, GatewayFluxBatteryBlockEntity> controllers = new java.util.HashMap<>();
+        if (level == null)
+            return controllers.values();
+        java.util.Set<BlockPos> visited = new java.util.HashSet<>();
+        java.util.Queue<BlockPos> queue = new java.util.ArrayDeque<>();
+        queue.add(worldPosition);
+        visited.add(worldPosition);
+        while (!queue.isEmpty() && visited.size() <= 64) {
+            BlockPos pos = queue.poll();
+            for (Direction dir : Direction.values()) {
+                BlockPos next = pos.relative(dir);
+                if (level.getBlockEntity(next) instanceof GatewayFluxBatteryBlockEntity battery) {
+                    GatewayFluxBatteryBlockEntity controller = battery.getControllerBE();
+                    if (controller != null)
+                        controllers.putIfAbsent(controller.getBlockPos(), controller);
+                }
+                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                    visited.add(next);
+                    queue.add(next);
+                }
+            }
+        }
+        return controllers.values();
+    }
+
     public GatewaySideState createSideState() {
         return new GatewaySideState(level.dimension(), worldPosition, getSpeed() != 0, requiredFuel() >= travelCost(),
                 level.dimension().equals(Level.END));

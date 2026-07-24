@@ -54,6 +54,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.battery.empty", "Empty");
         add("cesg.goggles.battery.stored", "%s: %s/%s mB");
         add("cesg.goggles.battery.array", "Array: %sx%sx%s");
+        add("cesg.goggles.battery.reserve", "Travel reserve: %s mB (automation paused below this)");
         add("block.cesg.gateway_frame", "Gateway Frame");
         add("block.cesg.gateway_frame.tooltip.summary",
                 "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal.");

@@ -14,8 +14,10 @@ public final class CESGConfig {
     private static final ModConfigSpec.BooleanValue GATEWAY_CHUNK_LOADING;
     private static final ModConfigSpec.IntValue SHULKER_CAGE_COOLDOWN;
     private static final ModConfigSpec.IntValue SHULKER_CAGE_FIRE_INTERVAL;
+    private static final ModConfigSpec.IntValue GATEWAY_PORT_TRANSFER_COST;
     private static final ModConfigSpec.IntValue BATTERY_CAPACITY;
     private static final ModConfigSpec.IntValue BATTERY_MAX_DRAIN;
+    private static final ModConfigSpec.IntValue BATTERY_RESERVE_FLOOR;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -31,6 +33,12 @@ public final class CESGConfig {
                 .comment("Allow the per-gateway \"keep destination loaded\" toggle (chunk loading).",
                         "Disable to remove the option entirely on this server.")
                 .define("allowChunkLoading", true);
+        GATEWAY_PORT_TRANSFER_COST = builder
+                .comment("Fuel (mB) a Gateway Port spends per flush (every 10 ticks) when it moves items or",
+                        "fluid. Default 0 = Ports are free (1.0 behaviour). Set >0 to make automated",
+                        "transfer cost fuel; a Gateway Flux Battery on the ring then protects a travel",
+                        "reserve (see battery.reserveFloorMb).")
+                .defineInRange("portTransferCostMb", 0, 0, 4000);
         builder.pop();
 
         builder.push("shulkerCage");
@@ -52,6 +60,12 @@ public final class CESGConfig {
                 .comment("Max fuel (mB) the battery array pushes into the connected gateway Core per tick.",
                         "Bounds how fast a battery can cover a burst.")
                 .defineInRange("maxDrainMbPerTick", 500, 1, 100_000);
+        BATTERY_RESERVE_FLOOR = builder
+                .comment("Fuel (mB) a Gateway Flux Battery array keeps in reserve for player travel. While a",
+                        "battery is on the ring, automated Port/Bridge transfers may only draw combined fuel",
+                        "(Core + battery) down to this floor; player travel ignores it. Only has an effect",
+                        "when gateway.portTransferCostMb > 0.")
+                .defineInRange("reserveFloorMb", 1000, 0, 1_000_000);
         builder.pop();
 
         SPEC = builder.build();
@@ -71,6 +85,10 @@ public final class CESGConfig {
         return GATEWAY_CHUNK_LOADING.get();
     }
 
+    public static int gatewayPortTransferCost() {
+        return GATEWAY_PORT_TRANSFER_COST.get();
+    }
+
     public static int shulkerCageCooldown() {
         return SHULKER_CAGE_COOLDOWN.get();
     }
@@ -85,5 +103,9 @@ public final class CESGConfig {
 
     public static int batteryMaxDrainPerTick() {
         return BATTERY_MAX_DRAIN.get();
+    }
+
+    public static int batteryReserveFloor() {
+        return BATTERY_RESERVE_FLOOR.get();
     }
 }

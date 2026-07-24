@@ -137,6 +137,11 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         if (targets.isEmpty())
             return IDLE_BACKOFF;
 
+        // Automated transfer costs fuel (config; default 0). A Gateway Flux Battery on the ring gates
+        // this against its reserve floor, so automation never starves player travel — see the Core.
+        if (!core.tryConsumeAutomationFuel(com.cesg.CESGConfig.gatewayPortTransferCost()))
+            return IDLE_BACKOFF;
+
         pushItems(targets);
         pushFluid(targets);
         return FLUSH_INTERVAL;

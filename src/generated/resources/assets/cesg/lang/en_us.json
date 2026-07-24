@@ -125,6 +125,7 @@
   "cesg.gateway.unpowered": "Gateway requires kinetic power",
   "cesg.goggles.battery.array": "Array: %sx%sx%s",
   "cesg.goggles.battery.empty": "Empty",
+  "cesg.goggles.battery.reserve": "Travel reserve: %s mB (automation paused below this)",
   "cesg.goggles.battery.stored": "%s: %s/%s mB",
   "cesg.goggles.battery.title": "Gateway Flux Battery",
   "cesg.goggles.belt_loader.placement": "Place two blocks above a horizontal belt",
