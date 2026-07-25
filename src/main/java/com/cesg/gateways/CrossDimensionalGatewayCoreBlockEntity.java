@@ -125,6 +125,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         activeChannel = clamped;
         partnerStatus = PARTNER_UNKNOWN;
         applyChunkLoading();
+        refreshPortalState(); // recolor glass + frames to the new destination's fuel now, not next lazyTick
         notifyUpdate();
     }
 
@@ -393,6 +394,24 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         return true;
     }
 
+    /**
+     * True when a Gateway Flux Battery on the ring currently holds the given fuel. While one does, it is
+     * the authoritative source that refills the Core, so the Gateway Frame transit buffers stop feeding
+     * the Core (travel drain then shows cleanly on the battery instead of being split with parked ring
+     * fluid). A dry battery does not count — the ring stays a fallback so an empty battery never bricks
+     * travel while the frames still hold fuel.
+     */
+    public boolean ringHasBatteryWithFuel(boolean eye) {
+        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
+            net.neoforged.neoforge.fluids.FluidStack fluid = battery.storedFluid();
+            if (fluid.isEmpty())
+                continue;
+            if (eye ? GatewayFluxBatteryBlockEntity.isEye(fluid) : GatewayFluxBatteryBlockEntity.isEssence(fluid))
+                return true;
+        }
+        return false;
+    }
+
     /** Unique Gateway Flux Battery controllers whose array touches this gateway ring. */
     private java.util.Collection<GatewayFluxBatteryBlockEntity> scanRingBatteries() {
         java.util.Map<BlockPos, GatewayFluxBatteryBlockEntity> controllers = new java.util.HashMap<>();
@@ -442,13 +461,24 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         super.lazyTick();
         if (level == null || level.isClientSide)
             return;
+        refreshPortalState();
+        updatePartnerLiveness();
+    }
+
+    /**
+     * Re-evaluate portal shape/fuel/power and repaint the Core glass + frame conduits. Frames are lit
+     * with the ACTIVE channel's fuel, so calling this on a channel switch recolors the ring to the new
+     * destination's fuel immediately instead of lagging a lazyTick.
+     */
+    private void refreshPortalState() {
+        if (level == null || level.isClientSide)
+            return;
         Optional<GatewayPortalShape> shape = GatewayPortalShape.detect(level, worldPosition);
         if (shape.isPresent() && canTravel())
             activate(shape.get());
         else
             deactivate();
         updateCoreFuelVisual();
-        updatePartnerLiveness();
     }
 
     /** Refreshes the eye texture when transit fluid moves through connected frames into an empty tank. */
@@ -485,16 +515,32 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
      * Glass eye shows the fuel in the tanks, or fluid in transit on the ring when the tanks are empty.
      * Liquid Eye of Ender wins when both tanks hold fuel.
      */
-    private GatewayFrameBlock.FrameFuel displayFuel() {
-        if (eyeMb > 0)
-            return GatewayFrameBlock.FrameFuel.EYE;
-        if (essenceMb > 0)
-            return GatewayFrameBlock.FrameFuel.ESSENCE;
-        return transitFuel();
+    /** The fuel the CURRENTLY-ACTIVE channel travels on — Eye (cross-dimension) or Essence (same). */
+    public GatewayFrameBlock.FrameFuel activeFuelType() {
+        return partnerIsCrossDimension() ? GatewayFrameBlock.FrameFuel.EYE : GatewayFrameBlock.FrameFuel.ESSENCE;
     }
 
-    /** Scans connected frame buffers for fuel being pumped toward this core. */
-    private GatewayFrameBlock.FrameFuel transitFuel() {
+    /**
+     * What the Core's glass shows: the ACTIVE channel's fuel when the Core (or ring transit) holds any,
+     * so the visual follows the destination — a same-dim channel reads Essence even while an Eye tank is
+     * full. Falls back to the other stored fuel, then to whatever is in transit through the frames.
+     */
+    private GatewayFrameBlock.FrameFuel displayFuel() {
+        boolean crossDim = partnerIsCrossDimension();
+        GatewayFrameBlock.FrameFuel active = crossDim ? GatewayFrameBlock.FrameFuel.EYE
+                : GatewayFrameBlock.FrameFuel.ESSENCE;
+        GatewayFrameBlock.FrameFuel other = crossDim ? GatewayFrameBlock.FrameFuel.ESSENCE
+                : GatewayFrameBlock.FrameFuel.EYE;
+        if ((crossDim ? eyeMb : essenceMb) > 0)
+            return active;
+        if ((crossDim ? essenceMb : eyeMb) > 0)
+            return other;
+        return transitFuel(active, other);
+    }
+
+    /** Scans connected frame buffers for fuel being pumped toward this core (active fuel preferred). */
+    private GatewayFrameBlock.FrameFuel transitFuel(GatewayFrameBlock.FrameFuel active,
+            GatewayFrameBlock.FrameFuel other) {
         if (level == null)
             return GatewayFrameBlock.FrameFuel.NONE;
         Set<BlockPos> visited = new HashSet<>();
@@ -519,10 +565,12 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
                 }
             }
         }
-        if (eye)
-            return GatewayFrameBlock.FrameFuel.EYE;
-        if (essence)
-            return GatewayFrameBlock.FrameFuel.ESSENCE;
+        boolean hasActive = active == GatewayFrameBlock.FrameFuel.EYE ? eye : essence;
+        boolean hasOther = other == GatewayFrameBlock.FrameFuel.EYE ? eye : essence;
+        if (hasActive)
+            return active;
+        if (hasOther)
+            return other;
         return GatewayFrameBlock.FrameFuel.NONE;
     }
 

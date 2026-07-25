@@ -23,12 +23,18 @@ import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
  * it has room. Transit fluid is never voided (drainable, and forwarded automatically).
  */
 public class GatewayFrameBlockEntity extends BlockEntity {
-    public static final int BUFFER_CAPACITY = 250;
+    /**
+     * Per-frame transit buffer: just enough to keep the conduit visibly flowing, NOT a fuel reservoir.
+     * Kept small so a ring can't hoard several trips of invisible backup fuel (a full ring is only
+     * {@code BUFFER_CAPACITY × frame count}). When a fuelled battery is on the ring the frames don't
+     * forward into the Core at all — see {@link #moveBufferAlong}.
+     */
+    public static final int BUFFER_CAPACITY = 25;
     /** How long the cosmetic flow lingers after the buffer empties, in ticks. */
     private static final int FLOW_LINGER_TICKS = 15;
     private static final int SPREAD_INTERVAL = 5;
-    private static final int SPREAD_AMOUNT = 50;
-    private static final int FORWARD_AMOUNT = 100;
+    private static final int SPREAD_AMOUNT = 5;
+    private static final int FORWARD_AMOUNT = 25;
 
     final FluidTank buffer = new FluidTank(BUFFER_CAPACITY,
             fs -> fs.getFluid().getFluidType() == CESGFluids.TELEPORT_ESSENCE.getType()
@@ -110,8 +116,11 @@ public class GatewayFrameBlockEntity extends BlockEntity {
     private void moveBufferAlong(Level level, BlockPos pos) {
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, pos);
         FluidStack held = buffer.getFluid();
-        if (core != null) {
-            int accepted = fuelTypeOf(held) == GatewayFrameBlock.FrameFuel.EYE
+        boolean eye = fuelTypeOf(held) == GatewayFrameBlock.FrameFuel.EYE;
+        // A fuelled Gateway Flux Battery owns Core refills; the frame buffer then stays put (pure
+        // transit/visual) so travel drain shows cleanly on the battery, not split with parked ring fluid.
+        if (core != null && !core.ringHasBatteryWithFuel(eye)) {
+            int accepted = eye
                     ? core.fillEye(Math.min(FORWARD_AMOUNT, held.getAmount()), false)
                     : core.fillEssence(Math.min(FORWARD_AMOUNT, held.getAmount()), false);
             if (accepted > 0) {
