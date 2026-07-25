@@ -524,11 +524,15 @@ Do this after every feature above exists, so it covers the final surface.
 - **Recipe-viewer completeness** — every new block/module/recipe shows correctly
   in both JEI and EMI; add category entries for the in-box processing modules if
   they need explaining.
-- **Storage Terminal recipe transfer (from 7C)** — add a JEI `IRecipeTransferHandler`
-  + EMI equivalent for `StorageTerminalMenu` so the "+" auto-fills the 3×3 grid from
-  network stock (optionally R/U "show recipe/uses" on list items). Pulls must
-  respect the L4 snapshot rules (fresh handlers, skip viewed boxes). The crafting
-  terminal itself already shipped in 1.0.0 — this is the only remaining piece.
+- ✅ **Storage Terminal recipe transfer (from 7C)** — DONE 2026-07-25. JEI
+  `IRecipeTransferHandler` (`TerminalRecipeTransferHandler`, CRAFTING) + EMI
+  `EmiRecipeHandler` (`TerminalEmiRecipeHandler`) both forward the recipe id via
+  the new `TerminalFillRecipePacket`; the server (`StorageTerminalMenu.fillFromRecipe`)
+  returns the grid to the network, then places one of each ingredient — player
+  inventory first, network second — via `StorageNetwork.extract` (L4-safe: fresh
+  handlers, skips viewed boxes). Shaped keeps its shape (top-left), shapeless fills
+  sequentially. Pending in-game verification (both viewers). Batch amount uses the
+  existing shift-click batch-craft; R/U "show uses" not added.
 - **Config surface** — confirm all new knobs are documented and defaulted (L5).
 - **Lang audit** — every new block/item/tooltip/ponder key localized (ponder
   text does NOT auto-localize; raw keys show if missing).

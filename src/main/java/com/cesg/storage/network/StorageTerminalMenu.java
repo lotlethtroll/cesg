@@ -25,11 +25,14 @@ import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.ResultSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.TransientCraftingContainer;
+import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -209,6 +212,86 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
         craftSlots.setChanged();
         updateCraftingResult();
         requestRefresh();
+    }
+
+    /**
+     * Recipe-viewer "+" transfer: return the current grid to the network, then place one of each of the
+     * recipe's ingredients into the 3×3 grid — preferring the player inventory, falling back to the
+     * storage network. Shaped recipes keep their shape (top-left); shapeless fill sequentially. The
+     * player then shift-clicks the result to batch-craft, which restocks from the network.
+     */
+    public void fillFromRecipe(CraftingRecipe recipe) {
+        if (player.level().isClientSide)
+            return;
+        Ingredient[] grid = gridLayout(recipe);
+        clearCraftingGrid(); // return whatever is on the grid to the network first
+        for (int slot = 0; slot < 9; slot++) {
+            Ingredient ingredient = grid[slot];
+            if (ingredient == null || ingredient.isEmpty())
+                continue;
+            ItemStack chosen = takeIngredient(ingredient);
+            if (!chosen.isEmpty())
+                craftSlots.setItem(slot, chosen);
+        }
+        craftSlots.setChanged();
+        updateCraftingResult();
+        requestRefresh();
+    }
+
+    /** Maps a crafting recipe's ingredients onto the 3×3 grid (nulls = empty). */
+    private static Ingredient[] gridLayout(CraftingRecipe recipe) {
+        Ingredient[] grid = new Ingredient[9];
+        if (recipe instanceof ShapedRecipe shaped) {
+            int width = shaped.getWidth();
+            int height = shaped.getHeight();
+            NonNullList<Ingredient> ingredients = shaped.getIngredients();
+            for (int row = 0; row < height && row < 3; row++)
+                for (int col = 0; col < width && col < 3; col++) {
+                    int index = row * width + col;
+                    if (index < ingredients.size() && !ingredients.get(index).isEmpty())
+                        grid[row * 3 + col] = ingredients.get(index);
+                }
+        } else {
+            int slot = 0;
+            for (Ingredient ingredient : recipe.getIngredients()) {
+                if (slot >= 9)
+                    break;
+                if (!ingredient.isEmpty())
+                    grid[slot++] = ingredient;
+            }
+        }
+        return grid;
+    }
+
+    /** One item accepted by {@code ingredient}, taken from the player inventory or, failing that, the network. */
+    private ItemStack takeIngredient(Ingredient ingredient) {
+        ItemStack[] options = ingredient.getItems();
+        for (ItemStack option : options) {
+            ItemStack fromPlayer = takeFromPlayer(option);
+            if (!fromPlayer.isEmpty())
+                return fromPlayer;
+        }
+        for (ItemStack option : options) {
+            ItemStack pulled = StorageNetwork.extract(player.level(), terminalPos, option, 1);
+            if (!pulled.isEmpty())
+                return pulled;
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private ItemStack takeFromPlayer(ItemStack sample) {
+        if (sample.isEmpty())
+            return ItemStack.EMPTY;
+        NonNullList<ItemStack> items = player.getInventory().items; // 36 main slots only
+        for (int i = 0; i < items.size(); i++) {
+            ItemStack stack = items.get(i);
+            if (!stack.isEmpty() && ItemStack.isSameItemSameComponents(stack, sample)) {
+                ItemStack taken = stack.copyWithCount(1);
+                stack.shrink(1);
+                return taken;
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     @Override

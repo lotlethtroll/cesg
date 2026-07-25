@@ -28,5 +28,7 @@ public class CESGEmiPlugin implements EmiPlugin {
                 registry.getRecipeManager().getAllRecipesFor(CESGRecipes.ENDER_INFUSING_TYPE.get())) {
             registry.addRecipe(new EnderInfusingEmiRecipe(ENDER_INFUSING, holder.id(), holder.value()));
         }
+        // Storage Terminal "+" transfer: fill the crafting grid from the network (server-authoritative).
+        registry.addRecipeHandler(com.cesg.init.CESGMenus.STORAGE_TERMINAL.get(), new TerminalEmiRecipeHandler());
     }
 }

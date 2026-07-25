@@ -24,5 +24,7 @@ public final class CESGNetwork {
                 TerminalContentPacket::handle);
         registrar.playToServer(TerminalActionPacket.TYPE, TerminalActionPacket.STREAM_CODEC,
                 TerminalActionPacket::handle);
+        registrar.playToServer(TerminalFillRecipePacket.TYPE, TerminalFillRecipePacket.STREAM_CODEC,
+                TerminalFillRecipePacket::handle);
     }
 }
