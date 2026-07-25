@@ -368,6 +368,16 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.gateway.chunkload_off", "Load Destination: OFF");
         add("cesg.gateway.chunkload_tooltip",
                 "While ON, this gateway keeps its own chunk and the bound destination's chunk loaded and ticking — Gateway Port transfers keep flowing with nobody on either side. Follows the active channel: switching destinations moves the loading with it.");
+        add("cesg.gateway.route_on", "Route: ON");
+        add("cesg.gateway.route_off", "Route: OFF");
+        add("cesg.gateway.route_tooltip",
+                "Route mode: a Gateway Port or Storage Bridge fans each item out to whichever bound channel's filter accepts it, instead of only the active channel. Right-click a channel to edit its filter. Fluids and manual/terminal moves still use the active channel.");
+        add("cesg.gateway.filter.title", "Channel %s Filter");
+        add("cesg.gateway.filter.whitelist", "Whitelist");
+        add("cesg.gateway.filter.blacklist", "Blacklist");
+        add("cesg.gateway.filter.whitelist.tip", "Whitelist: only these items route to this channel (empty = none).");
+        add("cesg.gateway.filter.blacklist.tip", "Blacklist: every item routes to this channel except these (empty = all).");
+        add("cesg.gateway.filter.hint", "Click with an item to filter this channel (the item is not consumed).");
         add("cesg.goggles.gateway.partner_live", "Partner gateway is powered and fueled");
         add("cesg.goggles.gateway.partner_offline", "Partner gateway is unpowered or out of fuel");
 

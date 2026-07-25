@@ -18,8 +18,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * active channel and/or set the gateway's display name. {@code channel < 0} keeps the current channel
  * (name-only update, sent when the screen closes without a pick).
  */
-public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, boolean chunkLoading)
-        implements CustomPacketPayload {
+public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, boolean chunkLoading,
+        boolean routeMode) implements CustomPacketPayload {
     public static final Type<SetGatewayChannelPacket> TYPE = new Type<>(CESG.id("set_gateway_channel"));
 
     public static final StreamCodec<ByteBuf, SetGatewayChannelPacket> STREAM_CODEC = StreamCodec.composite(
@@ -27,6 +27,7 @@ public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, bo
             ByteBufCodecs.VAR_INT, SetGatewayChannelPacket::channel,
             ByteBufCodecs.stringUtf8(32), SetGatewayChannelPacket::name,
             ByteBufCodecs.BOOL, SetGatewayChannelPacket::chunkLoading,
+            ByteBufCodecs.BOOL, SetGatewayChannelPacket::routeMode,
             SetGatewayChannelPacket::new);
 
     @Override
@@ -47,6 +48,7 @@ public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, bo
                     core.setActiveChannel(packet.channel());
                 core.setGatewayName(packet.name());
                 core.setChunkLoading(packet.chunkLoading());
+                core.setRouteMode(packet.routeMode());
                 core.setChanged();
             }
         });

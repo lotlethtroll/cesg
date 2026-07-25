@@ -18,6 +18,8 @@ public final class CESGNetwork {
                 StationConfigurationPacket::handle);
         registrar.playToServer(SetGatewayChannelPacket.TYPE, SetGatewayChannelPacket.STREAM_CODEC,
                 SetGatewayChannelPacket::handle);
+        registrar.playToServer(OpenGatewayFilterPacket.TYPE, OpenGatewayFilterPacket.STREAM_CODEC,
+                OpenGatewayFilterPacket::handle);
         registrar.playToClient(TerminalContentPacket.TYPE, TerminalContentPacket.STREAM_CODEC,
                 TerminalContentPacket::handle);
         registrar.playToServer(TerminalActionPacket.TYPE, TerminalActionPacket.STREAM_CODEC,

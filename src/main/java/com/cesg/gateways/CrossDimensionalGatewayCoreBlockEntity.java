@@ -28,6 +28,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -51,6 +52,10 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
 
     /** Channel -> bound partner. Only bound channels are stored. */
     private final java.util.Map<Integer, GatewayPartner> bindings = new java.util.HashMap<>();
+    /** Channel -> routing filter (Phase 7B). Only channels whose filter has been edited are stored. */
+    private final java.util.Map<Integer, ChannelFilter> channelFilters = new java.util.HashMap<>();
+    /** Fan-out routing: distribute items to the channel whose filter accepts them, not just the active one. */
+    private boolean routeMode;
     private int activeChannel;
     /** Player-given label for THIS gateway; carried into crystals and partner bindings (Phase 6A UX). */
     private String gatewayName = "";
@@ -121,6 +126,65 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         partnerStatus = PARTNER_UNKNOWN;
         applyChunkLoading();
         notifyUpdate();
+    }
+
+    // ---- Fan-out routing (Phase 7B) --------------------------------------------------------------
+
+    /** Route mode, honouring the server's fan-out allow toggle (off = single active channel). */
+    public boolean isRouteMode() {
+        return routeMode && com.cesg.CESGConfig.gatewayFanOutAllowed();
+    }
+
+    public void setRouteMode(boolean value) {
+        if (routeMode == value)
+            return;
+        routeMode = value;
+        notifyUpdate();
+    }
+
+    /** The editable filter for {@code channel}, created on first edit (used by the filter GUI). */
+    public ChannelFilter getOrCreateChannelFilter(int channel) {
+        return channelFilters.computeIfAbsent(Math.floorMod(channel, CHANNEL_COUNT),
+                c -> new ChannelFilter(this::onChannelFilterChanged));
+    }
+
+    /** True when {@code channel} has a non-default filter (picker indicator). */
+    public boolean hasChannelFilter(int channel) {
+        ChannelFilter filter = channelFilters.get(Math.floorMod(channel, CHANNEL_COUNT));
+        return filter != null && filter.hasContent();
+    }
+
+    public boolean isChannelBlacklist(int channel) {
+        ChannelFilter filter = channelFilters.get(Math.floorMod(channel, CHANNEL_COUNT));
+        return filter != null && filter.isBlacklist();
+    }
+
+    public void toggleChannelBlacklist(int channel) {
+        ChannelFilter filter = getOrCreateChannelFilter(channel);
+        filter.setBlacklist(!filter.isBlacklist());
+        onChannelFilterChanged();
+    }
+
+    private void onChannelFilterChanged() {
+        notifyUpdate();
+    }
+
+    /**
+     * The bound channel that should receive {@code sample}: in route mode, the first bound channel
+     * whose filter accepts it (deterministic, so items never flip-flop); otherwise the active channel.
+     * Returns -1 when nothing accepts it (route mode) or the active channel is unbound.
+     */
+    public int routeChannel(ItemStack sample) {
+        if (!isRouteMode())
+            return getPartner().isBound() ? activeChannel : -1;
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++) {
+            if (!getBinding(channel).isBound())
+                continue;
+            ChannelFilter filter = channelFilters.get(channel);
+            if (filter != null && filter.accepts(sample))
+                return channel;
+        }
+        return -1;
     }
 
     public int getPartnerStatus() {
@@ -592,6 +656,16 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             bindingList.add(entry);
         });
         tag.put("Bindings", bindingList);
+        net.minecraft.nbt.ListTag filterList = new net.minecraft.nbt.ListTag();
+        channelFilters.forEach((channel, filter) -> {
+            if (!filter.hasContent())
+                return; // don't persist/sync fresh defaults
+            CompoundTag entry = filter.save(registries);
+            entry.putInt("Channel", channel);
+            filterList.add(entry);
+        });
+        tag.put("ChannelFilters", filterList);
+        tag.putBoolean("RouteMode", routeMode);
         tag.putInt("ActiveChannel", activeChannel);
         tag.putInt("PartnerStatus", partnerStatus);
         tag.putString("GatewayName", gatewayName);
@@ -636,6 +710,14 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             if (legacy.isBound())
                 bindings.putIfAbsent(0, legacy);
         }
+        channelFilters.clear();
+        for (net.minecraft.nbt.Tag raw : tag.getList("ChannelFilters", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            CompoundTag entry = (CompoundTag) raw;
+            ChannelFilter filter = new ChannelFilter(this::onChannelFilterChanged);
+            filter.load(registries, entry);
+            channelFilters.put(Math.floorMod(entry.getInt("Channel"), CHANNEL_COUNT), filter);
+        }
+        routeMode = tag.getBoolean("RouteMode");
         activeChannel = Math.floorMod(tag.getInt("ActiveChannel"), CHANNEL_COUNT);
         partnerStatus = Math.floorMod(tag.getInt("PartnerStatus"), 3);
         gatewayName = tag.getString("GatewayName");

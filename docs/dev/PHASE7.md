@@ -44,12 +44,13 @@ Two standing rules for new content this phase:
 | 7F | Polish & UX pass | | 6 (last) |
 | 7H | Art Pass (models/textures for every new block/item) | | last — collects deferred art |
 
-Build order rationale: **7G done**, **7E done** (both verified/committed on
-`1.1-dev`). **7C's crafting terminal already shipped in 1.0.0** — only its JEI/EMI
-"+" transfer remains, folded into 7F. Remaining: 7A the big lift; 7B extends 7A's
-routing; 7D is orthogonal and can slot anywhere; 7F last so ponders / particles /
-recipe-viewer (incl. the terminal transfer handler) cover the final feature set;
-7H last collects deferred art.
+Build order rationale: **7G done**, **7E done** (verified/committed on `1.1-dev`).
+**7A done** (engine + terminal remote section + config GUI) and **7B done**
+(per-channel filters + Port/Bridge fan-out) — both built on `1.1-dev`, pending
+in-game QA. **7C's crafting terminal already shipped in 1.0.0** — only its JEI/EMI
+"+" transfer remains, folded into 7F. Remaining: 7D is orthogonal and can slot
+anywhere; 7F last so ponders / particles / recipe-viewer (incl. the terminal
+transfer handler) cover the final feature set; 7H last collects deferred art.
 
 ---
 
@@ -269,6 +270,24 @@ transfer; verify viewed boxes skipped on both sides.
 ---
 
 ## 7B — Gateway Routing: filters + fan-out (build fourth)
+
+**Status (2026-07-24, `1.1.0-dev`): built, pending in-game verification.**
+- ✅ Core: per-channel `ChannelFilter` map (9 ghost slots + whitelist/blacklist)
+  + `routeMode` flag + `routeChannel(stack)` helper (first bound channel whose
+  filter accepts it — deterministic, no flip-flop). NBT-safe: 1.0 worlds load
+  with no filters + route off. Config `gateway.allowFanOut` gates the whole thing.
+- ✅ Gateway Port: `flushRouted` fans each send item to its routed channel's
+  partner ring (partners resolved once/flush + cached); fluid follows the active
+  channel. Default path (`flushActive`) unchanged.
+- ✅ Storage Bridge: route-mode passive push extracts whatever *some* channel
+  accepts (channel filters are the only gate in route mode — the per-direction
+  send filter is bypassed) and fans it out via `resolvePartner` per channel. Pull
+  stays on the active channel (fan-out is a send concern).
+- ✅ UI: channel picker grows a **Route: ON/OFF** toggle and **right-click a
+  channel** opens its filter editor (`GatewayFilterMenu`/`Screen`, ghost slots +
+  WL/BL toggle). New `OpenGatewayFilterPacket`; `SetGatewayChannelPacket` carries
+  `routeMode`.
+- ⬜ In-game verification — see [PHASE7-QA.md](PHASE7-QA.md) 7B steps.
 
 **Goal:** per-channel filtering and one-to-many distribution, so a single Core
 can route different item/fluid classes to different bound partners. Extends the

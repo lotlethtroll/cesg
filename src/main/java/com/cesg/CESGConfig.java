@@ -15,6 +15,7 @@ public final class CESGConfig {
     private static final ModConfigSpec.IntValue SHULKER_CAGE_COOLDOWN;
     private static final ModConfigSpec.IntValue SHULKER_CAGE_FIRE_INTERVAL;
     private static final ModConfigSpec.IntValue GATEWAY_PORT_TRANSFER_COST;
+    private static final ModConfigSpec.BooleanValue GATEWAY_FAN_OUT;
     private static final ModConfigSpec.IntValue BATTERY_CAPACITY;
     private static final ModConfigSpec.IntValue BATTERY_MAX_DRAIN;
     private static final ModConfigSpec.IntValue BATTERY_RESERVE_FLOOR;
@@ -42,6 +43,12 @@ public final class CESGConfig {
                         "transfer cost fuel; a Gateway Flux Battery on the ring then protects a travel",
                         "reserve (see battery.reserveFloorMb).")
                 .defineInRange("portTransferCostMb", 0, 0, 4000);
+        GATEWAY_FAN_OUT = builder
+                .comment("Allow the per-gateway \"route\" mode: when enabled on a Core, a Gateway Port or",
+                        "Storage Bridge fans each item out to whichever bound channel's filter accepts it,",
+                        "instead of only the active channel. Disable to remove the option on this server",
+                        "(gateways then always use the single active channel).")
+                .define("allowFanOut", true);
         builder.pop();
 
         builder.push("shulkerCage");
@@ -108,6 +115,10 @@ public final class CESGConfig {
 
     public static int gatewayPortTransferCost() {
         return GATEWAY_PORT_TRANSFER_COST.get();
+    }
+
+    public static boolean gatewayFanOutAllowed() {
+        return GATEWAY_FAN_OUT.get();
     }
 
     public static int shulkerCageCooldown() {
