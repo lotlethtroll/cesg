@@ -201,6 +201,61 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_magnet_t2", has(CESGRegistration.MAGNET_UPGRADE_T2.get()))
                 .save(output);
 
+        // Crushing module (7D): millstone core; in-box crushing + milling. Tiers chain like magnet.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.CRUSHING_UPGRADE_T1.get())
+                .pattern(" I ")
+                .pattern("IMI")
+                .pattern(" S ")
+                .define('I', AllItems.IRON_SHEET.get())
+                .define('M', AllBlocks.MILLSTONE.get())
+                .define('S', CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.CRUSHING_UPGRADE_T2.get())
+                .requires(CESGRegistration.CRUSHING_UPGRADE_T1.get())
+                .requires(AllItems.ELECTRON_TUBE.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_crushing_t1", has(CESGRegistration.CRUSHING_UPGRADE_T1.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.CRUSHING_UPGRADE_T3.get())
+                .requires(CESGRegistration.CRUSHING_UPGRADE_T2.get())
+                .requires(AllItems.PRECISION_MECHANISM.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_crushing_t2", has(CESGRegistration.CRUSHING_UPGRADE_T2.get()))
+                .save(output);
+
+        // Washing module (7D): encased-fan core over water; in-box splashing. Tiers chain like magnet.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.WASHING_UPGRADE_T1.get())
+                .pattern(" W ")
+                .pattern("IFI")
+                .pattern(" S ")
+                .define('W', Items.WATER_BUCKET)
+                .define('I', AllItems.IRON_SHEET.get())
+                .define('F', AllBlocks.ENCASED_FAN.get())
+                .define('S', CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.WASHING_UPGRADE_T2.get())
+                .requires(CESGRegistration.WASHING_UPGRADE_T1.get())
+                .requires(AllItems.ELECTRON_TUBE.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_washing_t1", has(CESGRegistration.WASHING_UPGRADE_T1.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.WASHING_UPGRADE_T3.get())
+                .requires(CESGRegistration.WASHING_UPGRADE_T2.get())
+                .requires(AllItems.PRECISION_MECHANISM.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_washing_t2", has(CESGRegistration.WASHING_UPGRADE_T2.get()))
+                .save(output);
+
         // Processed Shulker Shells are now made by dousing a Shulker Shell in Liquid Ender Pearl with a
         // Create Spout (see data/cesg/recipe/processed_shulker_shell_from_filling.json), so the old
         // iron-sheet crafting recipe is retired.

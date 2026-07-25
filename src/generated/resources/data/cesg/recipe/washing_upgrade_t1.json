@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "create:encased_fan"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "S": {
+      "item": "cesg:shulker_shell"
+    },
+    "W": {
+      "item": "minecraft:water_bucket"
+    }
+  },
+  "pattern": [
+    " W ",
+    "IFI",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:washing_upgrade_t1"
+  }
+}

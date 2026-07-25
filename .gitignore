@@ -35,6 +35,9 @@ bin/
 .aider*
 .continue/
 
+### Local scratch / reference extracts (do not commit) ###
+temp/
+
 ### Mac OS ###
 .DS_Store
 

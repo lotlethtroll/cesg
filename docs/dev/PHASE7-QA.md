@@ -84,13 +84,13 @@ Create's `ConnectivityHandler`; FluidHandler cap delegates to the controller;
 tank that locks to the first fuel piped in (Essence OR Eye); batteries assemble into
 a square-base array (cap **2×2×2** / **3×3×3**) whose capacity = `blocks × perBlock`;
 the controller **tops up the connected ring Core** every 5 ticks (push-only).
-Placeholder brass-cube texture pending art.
+Art: Create fluid-tank visual stack (brass/portal CT + teal windows + fill BER).
 
 ### Load & recipe-viewer
 
 - [ ] World loads with no errors; block appears in the CESG creative tab
 - [ ] JEI/EMI shows the crafting recipe (brass + ender pearls + Create fluid tank)
-- [ ] Block places and renders (brass placeholder cube — art is a later polish)
+- [ ] Block places and renders as a windowed brass tank (not a solid cube); fill shows through windows when fueled
 - [ ] Goggles show title + stored fuel `x/y mB`; on a multi, also `Array: WxWxH`
 
 ### Functional — single-fuel + top-up
@@ -140,11 +140,11 @@ Placeholder brass-cube texture pending art.
 - [ ] `gateway.portTransferCostMb` sets the per-flush Port fuel cost (0 = free)
 - [ ] `battery.reserveFloorMb` sets the protected travel reserve
 
-### Art pass — DEFERRED to 7H
+### Art pass — DONE (Create-tank stack)
 
-- Battery art (placeholder brass cube → bespoke model + fluid windows) is deferred
-  by the user 2026-07-23 and tracked as an explicit requirement under **7H — Art
-  Pass** below. 7E is functionally green on the placeholder; final art gates 1.1.0.
+- Battery art shipped 2026-07-24: brass/portal CT sheets, teal glass windows,
+  TOP/BOTTOM/SHAPE models, wrench window toggle, controller BER fill. Re-verify
+  visuals in-game on a fresh client load (1×1 / 2×2×2 / 3×3×3 + wrench).
 - ⚠️ **Recipe not yet signed off** — brass + ender pearls + Create fluid tank was
   authored before the sign-off rule; still awaiting user review/adjust.
 
@@ -246,7 +246,32 @@ Verify with one Core bound to two+ partners on different channels.
 
 ## 7D — Create-synergy Modules (Crushing + Washing)
 
-_Not built yet. (in-box processing chains, tier throughput, no dupe.)_
+Built 2026-07-24 (`1.1.0-dev`); compiles + full build clean, datagen regenerated.
+Recipes signed off. Verify with a **placed** Enhanced Shulker (processing is
+placed-only, and pauses while the GUI is open — check contents by breaking/peeking
+or piping out, not by watching the open GUI).
+
+### Craft & install
+- [ ] All 6 items appear in the CESG creative tab with names + tooltips
+- [ ] Crushing Mk I crafts (millstone + iron sheets + shell); Washing Mk I crafts
+  (encased fan + water bucket + iron sheets + shell), bucket returned
+- [ ] Mk II/III craft as shapeless upgrades of the prior tier
+- [ ] Modules install in the upgrade sidebar; only the highest tier of each applies
+
+### Processing
+- [ ] A placed box with **Crushing** turns cobblestone → gravel → sand (chains to
+  terminal); crushed-ore/dust outputs appear from ores
+- [ ] A placed box with **Washing** runs splashing (gravel → flint/nugget, etc.)
+- [ ] Chance/multi-output rolls look right over a large sample (not always max)
+- [ ] Throughput scales Mk I=1/s, Mk II=2/s, Mk III=4/s
+- [ ] Crushing + Washing in one box both run; stacking with **Smelting** chains
+  (e.g. crushed ore → ingot)
+
+### Safety / no-dupe
+- [ ] A **full** box holds the input (no processing, no loss) until space frees
+- [ ] No item dupe across chained conversions or on chunk reload mid-process
+- [ ] Overflow (rare) drops at the box rather than vanishing
+- [ ] No lag with a box full of cobble (throttle holds); no infinite oscillation
 
 ## 7F — Polish & UX
 
@@ -259,10 +284,9 @@ The home for every placeholder deferred by a feature track. **1.1.0 does not shi
 until this list is complete** (or an item is explicitly dropped by the user).
 Follow the palette / PIL recolor workflow in the texture art-direction notes.
 
-- [ ] **7E — Gateway Flux Battery**: replace placeholder brass cube with a bespoke
-  model + texture — brass-cased body, two fluid windows (teal Teleport Essence /
-  green Liquid Eye of Ender) showing fill level; directional optional. _Deferred
-  2026-07-23._
+- [x] **7E — Gateway Flux Battery**: Create fluid-tank visual stack (brass/portal
+  CT + teal windows + BER fill). Fill colour = stored fuel (lilac Essence /
+  green Eye). _Shipped 2026-07-24._
 
 _(Append 7A/7B/7C/7D blocks and any new item icons here as they are built on
 placeholders.)_

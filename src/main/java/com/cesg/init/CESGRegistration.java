@@ -155,6 +155,30 @@ public class CESGRegistration {
                 .register();
     }
 
+    public static final ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> CRUSHING_UPGRADE_T1 = crushingUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> CRUSHING_UPGRADE_T2 = crushingUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> CRUSHING_UPGRADE_T3 = crushingUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> crushingUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("crushing_upgrade_t" + tier, props -> new com.cesg.upgrades.CrushingUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/crushing_upgrade_t" + tier)))
+                .register();
+    }
+
+    public static final ItemEntry<com.cesg.upgrades.WashingUpgradeItem> WASHING_UPGRADE_T1 = washingUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.WashingUpgradeItem> WASHING_UPGRADE_T2 = washingUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.WashingUpgradeItem> WASHING_UPGRADE_T3 = washingUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.WashingUpgradeItem> washingUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("washing_upgrade_t" + tier, props -> new com.cesg.upgrades.WashingUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/washing_upgrade_t" + tier)))
+                .register();
+    }
+
     public static final ItemEntry<ShulkerShellItem> SHULKER_SHELL = CESG.REGISTRATE.item("shulker_shell", ShulkerShellItem::new)
             .model(CESGPlaceholderModels::shulkerShell)
             .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.shulker_shell"))
@@ -240,7 +264,11 @@ public class CESGRegistration {
                     .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion())
                     .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
                     .blockstate(CESGPlaceholderModels::gatewayFluxBattery)
+                    .onRegister(CreateRegistrate.blockModel(
+                            () -> com.cesg.client.GatewayFluxBatteryModel::standard))
+                    .addLayer(() -> net.minecraft.client.renderer.RenderType::cutoutMipped)
                     .item(com.cesg.gateways.GatewayFluxBatteryItem::new)
+                    .model(CESGPlaceholderModels::gatewayFluxBatteryItem)
                     .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_flux_battery"))
                     .build()
                     .register();

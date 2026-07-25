@@ -45,12 +45,13 @@ Two standing rules for new content this phase:
 | 7H | Art Pass (models/textures for every new block/item) | | last — collects deferred art |
 
 Build order rationale: **7G done**, **7E done** (verified/committed on `1.1-dev`).
-**7A done** (engine + terminal remote section + config GUI) and **7B done**
-(per-channel filters + Port/Bridge fan-out) — both built on `1.1-dev`, pending
-in-game QA. **7C's crafting terminal already shipped in 1.0.0** — only its JEI/EMI
-"+" transfer remains, folded into 7F. Remaining: 7D is orthogonal and can slot
-anywhere; 7F last so ponders / particles / recipe-viewer (incl. the terminal
-transfer handler) cover the final feature set; 7H last collects deferred art.
+**7A done** (engine + terminal remote section + config GUI), **7B done**
+(per-channel filters + Port/Bridge fan-out), and **7D done** (Crushing + Washing
+in-box modules) — all built on `1.1-dev`, pending in-game QA. **7C's crafting
+terminal already shipped in 1.0.0** — only its JEI/EMI "+" transfer remains, folded
+into 7F. Remaining feature work is done; **7F** (polish: ponders / sounds /
+particles / recipe-viewer incl. the terminal transfer handler / lang audit) and
+**7H** (art) are the finishing passes, plus the in-game QA sweep.
 
 ---
 
@@ -428,8 +429,47 @@ with empty filters and behave as before.
 
 ## 7D — Create-synergy upgrade modules (orthogonal)
 
-**Goal:** turn an Enhanced Shulker into a portable Create processing node.
-**Ship Crushing + Washing in 1.1** (D4); others queue for 1.2.
+**Status (2026-07-24, `1.1.0-dev`): built, pending in-game verification.** Recipes
+signed off by the user (chain-to-terminal, crushing+milling scope, recipe designs).
+- ✅ Two tiered modules (Mk I/II/III): `CrushingUpgradeItem` (Create
+  crushing + milling), `WashingUpgradeItem` (Create splashing). 6 items,
+  registered like the Magnet tiers; auto-join the creative tab and inherit the
+  global `ItemDescription` tooltip modifier.
+- ✅ `ShulkerProcessingUpgrades`: per-op recipe lookup via
+  `AllRecipeTypes.{CRUSHING,MILLING,SPLASHING}.getType()` + `SingleRecipeInput`,
+  rolls each `ProcessingOutput` (chance/multi-output), and commits a conversion
+  only after a **scratch-mirror simulate** confirms the outputs fit (full box
+  holds; a rare commit overflow drops at the box rather than vanishing). Chains to
+  a terminal form over successive passes, like Smelting.
+- ✅ Hooked into `EnhancedShulkerBoxBlockEntity.serverTick` (PLACED boxes only),
+  throttled to 1 pass/`PROCESS_INTERVAL` (20t); ops/pass = **1 / 2 / 4** by tier
+  (`operationsForTier`). Skipped while the box is viewed (like Magnet). Only the
+  highest installed tier of each module applies.
+- ✅ Crafting recipes (approved): Mk I shaped around the themed Create machine
+  (millstone / encased fan) + iron sheet + shulker shell; Mk II/III shapeless
+  upgrades (+ electron tube / precision mechanism + brass + shell). Lang + datagen.
+- ⬜ In-game verification — see [PHASE7-QA.md](PHASE7-QA.md) 7D steps.
+- ⬜ Bespoke art deferred to 7H (placeholder textures copied from magnet /
+  stack-depth for now).
+
+### Behavior as built (wiki reference)
+
+**Crushing / Washing modules** are tiered Enhanced-Shulker sidebar modules that
+**process the box's own contents in place**, like the Smelting module — but using
+Create's multi-output, chance-based recipes.
+- **Crushing Upgrade** runs Create **crushing + milling** recipes (ores → crushed
+  ore, cobblestone → gravel → sand). **Washing Upgrade** runs **splashing** (fan /
+  bulk washing) recipes (gravel → flint/iron nugget, sand → clay, crushed ore →
+  extra nuggets).
+- The box must be **placed** (a pocket box doesn't run a crusher). Every interval
+  it performs a few conversions — **Mk I = 1/sec, Mk II = 2/sec, Mk III = 4/sec**;
+  only the highest installed tier of a given module counts.
+- Outputs go **back into the box** and are re-processed on later passes, so a
+  Crushing box takes cobblestone all the way to sand (**chain to terminal**). A
+  box with both a Crushing and a Washing module runs both; modules stack with
+  Smelting (e.g. crushed ore → smelted to ingot).
+- It never loses items: if the outputs don't fit, the box simply **holds** the
+  input until there's room. Processing pauses while the box's GUI is open.
 
 **Design (mirrors Smelting module):**
 - On the upgrade tick, scan box contents; for each stack with a matching Create
@@ -591,9 +631,10 @@ Follow the palette / PIL recolor workflow in the texture art-direction notes;
 match Create's brass/andesite grain where a block reads as a machine.
 
 **Outstanding art requirements (grow this list as tracks defer art):**
-- **7E — Gateway Flux Battery** — replace the placeholder brass cube with a
-  bespoke model + texture: brass-cased body with two fluid windows (teal Teleport
-  Essence / green Liquid Eye of Ender) reading fill level; directional optional.
+- **7E — Gateway Flux Battery** — ✅ done: Create fluid-tank visual stack (brass /
+  portal-accent CT sheets + teal glass windows + controller BER fill), plus battery
+  differentiation: terminal/bus top, fill-reactive side charge gauges (lilac/green),
+  and Port-style conduit sockets on faces touching a gateway frame/core.
 
 (Add 7A/7B/7C/7D blocks + any new items here as they are built with placeholders.)
 

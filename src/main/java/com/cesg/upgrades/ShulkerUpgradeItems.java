@@ -23,7 +23,9 @@ public final class ShulkerUpgradeItems {
                 || stack.is(CESGRegistration.COMPACTING_UPGRADE.get())
                 || stack.is(CESGRegistration.SMELTING_UPGRADE.get())
                 || stack.is(CESGRegistration.VOID_UPGRADE.get())
-                || stack.getItem() instanceof MagnetUpgradeItem;
+                || stack.getItem() instanceof MagnetUpgradeItem
+                || stack.getItem() instanceof CrushingUpgradeItem
+                || stack.getItem() instanceof WashingUpgradeItem;
     }
 
     /** Highest magnet module tier installed, or 0. Like stack depth, only the best tier applies. */
@@ -32,6 +34,26 @@ public final class ShulkerUpgradeItems {
         for (ItemStack stack : upgradeSlots) {
             if (stack.getItem() instanceof MagnetUpgradeItem magnet)
                 best = Math.max(best, magnet.getModuleTier());
+        }
+        return best;
+    }
+
+    /** Highest crushing module tier installed, or 0. Only the best tier applies. */
+    public static int highestInstalledCrushingTier(Iterable<ItemStack> upgradeSlots) {
+        int best = 0;
+        for (ItemStack stack : upgradeSlots) {
+            if (stack.getItem() instanceof CrushingUpgradeItem crushing)
+                best = Math.max(best, crushing.getModuleTier());
+        }
+        return best;
+    }
+
+    /** Highest washing module tier installed, or 0. Only the best tier applies. */
+    public static int highestInstalledWashingTier(Iterable<ItemStack> upgradeSlots) {
+        int best = 0;
+        for (ItemStack stack : upgradeSlots) {
+            if (stack.getItem() instanceof WashingUpgradeItem washing)
+                best = Math.max(best, washing.getModuleTier());
         }
         return best;
     }

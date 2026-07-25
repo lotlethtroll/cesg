@@ -293,10 +293,38 @@ public final class CESGPlaceholderModels {
                 net.minecraft.resources.ResourceLocation.parse("create:block/brass_casing")));
     }
 
-    /** Gateway Flux Battery (Phase 7E): brass-cased fuel reservoir. Placeholder brass cube pending art. */
+    /**
+     * Gateway Flux Battery (Phase 7E / 7H): Create fluid-tank style TOP/BOTTOM/SHAPE variants pointing at
+     * hand-authored models under {@code models/block/gateway_flux_battery/}.
+     */
     public static void gatewayFluxBattery(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
-        prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(),
-                net.minecraft.resources.ResourceLocation.parse("create:block/brass_casing")));
+        prov.getVariantBuilder(ctx.getEntry()).forAllStates(state -> {
+            boolean top = state.getValue(com.cesg.gateways.GatewayFluxBatteryBlock.TOP);
+            boolean bottom = state.getValue(com.cesg.gateways.GatewayFluxBatteryBlock.BOTTOM);
+            com.cesg.gateways.GatewayFluxBatteryBlock.Shape shape =
+                    state.getValue(com.cesg.gateways.GatewayFluxBatteryBlock.SHAPE);
+
+            String shapeName = "middle";
+            if (top && bottom)
+                shapeName = "single";
+            else if (top)
+                shapeName = "top";
+            else if (bottom)
+                shapeName = "bottom";
+
+            String modelName = shapeName
+                    + (shape == com.cesg.gateways.GatewayFluxBatteryBlock.Shape.PLAIN
+                            ? ""
+                            : "_" + shape.getSerializedName());
+            ModelFile model = prov.models()
+                    .getExistingFile(cesg("block/gateway_flux_battery/block_" + modelName));
+            return ConfiguredModel.builder().modelFile(model).build();
+        });
+    }
+
+    /** Inventory model parents the windowed single-block tank. */
+    public static void gatewayFluxBatteryItem(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
+        prov.withExistingParent(ctx.getName(), cesg("block/gateway_flux_battery/block_single_window"));
     }
 
     /** Animated ender teal-purple portal plane (custom models referencing cesg:block/gateway_portal). */

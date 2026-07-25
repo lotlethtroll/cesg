@@ -55,6 +55,9 @@
   "fluid.cesg.liquid_eye_of_ender": "ɹǝpuƎ ɟo ǝʎƎ pınbıꞀ",
   "fluid.cesg.teleport_essence": "ǝɔuǝssƎ ʇɹodǝןǝ⟘",
   "item.cesg.compacting_upgrade": "ǝpɐɹbd∩ buıʇɔɐdɯoƆ",
+  "item.cesg.crushing_upgrade_t1": "Ɩ⟘ ǝpɐɹbd∩ buıɥsnɹƆ",
+  "item.cesg.crushing_upgrade_t2": "ᄅ⟘ ǝpɐɹbd∩ buıɥsnɹƆ",
+  "item.cesg.crushing_upgrade_t3": "Ɛ⟘ ǝpɐɹbd∩ buıɥsnɹƆ",
   "item.cesg.emergency_eye_charge": "ǝbɹɐɥƆ ǝʎƎ ʎɔuǝbɹǝɯƎ",
   "item.cesg.ender_pearl_dust": "ʇsnᗡ ןɹɐǝԀ ɹǝpuƎ",
   "item.cesg.filter_upgrade": "ǝpɐɹbd∩ ɹǝʇןıℲ",
@@ -70,5 +73,8 @@
   "item.cesg.stack_depth_upgrade_t2": "ᄅ⟘ ǝpɐɹbd∩ ɥʇdǝᗡ ʞɔɐʇS",
   "item.cesg.stack_depth_upgrade_t3": "Ɛ⟘ ǝpɐɹbd∩ ɥʇdǝᗡ ʞɔɐʇS",
   "item.cesg.teleport_essence_bucket": "ʇǝʞɔnᗺ ǝɔuǝssƎ ʇɹodǝןǝ⟘",
-  "item.cesg.void_upgrade": "ǝpɐɹbd∩ pıoΛ"
+  "item.cesg.void_upgrade": "ǝpɐɹbd∩ pıoΛ",
+  "item.cesg.washing_upgrade_t1": "Ɩ⟘ ǝpɐɹbd∩ buıɥsɐM",
+  "item.cesg.washing_upgrade_t2": "ᄅ⟘ ǝpɐɹbd∩ buıɥsɐM",
+  "item.cesg.washing_upgrade_t3": "Ɛ⟘ ǝpɐɹbd∩ buıɥsɐM"
 }

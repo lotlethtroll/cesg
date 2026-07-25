@@ -1,12 +1,17 @@
 package com.cesg.gateways;
 
+import static java.lang.Math.abs;
+
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.cesg.CESGConfig;
+import com.cesg.gateways.GatewayFluxBatteryBlock.Shape;
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.init.CESGFluids;
 import com.cesg.util.CESGLang;
@@ -14,6 +19,8 @@ import com.simibubi.create.api.connectivity.ConnectivityHandler;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 
+import net.createmod.catnip.animation.LerpedFloat;
+import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -58,6 +65,8 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
     private int width = 1;
     private int height = 1;
     private boolean syncDirty;
+    private boolean window = true;
+    private LerpedFloat fluidLevel;
 
     final FluidTank tank = new FluidTank(capacityPerBlock(),
             s -> isEssence(s) || isEye(s)) {
@@ -65,6 +74,8 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         protected void onContentsChanged() {
             setChanged();
             syncDirty = true;
+            if (level != null && level.isClientSide)
+                chaseFluidLevel();
         }
     };
 
@@ -89,6 +100,25 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         return c == null ? FluidStack.EMPTY : c.tank.getFluid();
     }
 
+    public FluidTank getTankInventory() {
+        return tank;
+    }
+
+    public boolean hasWindow() {
+        return window;
+    }
+
+    @Nullable
+    public LerpedFloat getFluidLevel() {
+        return fluidLevel;
+    }
+
+    public float getFillState() {
+        if (tank.getCapacity() == 0)
+            return 0;
+        return (float) tank.getFluidAmount() / tank.getCapacity();
+    }
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, GatewayFluxBatteryBlockEntity be) {
         be.lastKnownPos = pos;
         if (be.updateConnectivity)
@@ -103,6 +133,11 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
             be.topUpCore();
     }
 
+    public static void clientTick(Level level, BlockPos pos, BlockState state, GatewayFluxBatteryBlockEntity be) {
+        if (be.fluidLevel != null)
+            be.fluidLevel.tickChaser();
+    }
+
     void updateConnectivity() {
         updateConnectivity = false;
         if (level == null || level.isClientSide)
@@ -110,6 +145,49 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         if (!isController())
             return;
         ConnectivityHandler.formMulti(this);
+    }
+
+    public void toggleWindows() {
+        GatewayFluxBatteryBlockEntity be = controllerBE();
+        if (be == null)
+            return;
+        be.setWindows(!be.window);
+    }
+
+    public void setWindows(boolean window) {
+        this.window = window;
+        if (level == null)
+            return;
+        // Controller-authoritative rewrite of SHAPE + TOP/BOTTOM for the whole footprint.
+        // Parts are notified during form *before* the controller's height is updated, so relying
+        // solely on each part's notifyMultiUpdated leaves phantom missing lids on upper layers.
+        for (int yOffset = 0; yOffset < height; yOffset++) {
+            for (int xOffset = 0; xOffset < width; xOffset++) {
+                for (int zOffset = 0; zOffset < width; zOffset++) {
+                    BlockPos pos = this.worldPosition.offset(xOffset, yOffset, zOffset);
+                    BlockState blockState = level.getBlockState(pos);
+                    if (!GatewayFluxBatteryBlock.isBattery(blockState))
+                        continue;
+
+                    Shape shape = Shape.PLAIN;
+                    if (window) {
+                        if (width == 1)
+                            shape = Shape.WINDOW;
+                        if (width == 2)
+                            shape = xOffset == 0 ? zOffset == 0 ? Shape.WINDOW_NW : Shape.WINDOW_SW
+                                    : zOffset == 0 ? Shape.WINDOW_NE : Shape.WINDOW_SE;
+                        if (width == 3 && abs(abs(xOffset) - abs(zOffset)) == 1)
+                            shape = Shape.WINDOW;
+                    }
+
+                    level.setBlock(pos, blockState
+                                    .setValue(GatewayFluxBatteryBlock.SHAPE, shape)
+                                    .setValue(GatewayFluxBatteryBlock.BOTTOM, yOffset == 0)
+                                    .setValue(GatewayFluxBatteryBlock.TOP, yOffset == height - 1),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+                }
+            }
+        }
     }
 
     /** Push held fuel into the connected gateway Core's matching tank, up to the per-cycle budget. */
@@ -166,6 +244,13 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
     private void sync() {
         if (level != null)
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+    }
+
+    private void chaseFluidLevel() {
+        float fill = getFillState();
+        if (fluidLevel == null)
+            fluidLevel = LerpedFloat.linear().startWithValue(fill);
+        fluidLevel.chase(fill, 0.5f, Chaser.EXP);
     }
 
     // ---- IMultiBlockEntityContainer ----
@@ -243,6 +328,16 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         controller = null;
         width = 1;
         height = 1;
+
+        BlockState state = getBlockState();
+        if (GatewayFluxBatteryBlock.isBattery(state) && level != null) {
+            state = state.setValue(GatewayFluxBatteryBlock.BOTTOM, true);
+            state = state.setValue(GatewayFluxBatteryBlock.TOP, true);
+            state = state.setValue(GatewayFluxBatteryBlock.SHAPE, window ? Shape.WINDOW : Shape.PLAIN);
+            level.setBlock(worldPosition, state,
+                    Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        }
+
         if (level != null)
             level.invalidateCapabilities(worldPosition);
         setChanged();
@@ -262,6 +357,20 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
 
     @Override
     public void notifyMultiUpdated() {
+        BlockState state = getBlockState();
+        if (GatewayFluxBatteryBlock.isBattery(state) && level != null) {
+            // Use *this* BE's height: ConnectivityHandler sets it on each part before notify.
+            // Reading the controller's height here is wrong — the controller is updated last,
+            // so parts would still see height=1 and never get TOP=true on upper layers.
+            BlockPos ctrl = getController();
+            state = state.setValue(GatewayFluxBatteryBlock.BOTTOM, ctrl.getY() == getBlockPos().getY());
+            state = state.setValue(GatewayFluxBatteryBlock.TOP,
+                    ctrl.getY() + height - 1 == getBlockPos().getY());
+            level.setBlock(getBlockPos(), state,
+                    Block.UPDATE_CLIENTS | Block.UPDATE_INVISIBLE | Block.UPDATE_KNOWN_SHAPE);
+        }
+        if (isController())
+            setWindows(window); // also rewrites TOP/BOTTOM for the full footprint
         setChanged();
         if (level != null && !level.isClientSide) {
             level.invalidateCapabilities(worldPosition);
@@ -272,6 +381,25 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
     @Override
     public void preventConnectivityUpdate() {
         updateConnectivity = false;
+    }
+
+    @Override
+    public void setExtraData(@Nullable Object data) {
+        if (data instanceof Boolean b)
+            window = b;
+    }
+
+    @Override
+    @Nullable
+    public Object getExtraData() {
+        return window;
+    }
+
+    @Override
+    public Object modifyExtraData(Object data) {
+        if (data instanceof Boolean windows)
+            return windows || window;
+        return data;
     }
 
     // ---- IMultiBlockEntityContainer.Fluid ----
@@ -330,6 +458,7 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         if (isController()) {
             tag.putInt("Width", width);
             tag.putInt("Height", height);
+            tag.putBoolean("Window", window);
             tag.put("Tank", tank.writeToNBT(registries, new CompoundTag()));
         }
     }
@@ -343,11 +472,14 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         if (isController()) {
             width = Math.max(1, tag.getInt("Width"));
             height = Math.max(1, tag.getInt("Height"));
+            if (tag.contains("Window"))
+                window = tag.getBoolean("Window");
             tank.setCapacity(getTotalTankSize() * capacityPerBlock());
             tank.readFromNBT(registries, tag.getCompound("Tank"));
             int overflow = tank.getFluidAmount() - tank.getCapacity();
             if (overflow > 0)
                 tank.drain(overflow, IFluidHandler.FluidAction.EXECUTE);
+            chaseFluidLevel();
         }
     }
 

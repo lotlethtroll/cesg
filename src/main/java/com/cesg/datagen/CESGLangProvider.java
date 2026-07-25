@@ -55,6 +55,13 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.battery.stored", "%s: %s/%s mB");
         add("cesg.goggles.battery.array", "Array: %sx%sx%s");
         add("cesg.goggles.battery.reserve", "Travel reserve: %s mB (automation paused below this)");
+        add("cesg.battery.fuel_added", "Added %s mB to the Flux Battery");
+        add("cesg.battery.fuel_drained", "Drained %s mB from the Flux Battery");
+        add("cesg.battery.need_bucket_space",
+                "Need %s mB free for a full bucket (only %s mB free)");
+        add("cesg.battery.need_bucket_fuel",
+                "Need %s mB stored to fill a bucket (only %s mB)");
+        add("cesg.battery.wrong_fuel", "Battery is locked to %s — empty it first");
         add("block.cesg.storage_bridge", "Cross-Dimensional Storage Bridge");
         add("block.cesg.storage_bridge.tooltip.summary",
                 "Links two _Storage Networks_ through a bound gateway. Place beside a _Gateway Frame_ or _Core_ that is _adjacent to a Storage Network_; a matching Bridge on the partner ring surfaces that network's items on this side's _Storage Terminal_ as a separate section. Moves items _both ways_ with per-side filters while the gateway is powered and fueled.");
@@ -102,6 +109,12 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.magnet_upgrade_t1", "Magnet Upgrade Mk I");
         add("item.cesg.magnet_upgrade_t2", "Magnet Upgrade Mk II");
         add("item.cesg.magnet_upgrade_t3", "Magnet Upgrade Mk III");
+        add("item.cesg.crushing_upgrade_t1", "Crushing Upgrade Mk I");
+        add("item.cesg.crushing_upgrade_t2", "Crushing Upgrade Mk II");
+        add("item.cesg.crushing_upgrade_t3", "Crushing Upgrade Mk III");
+        add("item.cesg.washing_upgrade_t1", "Washing Upgrade Mk I");
+        add("item.cesg.washing_upgrade_t2", "Washing Upgrade Mk II");
+        add("item.cesg.washing_upgrade_t3", "Washing Upgrade Mk III");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.summary",
                 "_Raises stack limits to 128_ per slot when installed in an _Enhanced Shulker_.");
         add("item.cesg.stack_depth_upgrade_t2.tooltip.summary",
@@ -122,6 +135,18 @@ public class CESGLangProvider extends LanguageProvider {
                 "A PLACED box pulls in dropped items it can accept within _10 blocks_, fastest. Only the highest-tier magnet module applies.");
         add("item.cesg.void_upgrade.tooltip.summary",
                 "Overflow of item types the box already stores is _destroyed_ instead of rejected. Types the box does not store are still rejected normally — a full box is not a trash can. Click the module's _crimson config slot_ with an item to void ONLY matching overflow (independent of the storage filter).");
+        add("item.cesg.crushing_upgrade_t1.tooltip.summary",
+                "A PLACED box _crushes and mills_ its contents using Create recipes (ores → crushed ore, cobble → gravel → sand), chaining to the final form. _1 conversion/sec_. Only the highest-tier crushing module applies.");
+        add("item.cesg.crushing_upgrade_t2.tooltip.summary",
+                "A PLACED box _crushes and mills_ its contents, chaining to the final form, at _2 conversions/sec_. Only the highest-tier crushing module applies.");
+        add("item.cesg.crushing_upgrade_t3.tooltip.summary",
+                "A PLACED box _crushes and mills_ its contents, chaining to the final form, at _4 conversions/sec_. Only the highest-tier crushing module applies.");
+        add("item.cesg.washing_upgrade_t1.tooltip.summary",
+                "A PLACED box _washes_ its contents using Create splashing recipes (gravel → flint, sand → clay, crushed ores → nuggets), chaining to the final form. _1 conversion/sec_. Only the highest-tier washing module applies.");
+        add("item.cesg.washing_upgrade_t2.tooltip.summary",
+                "A PLACED box _washes_ its contents, chaining to the final form, at _2 conversions/sec_. Only the highest-tier washing module applies.");
+        add("item.cesg.washing_upgrade_t3.tooltip.summary",
+                "A PLACED box _washes_ its contents, chaining to the final form, at _4 conversions/sec_. Only the highest-tier washing module applies.");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.condition1", "When installed");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.behaviour1",
                 "Only modules in the _upgrade sidebar_ activate; spares kept in main storage are _inert_.");
