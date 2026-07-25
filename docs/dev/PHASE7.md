@@ -170,7 +170,7 @@ completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent fo
 
 ## 7A — Cross-Dimensional Storage Bridge (build third — the tentpole)
 
-**Status (2026-07-24, `1.1.0-dev`): server engine + terminal remote section landed; passive-filter GUI pending.**
+**Status (2026-07-24, `1.1.0-dev`): feature-complete pending in-game verification + art. Server engine, terminal remote section, and passive-transfer config GUI all landed.**
 - ✅ `StorageBridgeBlock` / `StorageBridgeBlockEntity`: `StorageNetwork` member +
   ring-attached endpoint; ring-BFS partner resolution with the Port's 3-state
   liveness (OFFLINE/LIVE/FAULT); bidirectional passive flush; fuel-gated via
@@ -188,10 +188,14 @@ completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent fo
   a partner never double-count. Server↔client via the extended
   `TerminalContentPacket` (+`remoteEntries`/`remoteStatus`) and new
   `TerminalActionPacket` REMOTE_* modes.
-- ⬜ **Filter + direction GUI** — `sendFilter`/`pullFilter`/blacklist flags and
-  `setPush/PullEnabled` (passive auto-transfer) persist but have no in-game
-  control yet, so passive bidirectional transfer can't be configured. The manual
-  terminal path above is fully usable without it.
+- ✅ **Passive-transfer config GUI (D3)** — right-click the Bridge (empty hand)
+  opens a config menu: a push (local→partner) and a pull (partner→local) row of
+  9 ghost-filter slots each, plus per-direction enable + whitelist/blacklist
+  toggles. Ghost slots reuse the enhanced-shulker filter-slot idiom (click a slot
+  with an item to set a type-only copy, nothing consumed). New `StorageBridgeMenu`
+  (ghost `SlotItemHandler` + `SimpleContainerData` toggles + `clickMenuButton`
+  buttons) and `StorageBridgeScreen`; the four booleans and both `ItemStackHandler`
+  filters were already persisted, now reachable + editable.
 - ⬜ **In-game verification** — see [PHASE7-QA.md](PHASE7-QA.md) 7A steps.
 - ⬜ Bespoke art deferred to 7H.
 

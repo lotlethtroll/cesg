@@ -63,6 +63,17 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.bridge.status.offline", "Partner network: offline (unbound or unloaded)");
         add("cesg.goggles.bridge.status.fault", "Partner network: no Bridge or controller found");
         add("cesg.goggles.bridge.transit", "In transit: %s out, %s in");
+        add("cesg.bridge.gui.title", "Storage Bridge");
+        add("cesg.bridge.push", "Push → Partner");
+        add("cesg.bridge.pull", "Pull ← Partner");
+        add("cesg.bridge.on", "On");
+        add("cesg.bridge.off", "Off");
+        add("cesg.bridge.whitelist_short", "WL");
+        add("cesg.bridge.blacklist_short", "BL");
+        add("cesg.bridge.enable.tip", "Toggle unattended auto-transfer in this direction. Idle = no fuel cost.");
+        add("cesg.bridge.whitelist.tip", "Whitelist: only the filtered items move (empty = nothing).");
+        add("cesg.bridge.blacklist.tip", "Blacklist: every item moves except the filtered ones (empty = everything).");
+        add("cesg.bridge.filter.hint", "Click with an item to filter this direction (the item is not consumed).");
         add("block.cesg.gateway_frame", "Gateway Frame");
         add("block.cesg.gateway_frame.tooltip.summary",
                 "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal.");

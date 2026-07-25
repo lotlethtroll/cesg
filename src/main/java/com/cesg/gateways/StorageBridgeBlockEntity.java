@@ -73,8 +73,8 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     final ItemStackHandler inBuffer = bufferHandler();
 
     // Per-direction filters (ghost items). Empty whitelist = nothing passes; empty blacklist = everything.
-    final ItemStackHandler sendFilter = new ItemStackHandler(FILTER_SLOTS);
-    final ItemStackHandler pullFilter = new ItemStackHandler(FILTER_SLOTS);
+    final ItemStackHandler sendFilter = filterHandler();
+    final ItemStackHandler pullFilter = filterHandler();
     private boolean sendBlacklist;
     private boolean pullBlacklist;
     private boolean pushEnabled;
@@ -90,6 +90,21 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             @Override
             protected void onContentsChanged(int slot) {
                 contentsChanged();
+            }
+        };
+    }
+
+    /** Ghost-filter storage: edits persist and mark the BE dirty, but never hold real items. */
+    private ItemStackHandler filterHandler() {
+        return new ItemStackHandler(FILTER_SLOTS) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                contentsChanged();
+            }
+
+            @Override
+            public int getSlotLimit(int slot) {
+                return 1; // filters are type-only; never stack
             }
         };
     }
@@ -384,6 +399,42 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
 
     public void setPullEnabled(boolean value) {
         pullEnabled = value;
+        contentsChanged();
+    }
+
+    public void togglePushEnabled() {
+        setPushEnabled(!pushEnabled);
+    }
+
+    public void togglePullEnabled() {
+        setPullEnabled(!pullEnabled);
+    }
+
+    /** Push filter (local → partner). Ghost items backing the terminal-independent auto-transfer. */
+    public ItemStackHandler getSendFilter() {
+        return sendFilter;
+    }
+
+    /** Pull filter (partner → local). */
+    public ItemStackHandler getPullFilter() {
+        return pullFilter;
+    }
+
+    public boolean isSendBlacklist() {
+        return sendBlacklist;
+    }
+
+    public boolean isPullBlacklist() {
+        return pullBlacklist;
+    }
+
+    public void toggleSendBlacklist() {
+        sendBlacklist = !sendBlacklist;
+        contentsChanged();
+    }
+
+    public void togglePullBlacklist() {
+        pullBlacklist = !pullBlacklist;
         contentsChanged();
     }
 

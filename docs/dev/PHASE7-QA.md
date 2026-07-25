@@ -168,10 +168,10 @@ auto-fill the grid — is folded into **7F** and will be QA'd there.
 
 ## 7A — Cross-Dimensional Storage Bridge
 
-Engine + terminal remote section built 2026-07-24 (`1.1.0-dev`); compiles + full
-build clean, datagen regenerated. The **manual** terminal path is now testable;
-only the passive-transfer **filter/direction GUI** is still pending (its engine
-exists, just no controls). Verify in a two-dimension setup with a bound gateway.
+Engine + terminal remote section + passive-transfer config GUI all built
+2026-07-24 (`1.1.0-dev`); compiles + full build clean, datagen regenerated. Track
+is feature-complete pending in-game verification (and 7H art). Verify in a
+two-dimension setup with a bound gateway.
 
 ### Placement & structure
 - [ ] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
@@ -199,9 +199,17 @@ exists, just no controls). Verify in a two-dimension setup with a bound gateway.
 - [ ] Drain fuel below the battery reserve → transfer gated (idle = free)
 - [ ] Viewed (open-GUI) shulker boxes skipped on **both** sides
 
-### Passive auto-transfer (filter/direction GUI) — pending
-- [ ] Enable push/pull + set per-side whitelist/blacklist; filtered bidirectional
-  flush moves matching items only, fuel-gated (idle = no cost)
+### Passive auto-transfer (config GUI)
+- [ ] Right-click the Bridge (empty hand) opens the config menu; push + pull rows
+  each show 9 filter slots and enable + WL/BL toggles
+- [ ] Click a filter slot with an item → sets a ghost copy (item not consumed);
+  click again empty / shift-click clears it
+- [ ] Toggles persist across close/reopen and a world reload
+- [ ] Enable push + whitelist a couple items → only those flow local→partner;
+  enable pull + blacklist an item → everything but it flows partner→local
+- [ ] Empty whitelist moves nothing; empty blacklist moves everything
+- [ ] Idle (both disabled) costs no fuel; enabled flush is fuel-gated by the
+  battery reserve
 
 ## 7B — Gateway Routing
 
