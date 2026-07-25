@@ -200,6 +200,45 @@ completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent fo
 - ⬜ **In-game verification** — see [PHASE7-QA.md](PHASE7-QA.md) 7A steps.
 - ⬜ Bespoke art deferred to 7H.
 
+### Behavior as built (wiki reference)
+
+**What the Bridge does.** The Cross-Dimensional Storage Bridge links two Storage
+Networks through a bound gateway. Place it next to a Gateway Frame or Core that is
+also touching a Storage Network; put a matching Bridge on the partner ring's
+network. Each Bridge joins its **local** network (its items show on local
+terminals) and mirrors the **partner** network across the gateway.
+
+**On the terminal.** When a Bridge is on a terminal's network, the terminal grows
+a **Local / Partner** tab strip (bridge-less terminals look unchanged). The
+Partner tab shows the partner network's items as a separate section with a
+liveness dot: **green** linked, **grey** offline (partner unbound or its chunk
+unloaded — silent, not an error), **red** fault (bound + loaded but no partner
+Bridge / no controller). Clicks on the Partner tab move items across the gateway:
+click withdraws to cursor, shift-click to inventory, right-click one; a
+carried-stack click deposits into the partner network.
+
+**Which partner a terminal shows.** A terminal drives its Partner tab from **one
+primary Bridge** (the first live one on the network), so several Bridges sharing a
+partner never double-count. The reverse of the hub-and-spoke case matters: many
+spoke networks can each see one shared hub, but a terminal only ever shows the
+**one** partner its Bridge's active channel points at.
+
+**Cross-dimension safety.** Every move is modelled extract-then-insert with an
+in-transit buffer: nothing commits until the source extract succeeds, so an
+unloaded partner or a broken Bridge can never dupe or void items (breaking a
+Bridge drops its buffered items). Manual withdraw charges fuel only on a
+successful pull (and bounces items back if the gateway can't pay); deposit charges
+up front and is refused outright when unfuelled.
+
+**Passive auto-transfer (config GUI).** Right-click the Bridge (empty hand) to
+open its config: a **push** (local→partner) and a **pull** (partner→local) row of
+nine filter slots each, with a per-direction enable and whitelist/blacklist
+toggle. Same filter rules as everywhere (empty whitelist = nothing, empty
+blacklist = everything). Enabled directions move filtered items automatically,
+fuel-gated by any Gateway Flux Battery's reserve; idle = no cost. **In gateway
+route mode (7B) the push side instead obeys the per-channel filters and the
+config-GUI push filter is ignored** — see 7B.
+
 **Goal:** link two Storage Networks through a bound gateway pair so a Terminal on
 one side can see and move items to/from the other side's network. Makes gateways
 permanent infrastructure, not just a travel novelty.
@@ -289,6 +328,63 @@ transfer; verify viewed boxes skipped on both sides.
   `routeMode`.
 - ⬜ In-game verification — see [PHASE7-QA.md](PHASE7-QA.md) 7B steps.
 
+### Behavior as built (wiki reference)
+
+Authoritative description of what shipped — use this to write the wiki page.
+
+**What routing does.** A Gateway Core is bound to up to 16 destinations
+("channels"). Normally a Gateway Port or Storage Bridge only talks to the
+**active** channel. Turn on **route mode** and it instead fans each item out to
+whichever channel's **filter** accepts it — one Core can sort iron to base A,
+gold to base B, everything else to base C, all at once.
+
+**Enabling it.** Right-click the Core to open the destination picker. It shows a
+**Route: ON/OFF** button (hidden if the server sets `gateway.allowFanOut = false`).
+Route mode is a property of the Core and applies to every Port and Bridge on that
+ring.
+
+**Per-channel filters.** In the picker, **right-click a channel** to open its
+filter editor: nine ghost slots plus a **Whitelist/Blacklist** toggle. Click a
+slot with an item to add it as a filter (the item is a copy — nothing is
+consumed); click a filled slot empty-handed to clear it. Filter rules match the
+rest of the mod:
+- **Whitelist** — only the listed items may route here. An **empty whitelist
+  accepts nothing** (an unconfigured channel therefore receives nothing).
+- **Blacklist** — everything routes here *except* the listed items. An **empty
+  blacklist accepts everything**, making that channel a **catch-all**.
+
+**How an item picks a channel.** For each item, the Core walks channels in order
+(1→16) and sends it to the **first bound channel whose filter accepts it**. This
+is deterministic — a given item type always lands on the same channel, so items
+never bounce between destinations. An item that **no** channel accepts is not
+moved (it stays in the Port's send buffer / the local storage network).
+
+**Gateway Port in route mode.** Items funneled into the Port are sorted to the
+matching channel's partner ring and delivered to a Port there. **Fluid is not
+item-filterable, so it always follows the active channel.** With route off, the
+Port behaves exactly as in 1.0 (everything to the active channel).
+
+**Storage Bridge in route mode.** The passive **push** pulls from the local
+network only the items some channel accepts, and delivers each to that channel's
+partner network. In route mode the channel filters are the **only** gate — the
+Bridge's own per-direction *send* filter is ignored (so you configure routing in
+one place, on the channels). The passive **pull** and the terminal's **Partner
+tab still use the active channel** — fan-out is a distribution/send concern only.
+
+**What the active channel is still used for** (unchanged by route mode): player
+**travel**, **fluid** transfer, **manual/terminal** item moves, and the Bridge's
+**pull** direction. Route mode only changes where *pushed/sent items* go.
+
+**Fuel & safety.** Routed transfers pay the same per-flush fuel as normal (Port:
+`gateway.portTransferCostMb`, Bridge: `bridge.transferCostMb`; default 0) and are
+gated by a Gateway Flux Battery's reserve floor the same way. A channel whose
+partner chunk is unloaded simply holds its share (buffered, retried) while other
+channels keep flowing — no dupe, no loss.
+
+**Compatibility.** Route mode defaults **off** and channels start with **no
+filters**, so 1.0 worlds and existing gateways behave exactly as before until a
+player opts in. `gateway.allowFanOut = false` removes the feature server-wide.
+
 **Goal:** per-channel filtering and one-to-many distribution, so a single Core
 can route different item/fluid classes to different bound partners. Extends the
 16-channel `bindings` infra already on the Core.
@@ -298,8 +394,10 @@ can route different item/fluid classes to different bound partners. Extends the
   channel's `GatewayPartner`, consulted by Ports and the Bridge before a flush.
   Reuse `ConfiguredFilterStack` / the existing filter-slot UI from upgrades.
 - **Fan-out mode:** when multiple channels are bound, a Port/Bridge in "route"
-  mode distributes each item to the first channel whose filter accepts it
-  (round-robin among ties). Default stays single-active-channel for compatibility.
+  mode distributes each item to the first bound channel whose filter accepts it.
+  **As built:** deterministic first-match by channel index (no round-robin — that
+  was considered and dropped to guarantee no item flip-flop). Default stays
+  single-active-channel for compatibility.
 - Destination-picker UI (already exists for channel selection) grows a
   filter-edit affordance per channel.
 
