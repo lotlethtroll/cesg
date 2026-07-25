@@ -230,6 +230,19 @@ public class GatewayFuelHandler implements IFluidHandler {
     }
 
     /**
+     * A ring block a walk rooted at the Core {@code ownCore} may traverse: any Gateway Frame, or that
+     * Core itself — but NOT a foreign Core. Foreign cores act as boundaries so two gateways that share
+     * ring blocks stay isolated (each owns its own side of the shared run) for fuel, battery, port and
+     * bridge scans alike.
+     */
+    public static boolean isOwnRingBlock(Level level, BlockPos pos, BlockPos ownCore) {
+        BlockState state = level.getBlockState(pos);
+        if (state.is(CESGRegistration.GATEWAY_FRAME.get()))
+            return true;
+        return pos.equals(ownCore) && state.is(CESGRegistration.CROSS_DIMENSIONAL_GATEWAY_CORE.get());
+    }
+
+    /**
      * Frame blocks have no BlockEntity, so NeoForge caches their fluid-handler lookup and only refreshes
      * it when that block's own state changes. When a ring block is added/removed, the Core a frame routes
      * to may appear or vanish without the frame's own state changing — so we must manually invalidate the

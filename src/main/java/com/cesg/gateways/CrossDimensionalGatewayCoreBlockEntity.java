@@ -412,6 +412,16 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         return false;
     }
 
+    /**
+     * A ring block this Core's own-ring walks may traverse: frames, and THIS Core — but never another
+     * Core. Stopping at a foreign Core keeps two gateways that share ring blocks from bleeding into each
+     * other's fuel/battery scans (each owns its own side of the shared run). {@code start != this} is a
+     * foreign Core and acts as a boundary.
+     */
+    private boolean isOwnRingBlock(BlockPos pos) {
+        return GatewayFuelHandler.isOwnRingBlock(level, pos, worldPosition);
+    }
+
     /** Unique Gateway Flux Battery controllers whose array touches this gateway ring. */
     private java.util.Collection<GatewayFluxBatteryBlockEntity> scanRingBatteries() {
         java.util.Map<BlockPos, GatewayFluxBatteryBlockEntity> controllers = new java.util.HashMap<>();
@@ -430,7 +440,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
                     if (controller != null)
                         controllers.putIfAbsent(controller.getBlockPos(), controller);
                 }
-                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                if (!visited.contains(next) && isOwnRingBlock(next)) {
                     visited.add(next);
                     queue.add(next);
                 }
@@ -559,7 +569,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             }
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
-                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                if (!visited.contains(next) && isOwnRingBlock(next)) {
                     visited.add(next);
                     queue.add(next);
                 }

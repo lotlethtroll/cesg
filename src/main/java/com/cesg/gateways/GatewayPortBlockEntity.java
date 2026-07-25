@@ -255,7 +255,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
                 if (checkedNeighbors.add(next)
                         && level.getBlockEntity(next) instanceof GatewayPortBlockEntity port)
                     ports.add(port);
-                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                if (!visited.contains(next) && GatewayFuelHandler.isOwnRingBlock(level, next, corePos)) {
                     visited.add(next);
                     queue.add(next);
                 }

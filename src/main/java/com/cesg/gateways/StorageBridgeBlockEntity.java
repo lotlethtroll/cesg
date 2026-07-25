@@ -207,7 +207,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
                 if (checkedNeighbors.add(next)
                         && level.getBlockEntity(next) instanceof StorageBridgeBlockEntity bridge)
                     bridges.add(bridge);
-                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                if (!visited.contains(next) && GatewayFuelHandler.isOwnRingBlock(level, next, corePos)) {
                     visited.add(next);
                     queue.add(next);
                 }
