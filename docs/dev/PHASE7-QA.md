@@ -248,12 +248,16 @@ setup with a bound gateway.
   2. The message was bare text drawn over the slot grid and was unreadable. It
      now sits on a panel plate with the usual highlight/shadow border.
   - **Re-confirm on the next client restart.**
-- [ ] Terminal shows a **Local / Partner** tab strip only when a Bridge is on the
-  network; a bridge-less terminal looks exactly as before
-- [ ] Partner tab's liveness dot matches the goggle status (green/grey/red)
-- [ ] Search box filters the active tab; switching tabs keeps the query
+- [x] Terminal shows a **Local / Partner** tab strip only when a Bridge is on the
+  network; a bridge-less terminal looks exactly as before _(2026-07-27)_
+- [x] Partner tab's liveness dot matches the goggle status (green/grey/red)
+  _(2026-07-27)_
+- [x] Search box filters the active tab; switching tabs keeps the query
+  _(2026-07-27)_
 - [ ] Partner chunk unloaded → Partner tab greys, grid shows "Partner network
   offline" (silent, not an error); FAULT shows "No partner network found"
+  — _FAULT text confirmed 2026-07-27; **the unloaded-chunk OFFLINE case belongs
+  to the cross-dimension pass (3E) and is still untested**_
 
 ### Transfer via terminal
 - [ ] On the Partner tab: click withdraws remote→cursor, shift-click→inventory,

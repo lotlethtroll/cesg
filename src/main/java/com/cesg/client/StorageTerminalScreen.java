@@ -279,10 +279,13 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             graphics.renderItem(entry.sample(), x, y);
             drawCount(graphics, x, y, entry.total());
         }
-        if (showingRemote && active.isEmpty())
-            drawRemotePlaceholder(graphics);
+        String placeholder = showingRemote && active.isEmpty() ? remotePlaceholderKey() : null;
+        if (placeholder != null)
+            drawRemotePlaceholder(graphics, placeholder);
 
-        if (isInGrid(mouseX, mouseY)) {
+        // No cell hover while a placeholder plate is up: there is nothing to hover, and the overlay
+        // would otherwise paint over the message.
+        if (placeholder == null && isInGrid(mouseX, mouseY)) {
             int gx = GRID_X + ((mouseX - leftPos - GRID_X) / CELL) * CELL + 1;
             int gy = GRID_Y + ((mouseY - topPos - GRID_Y) / CELL) * CELL + 1;
             graphics.fillGradient(net.minecraft.client.renderer.RenderType.guiOverlay(),
@@ -328,14 +331,15 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
      * holds nothing. A search that simply matches nothing leaves the grid blank exactly like the Local
      * tab does — claiming the partner network is empty when it merely has no match is misleading.
      */
-    private void drawRemotePlaceholder(GuiGraphics graphics) {
-        String key = switch (remoteStatus) {
+    private String remotePlaceholderKey() {
+        return switch (remoteStatus) {
             case TerminalContentPacket.REMOTE_OFFLINE -> "cesg.network.remote.offline";
             case TerminalContentPacket.REMOTE_FAULT -> "cesg.network.remote.fault";
             default -> remoteEntries.isEmpty() ? "cesg.network.remote.empty" : null;
         };
-        if (key == null)
-            return;
+    }
+
+    private void drawRemotePlaceholder(GuiGraphics graphics, String key) {
         Component msg = Component.translatable(key);
         int w = font.width(msg);
         int x = GRID_X + (COLS * CELL) / 2 - w / 2;
