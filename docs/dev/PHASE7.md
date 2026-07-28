@@ -8,8 +8,9 @@ pillars, chosen 2026-07-22:
    gateway routing, a crafting terminal, Create-synergy upgrade modules.
 2. **Power & economy** — a fuel/energy battery to buffer bursty gateway demand,
    plus config-exposed economics.
-3. **Polish & UX** — finish the Phase 6 ponder scaffold, close the cosmetic
-   TODOs, add sounds/particles, complete recipe-viewer coverage.
+3. **Polish & UX** — finish the Phase 6 ponder scaffold, sounds/particles,
+   recipe-viewer coverage, and release docs. (Phase 6 cosmetic carryovers are
+   WONTFIX for 1.1.0.)
 
 Version: MINOR (`1.1.0`) — new content, no save/recipe breakage intended. Any
 change that invalidates a 1.0 world or recipe must be flagged and re-scoped as
@@ -37,21 +38,33 @@ Two standing rules for new content this phase:
 |-------|------|-----------|-------------|
 | 7A | Cross-Dimensional Storage Bridge | ⭐ tentpole | 3 |
 | 7B | Gateway Routing (filters + fan-out) | | 4 |
-| 7C | Crafting Terminal — ✅ already shipped in 1.0.0; only JEI/EMI "+" transfer remains → 7F | | — |
+| 7C | Crafting Terminal — ✅ shipped in 1.0.0; JEI/EMI "+" → 7F (code done) | | — |
 | 7D | Create-synergy upgrade modules (Crushing, Washing) | | 5 |
 | 7E | Gateway Battery (fuel/energy buffer) | | 1 |
 | 7G | End Cultivation (native-Create farming recipes) | | anytime (orthogonal) |
 | 7F | Polish & UX pass | | 6 (last) |
 | 7H | Art Pass (models/textures for every new block/item) | | last — collects deferred art |
 
-Build order rationale: **7G done**, **7E done** (verified/committed on `1.1-dev`).
-**7A done** (engine + terminal remote section + config GUI), **7B done**
-(per-channel filters + Port/Bridge fan-out), and **7D done** (Crushing + Washing
-in-box modules) — all built on `1.1-dev`, pending in-game QA. **7C's crafting
-terminal already shipped in 1.0.0** — only its JEI/EMI "+" transfer remains, folded
-into 7F. Remaining feature work is done; **7F** (polish: ponders / sounds /
-particles / recipe-viewer incl. the terminal transfer handler / lang audit) and
-**7H** (art) are the finishing passes, plus the in-game QA sweep.
+### Status snapshot (code audit 2026-07-26, branch `1.1-dev`, `1.1.0-dev`)
+
+| Track | Feature code | Art | In-game QA | Notes |
+|-------|--------------|-----|------------|-------|
+| **7G** | ✅ | N/A | ✅ green | Only fully verified track |
+| **7C** | ✅ (in 1.0) | N/A | N/A | JEI/EMI "+" → 7F ✅ code |
+| **7E** | ✅ | ✅ | ❌ open | Recipe signed off 2026-07-27; fluid-on-break deferred |
+| **7A** | ✅ | ✅ (uncommitted) | ❌ open | Recipe signed off + authored 2026-07-27 |
+| **7B** | ✅ | N/A (UI) | ❌ open | |
+| **7D** | ✅ | ✅ textures present | ❌ open | Recipes signed off |
+| **7F** | partial | — | ❌ open | See 7F remaining list |
+| **7H** | — | near-done | — | Battery ✅; Bridge + Crushing/Washing pending user sign-off |
+
+**Truly open for 1.1.0 ship:** in-game QA sweep (7A/B/D/E + 7F transfer), ponder
+W-key verify, release docs (README / LISTING / CHANGELOG), confirm 7H Bridge +
+module icons in-game. Both outstanding recipes (Storage Bridge, Flux Battery)
+were signed off and authored 2026-07-27. Optional polish gaps
+(looping bridge hum, battery-discharge FX, continuous LIVE ambience) are
+documented under 7F — not treated as ship blockers unless re-scoped. Phase 6
+cosmetics = **WONTFIX**.
 
 ---
 
@@ -128,7 +141,12 @@ mid-transfer when a pump can't keep up.
 - `datagen/*` — blockstate, model, item model, loot table, lang, recipe, tags
 - Textures: battery block (brass casing + twin fluid windows, teal/green)
 
-**Recipe:** brass casing + fluid tank framing + ender pearl block (mid-tier).
+**Recipe** (signed off 2026-07-27): `BDB / DTD / BDB` — 4 Brass Ingot, 4 Ender
+Pearl Dust, 1 Create Fluid Tank → **2** batteries. Yields 2 like Create's own
+fluid tank because this is a bulk multiblock (a 3×3×3 array is 27 blocks), and
+the dust ties it to the renewable 7G crushing loop. Revised from the pre-sign-off
+version (4 brass + 4 whole ender pearls → 1), which made a full array cost 108
+ender pearls.
 
 **Risks:** ring-routing vs. standalone-network placement (D1); make sure draw
 order (battery before local tank) can't create a fill/drain loop with a pump.
@@ -161,45 +179,36 @@ restocking the grid from the network (`stockToFullStacks`); shift-click deposits
 into the network; a clear-grid button returns grid items to the network; and the
 searchable network list auto-refreshes. Nothing to rebuild.
 
-**The only remaining gap** is recipe-viewer transfer: JEI/EMI "+" to auto-fill the
-grid from network stock (and optionally R/U "show recipe/uses" on list items). The
-JEI/EMI plugins currently register only the Ender Infusing category — no terminal
-transfer handler. **This work is folded into 7F** (see "Recipe-viewer
-completeness" there): add a JEI `IRecipeTransferHandler` + the EMI equivalent for
-`StorageTerminalMenu`, respecting the L4 snapshot rules on any network pull.
+**JEI/EMI "+" transfer** (folded into 7F) is **code-complete** as of 2026-07-25
+(`TerminalRecipeTransferHandler` + `TerminalEmiRecipeHandler` +
+`TerminalFillRecipePacket`). Still needs in-game verification. R/U "show
+recipe/uses" on list items was never in scope and remains omitted.
 
 ---
 
 ## 7A — Cross-Dimensional Storage Bridge (build third — the tentpole)
 
-**Status (2026-07-24, `1.1.0-dev`): feature-complete pending in-game verification + art. Server engine, terminal remote section, and passive-transfer config GUI all landed.**
+**Status (2026-07-26, `1.1.0-dev`): feature-complete pending in-game QA + crafting
+recipe. Art landed (uncommitted) under 7H.**
 - ✅ `StorageBridgeBlock` / `StorageBridgeBlockEntity`: `StorageNetwork` member +
   ring-attached endpoint; ring-BFS partner resolution with the Port's 3-state
   liveness (OFFLINE/LIVE/FAULT); bidirectional passive flush; fuel-gated via
   `tryConsumeAutomationFuel`; break drops the in-transit buffer.
 - ✅ Registration, BE type, `bridge` config (transfer cost / max items / snapshot
-  TTL), `StorageNetwork.isMember`, brass placeholder model, lang, datagen.
-- ✅ **Terminal remote section (D2)** — a **Local / Partner** tab strip on the
-  terminal (shown only when a Bridge is on the network) toggles the 9×6 grid
-  between the local network and the partner snapshot. Partner tab carries a
-  liveness dot (green LIVE / grey OFFLINE / red FAULT) and shows a status line
-  when empty/offline/faulted. Clicks route across the gateway:
-  `terminalWithdrawRemote` (charge-on-success, bounce-back if unfuelled) and
-  `terminalDepositRemote` (charge-first, reject if unfuelled). One **primary
-  Bridge** (first LIVE, else first) drives the section so multiple Bridges sharing
-  a partner never double-count. Server↔client via the extended
-  `TerminalContentPacket` (+`remoteEntries`/`remoteStatus`) and new
-  `TerminalActionPacket` REMOTE_* modes.
-- ✅ **Passive-transfer config GUI (D3)** — right-click the Bridge (empty hand)
-  opens a config menu: a push (local→partner) and a pull (partner→local) row of
-  9 ghost-filter slots each, plus per-direction enable + whitelist/blacklist
-  toggles. Ghost slots reuse the enhanced-shulker filter-slot idiom (click a slot
-  with an item to set a type-only copy, nothing consumed). New `StorageBridgeMenu`
-  (ghost `SlotItemHandler` + `SimpleContainerData` toggles + `clickMenuButton`
-  buttons) and `StorageBridgeScreen`; the four booleans and both `ItemStackHandler`
-  filters were already persisted, now reachable + editable.
+  TTL), `StorageNetwork.isMember`, lang, datagen, status-driven models.
+- ✅ **Terminal remote section (D2)** — Local / Partner tab strip, liveness dot,
+  remote withdraw/deposit with fuel gates, primary-Bridge selection,
+  `TerminalContentPacket` / `TerminalActionPacket` REMOTE_* modes.
+- ✅ **Passive-transfer config GUI (D3)** — `StorageBridgeMenu` / `Screen` with
+  push/pull ghost filters + enable + WL/BL.
+- ✅ **Art (7H)** — hand-authored `storage_bridge/body` (+ `_lit`), OFFLINE/LIVE/
+  FAULT side+top textures, glass gauge panes (working tree; not yet committed).
+- ✅ **Crafting recipe** (signed off 2026-07-27) — `ERE / DCD / EYE`: 4 End Stone
+  Bricks, 1 **Processed Shulker Shell**, 1 Brass Casing, 2 Ender Pearl Dust,
+  1 Ender Eye → 1 Bridge. Gateway masonry around an ender-attuned storage core, so
+  the recipe reads as both subsystems; the Processed Shell gates the Bridge behind
+  the Liquid Ender Pearl economy it runs on.
 - ⬜ **In-game verification** — see [PHASE7-QA.md](PHASE7-QA.md) 7A steps.
-- ⬜ Bespoke art deferred to 7H.
 
 ### Behavior as built (wiki reference)
 
@@ -311,7 +320,8 @@ transfer; verify viewed boxes skipped on both sides.
 
 ## 7B — Gateway Routing: filters + fan-out (build fourth)
 
-**Status (2026-07-24, `1.1.0-dev`): built, pending in-game verification.**
+**Status (2026-07-26, `1.1.0-dev`): built, pending in-game verification.** No new
+block/item art (UI + Core NBT only).
 - ✅ Core: per-channel `ChannelFilter` map (9 ghost slots + whitelist/blacklist)
   + `routeMode` flag + `routeChannel(stack)` helper (first bound channel whose
   filter accepts it — deterministic, no flip-flop). NBT-safe: 1.0 worlds load
@@ -429,7 +439,7 @@ with empty filters and behave as before.
 
 ## 7D — Create-synergy upgrade modules (orthogonal)
 
-**Status (2026-07-24, `1.1.0-dev`): built, pending in-game verification.** Recipes
+**Status (2026-07-26, `1.1.0-dev`): built, pending in-game verification.** Recipes
 signed off by the user (chain-to-terminal, crushing+milling scope, recipe designs).
 - ✅ Two tiered modules (Mk I/II/III): `CrushingUpgradeItem` (Create
   crushing + milling), `WashingUpgradeItem` (Create splashing). 6 items,
@@ -448,9 +458,10 @@ signed off by the user (chain-to-terminal, crushing+milling scope, recipe design
 - ✅ Crafting recipes (approved): Mk I shaped around the themed Create machine
   (millstone / encased fan) + iron sheet + shulker shell; Mk II/III shapeless
   upgrades (+ electron tube / precision mechanism + brass + shell). Lang + datagen.
+- ✅ **Art (7H)** — dedicated `crushing_upgrade_t{1,2,3}.png` /
+  `washing_upgrade_t{1,2,3}.png` icons present (distinct from magnet; working
+  tree). Pending in-game / user sign-off that they read as final.
 - ⬜ In-game verification — see [PHASE7-QA.md](PHASE7-QA.md) 7D steps.
-- ⬜ Bespoke art deferred to 7H (placeholder textures copied from magnet /
-  stack-depth for now).
 
 ### Behavior as built (wiki reference)
 
@@ -508,36 +519,48 @@ interact sanely; confirm no dupe on chained conversions.
 
 ## 7F — Polish & UX pass (build last)
 
-Do this after every feature above exists, so it covers the final surface.
+Partial as of 2026-07-26. Feature tracks exist; this is the finishing pass.
 
-- **Ponder scenes** — finish the Phase 6 scaffold (never W-key verified). Verify
-  the 5 seeded scenes render, fix schematics/lang, and **add scenes** for the new
-  1.1 features: Storage Bridge, Crafting Terminal, Gateway Battery.
-  - Files: `ponder/CESGPonderScenes.java`, `ponder/CESGPonderPlugin.java`,
-    `assets/cesg/ponder/*.nbt`, lang `cesg.ponder.*` keys.
-- **Cosmetic TODOs** (carried from Phase 6): enhanced-shulker **item icon** (only
-  the placed BER is custom today), **station side faces**.
-- **Sounds** — gateway activate/deactivate, bridge-active hum, station dock/eject,
-  battery fill. Register a `SoundEvent` set; wire to the relevant BEs.
-- **Particles** — gateway portal ambiance already exists; add bridge-active and
-  battery-discharge cues.
-- **Recipe-viewer completeness** — every new block/module/recipe shows correctly
-  in both JEI and EMI; add category entries for the in-box processing modules if
-  they need explaining.
-- ✅ **Storage Terminal recipe transfer (from 7C)** — DONE 2026-07-25. JEI
-  `IRecipeTransferHandler` (`TerminalRecipeTransferHandler`, CRAFTING) + EMI
-  `EmiRecipeHandler` (`TerminalEmiRecipeHandler`) both forward the recipe id via
-  the new `TerminalFillRecipePacket`; the server (`StorageTerminalMenu.fillFromRecipe`)
-  returns the grid to the network, then places one of each ingredient — player
-  inventory first, network second — via `StorageNetwork.extract` (L4-safe: fresh
-  handlers, skips viewed boxes). Shaped keeps its shape (top-left), shapeless fills
-  sequentially. Pending in-game verification (both viewers). Batch amount uses the
-  existing shift-click batch-craft; R/U "show uses" not added.
-- **Config surface** — confirm all new knobs are documented and defaulted (L5).
-- **Lang audit** — every new block/item/tooltip/ponder key localized (ponder
-  text does NOT auto-localize; raw keys show if missing).
-- **README / LISTING / CHANGELOG** — add the new feature blurbs; update the
-  CurseForge listing.
+### Done
+- ✅ **Storage Terminal JEI/EMI "+" transfer** (from 7C) — 2026-07-25.
+  `TerminalRecipeTransferHandler` + `TerminalEmiRecipeHandler` +
+  `TerminalFillRecipePacket` → `StorageTerminalMenu.fillFromRecipe` (L4-safe).
+  Pending in-game verify. R/U "show uses" not in scope.
+- ✅ **Sounds (core set)** — `CESGSounds` + `sounds.json` + subtitle lang; wired
+  `PORTAL_OPEN` / `PORTAL_CLOSE`, `TELEPORT`, `LINK_LIVE` / `LINK_FAULT`,
+  `TRANSFER` (Port + Bridge, 20t throttle), `MACHINE_PROCESS`.
+- ✅ **Particles (core set)** — portal ambiance; open/close; teleport;
+  bridge LIVE/FAULT edges; Port/Bridge transfer bursts.
+- ✅ **Storage Bridge ponder scene** authored + lang keys; registered on
+  `storage_bridge` (and currently also reused for controller / terminal W-key).
+- ✅ **Config knobs** exist with comments/defaults in `CESGConfig`
+  (`gateway.portTransferCostMb`, `gateway.allowFanOut`, `battery.*`, `bridge.*`).
+- ✅ **Lang** for new blocks/items/goggles/GUI/route/filter/sound subtitles/
+  bridge ponder keys present in `CESGLangProvider` (regenerate `en_us` after
+  commit).
+
+### Still open (ship)
+- ⬜ **Ponders — W-key verify** Phase 6 scenes (loader / unloader / belt ×2 /
+  gateway core / ender infuser) + the new Bridge scene.
+- ⬜ **Ponders — dedicated 1.1 scenes** for **Gateway Flux Battery** and
+  **Crafting / Storage Terminal** (today controller + terminal reuse the Bridge
+  scene; Battery has no storyboard).
+- ⬜ **Recipe-viewer in-game sweep** — confirm battery / bridge (once recipe
+  exists) / crushing / washing / 7G recipes show in JEI+EMI; confirm terminal "+".
+- ⬜ **README / LISTING / CHANGELOG** — still 1.0-era; Unreleased only has 7G.
+  Need 1.1 blurbs (Bridge, routing, battery, modules, polish).
+- ⬜ **`docs/dev/TESTING.md` Section 5** — Phase 7 in-game checklist not added yet.
+
+### Deferred / accepted as-is (not ship blockers)
+- ❌ **Phase 6 cosmetics — WONTFIX** (2026-07-26): enhanced-shulker item icon,
+  station side faces.
+- ◯ No looping **bridge-active hum**; no **battery pipe-fill / Core top-up** sound
+  (bucket fill still vanilla `BUCKET_*`; station dock/eject still vanilla).
+- ◯ No **battery-discharge** particles on Core top-up; no continuous LIVE-idle
+  bridge ambience (edge + transfer FX only).
+- ◯ No dedicated JEI/EMI **category** explaining in-box Crushing/Washing (vanilla
+  Create recipe lookup is enough unless players need a CESG explainer).
+- ◯ Terminal R/U "show recipe/uses" omitted.
 
 ---
 
@@ -634,16 +657,20 @@ ship until 7H is complete** (or the user explicitly defers a specific item).
 Follow the palette / PIL recolor workflow in the texture art-direction notes;
 match Create's brass/andesite grain where a block reads as a machine.
 
-**Outstanding art requirements (grow this list as tracks defer art):**
-- **7E — Gateway Flux Battery** — ✅ done: Create fluid-tank visual stack (brass /
-  portal-accent CT sheets + teal glass windows + controller BER fill), plus battery
-  differentiation: terminal/bus top, fill-reactive side charge gauges (lilac/green),
-  and Port-style conduit sockets on faces touching a gateway frame/core.
+**Art checklist (audit 2026-07-26):**
+- ✅ **7E — Gateway Flux Battery** — Create fluid-tank visual stack (brass /
+  portal-accent CT + teal windows + controller BER fill), terminal/bus top,
+  fill-reactive side gauges, conduit sockets on ring-touching faces. _Shipped
+  2026-07-24._
+- ✅ **7A — Storage Bridge** — hand-authored `body` / `body_lit`, OFFLINE/LIVE/
+  FAULT textures + glass gauge (working tree). Pending commit + in-game sign-off.
+- ✅ **7D — Crushing / Washing icons** — six dedicated item PNGs present (not
+  magnet copies). Pending in-game / user sign-off as final.
+- N/A **7B** — UI-only (no new block/item art).
+- N/A **7C / 7G** — no new art surface.
 
-(Add 7A/7B/7C/7D blocks + any new items here as they are built with placeholders.)
-
-**Done when:** every new 1.1.0 block/item has final art, item icons included, and
-no placeholder models remain in the creative tab.
+**Done when:** user signs off Bridge + module icons in-game (or explicitly
+defers), and no placeholder cubes remain in the creative tab for 1.1 content.
 
 ---
 
@@ -670,7 +697,8 @@ no placeholder models remain in the creative tab.
 
 ## Testing checklist (extend docs/dev/TESTING.md)
 
-Add a **Section 5 (Phase 7)** with per-track in-game checks:
+Add a **Section 5 (Phase 7)** to `docs/dev/TESTING.md` (not present yet) with
+per-track in-game checks:
 - 5E Battery: fill/draw, burst-smoothing, goggle, config.
 - 5C Crafting Terminal: craft/shift-craft/JEI-fill, remainder return, viewed-box
   skip.
@@ -710,5 +738,17 @@ All four gating decisions locked 2026-07-22 (see "Locked" under Design decisions
   purpur/chorus lean on vanilla (regular harvesting on now-renewable end stone);
   optional Liquid-Ender-Pearl Spout as a premium end-stone accelerant.
 
-7E / 7A / 7B / 7D / 7G are now fully specified. Next: start 7E (Gateway Flux
-Battery), or 7G first if you want a fast, self-contained win (recipes only).
+**Recipe sign-offs 2026-07-27** (content-workflow rule — both were the last open
+balance decisions):
+- **Storage Bridge** — `ERE / DCD / EYE`: 4 End Stone Bricks, 1 Processed Shulker
+  Shell, 1 Brass Casing, 2 Ender Pearl Dust, 1 Ender Eye → 1. Chosen so the recipe
+  reads as gateway masonry + ender-attuned storage core, and so the Bridge is
+  gated behind the same Liquid Ender Pearl economy it consumes at runtime.
+- **Gateway Flux Battery** — `BDB / DTD / BDB`: 4 Brass Ingot, 4 Ender Pearl Dust,
+  1 Create Fluid Tank → **2**. Whole pearls → dust and yield 1 → 2, because the
+  battery is a bulk multiblock: the old recipe put a 3×3×3 array at 108 ender
+  pearls. Dust also routes the block through the renewable 7G crushing loop.
+
+7E / 7A / 7B / 7D / 7G feature code is built and every recipe is signed off.
+Remaining path to 1.1.0: in-game QA sweep, finish 7F ponders/docs, confirm 7H art,
+then release checklist.

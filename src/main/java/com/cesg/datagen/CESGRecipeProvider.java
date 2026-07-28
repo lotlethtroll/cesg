@@ -303,13 +303,30 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_gateway_frame", has(CESGRegistration.GATEWAY_FRAME.get()))
                 .save(output);
 
-        // Gateway Flux Battery (7E): a Create fluid tank ringed in brass + ender pearls; buffers gateway fuel.
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_FLUX_BATTERY.get())
-                .pattern("BPB")
-                .pattern("PTP")
-                .pattern("BPB")
+        // Cross-Dimensional Storage Bridge (7A): the tentpole. Gateway masonry wrapped around an
+        // ender-attuned storage core, so the recipe reads as both subsystems at once. The Processed
+        // Shulker Shell gates it behind the Liquid Ender Pearl economy the Bridge itself runs on.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.STORAGE_BRIDGE.get())
+                .pattern("ERE")
+                .pattern("DCD")
+                .pattern("EYE")
+                .define('E', Blocks.END_STONE_BRICKS)
+                .define('R', CESGRegistration.SHULKER_SHELL.get())
+                .define('C', AllBlocks.BRASS_CASING.get())
+                .define('D', CESGRegistration.ENDER_PEARL_DUST.get())
+                .define('Y', Items.ENDER_EYE)
+                .unlockedBy("has_processed_shulker_shell", has(CESGRegistration.SHULKER_SHELL.get()))
+                .save(output);
+
+        // Gateway Flux Battery (7E): a Create fluid tank ringed in brass + ender pearl dust; buffers
+        // gateway fuel. Yields 2 like Create's own fluid tank — this is a bulk multiblock (a 3x3x3
+        // array is 27 blocks), and the dust ties it to the renewable 7G crushing loop.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_FLUX_BATTERY.get(), 2)
+                .pattern("BDB")
+                .pattern("DTD")
+                .pattern("BDB")
                 .define('B', AllItems.BRASS_INGOT.get())
-                .define('P', Items.ENDER_PEARL)
+                .define('D', CESGRegistration.ENDER_PEARL_DUST.get())
                 .define('T', AllBlocks.FLUID_TANK.get())
                 .unlockedBy("has_fluid_tank", has(AllBlocks.FLUID_TANK.get()))
                 .save(output);

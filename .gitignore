@@ -37,6 +37,10 @@ bin/
 
 ### Local scratch / reference extracts (do not commit) ###
 temp/
+cx/
+
+### Tools (do not commit) ###
+tools/
 
 ### Mac OS ###
 .DS_Store

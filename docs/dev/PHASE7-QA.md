@@ -145,10 +145,13 @@ Art: Create fluid-tank visual stack (brass/portal CT + teal windows + fill BER).
 - Battery art shipped 2026-07-24: brass/portal CT sheets, teal glass windows,
   TOP/BOTTOM/SHAPE models, wrench window toggle, controller BER fill. Re-verify
   visuals in-game on a fresh client load (1×1 / 2×2×2 / 3×3×3 + wrench).
-- ⚠️ **Recipe not yet signed off** — brass + ender pearls + Create fluid tank was
-  authored before the sign-off rule; still awaiting user review/adjust.
+- ✅ **Recipe signed off 2026-07-27** and revised: `BDB / DTD / BDB` — 4 Brass
+  Ingot, 4 **Ender Pearl Dust**, 1 Create Fluid Tank → **2** batteries. The
+  pre-sign-off version (whole pearls, yield 1) made a 3×3×3 array cost 108 ender
+  pearls; dust + yield-2 drops that to 54 dust (~18 pearls) and 14 tanks, and ties
+  the bulk block to the renewable 7G crushing loop.
 
-### Deferred follow-ups (7E not fully closed until these land)
+### Deferred follow-ups (accepted for 1.1 unless re-scoped)
 
 - Breaking a lone battery loses its stored fluid (no NBT-on-item preservation).
 
@@ -158,20 +161,23 @@ Art: Create fluid-tank visual stack (brass/portal CT + teal windows + fill BER).
   Create-style multiblock** (`IMultiBlockEntityContainer.Fluid` + `ConnectivityHandler`,
   fetched from Create's source). `compileJava` + `runData` green. In-game
   verification pending — the multiblock form/split checks are the priority.
+- 2026-07-26: Docs refreshed; feature code still treated as done, **all functional
+  QA boxes above remain unchecked**.
 
 ## 7C — Crafting Terminal — ✅ SHIPPED IN 1.0.0
 
 The Storage Terminal already is the crafting terminal (3×3 grid + result, batch
 shift-craft with network restock, deposit-on-shift, clear-grid, searchable list).
-Nothing to build. The only remaining piece — JEI/EMI "+" recipe transfer to
-auto-fill the grid — is folded into **7F** and will be QA'd there.
+Nothing to build. JEI/EMI "+" recipe transfer is **code-complete** under **7F**
+(2026-07-25); QA it there.
 
 ## 7A — Cross-Dimensional Storage Bridge
 
 Engine + terminal remote section + passive-transfer config GUI all built
-2026-07-24 (`1.1.0-dev`); compiles + full build clean, datagen regenerated. Track
-is feature-complete pending in-game verification (and 7H art). Verify in a
-two-dimension setup with a bound gateway.
+2026-07-24 (`1.1.0-dev`); art (status-driven body + LIVE/FAULT textures) present
+in the working tree 2026-07-26; crafting recipe signed off + authored 2026-07-27.
+Track is feature-complete pending in-game verification. Verify in a two-dimension
+setup with a bound gateway.
 
 ### Placement & structure
 - [ ] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
@@ -210,6 +216,13 @@ two-dimension setup with a bound gateway.
 - [ ] Empty whitelist moves nothing; empty blacklist moves everything
 - [ ] Idle (both disabled) costs no fuel; enabled flush is fuel-gated by the
   battery reserve
+
+### Recipe & art
+- [ ] Crafting recipe visible in JEI/EMI and craftable at a bench (authored after
+  sign-off 2026-07-27: `ERE / DCD / EYE` — 4 End Stone Bricks, 1 Processed Shulker
+  Shell, 1 Brass Casing, 2 Ender Pearl Dust, 1 Ender Eye → 1 Bridge)
+- [ ] In-game: OFFLINE / LIVE / FAULT models + glass gauge read correctly
+  (art present in working tree; confirm on client load)
 
 ## 7B — Gateway Routing
 
@@ -273,10 +286,157 @@ or piping out, not by watching the open GUI).
 - [ ] Overflow (rare) drops at the box rather than vanishing
 - [ ] No lag with a box full of cobble (throttle holds); no infinite oscillation
 
+### Art pass
+- [ ] Six Crushing/Washing item icons look final in-game (textures present;
+  distinct from magnet as of 2026-07-26 — user sign-off)
+
 ## 7F — Polish & UX
 
-_Not built yet. (ponders render, sounds/particles, JEI+EMI complete, lang audit,
-**Storage Terminal JEI/EMI "+" recipe transfer** folded in from 7C.)_
+Partial (audit 2026-07-26). Terminal JEI/EMI "+" code shipped; sounds/particles
+core set wired; Bridge ponder authored. Phase 6 cosmetics **WONTFIX**.
+
+### Done (code) — still need in-game ticks where noted
+- [x] `CESGSounds` + `sounds.json` + subtitle lang registered
+- [x] Gateway open/close, teleport, bridge LIVE/FAULT, Port/Bridge transfer,
+  Infuser process sounds wired
+- [x] Portal ambiance + open/close + teleport + bridge edge + transfer particles
+- [x] Storage Terminal JEI/EMI "+" transfer handlers (`TerminalRecipeTransferHandler`,
+  `TerminalEmiRecipeHandler`)
+- [x] Storage Bridge ponder scene + lang keys (registered)
+- [x] Config knobs present with comments/defaults (`battery` / `bridge` /
+  `gateway.portTransferCostMb` / `gateway.allowFanOut`)
+- [x] Lang keys for new 1.1 blocks/items/GUIs/route/filter/subtitles/bridge ponder
+
+### Ponder polish pass (done — static verification only, see below)
+- [x] All 10 storyboards wrapped in Create's `CreateSceneBuilder`; every scene now
+  calls `setKineticSpeed` (belts/shafts/cogwheels were rendering frozen — Ponder
+  never runs the kinetic network) and the gateway scenes call `propagatePipeChange`
+- [x] Belt transfers use `createItemOnBelt` / `createItemOnBeltLike` instead of
+  thrown `createItemEntity` guesses; belt direction now follows the speed sign
+  (`getMovementFacing()` reads only the belt axis + speed sign, never `facing`)
+- [x] Terminal + Controller moved from `(2,1,0)`/`(3,1,0)` to the free `x=1`
+  column. The gateway schematic is only 2 wide, and `layersFrom` builds its
+  selection from `sceneBounds`, so anything at `x>1` was set in the world but
+  could never be shown
+- [x] Terminal + Controller have their own scene ids, titles and lang keys
+- [x] Dedicated **Gateway Flux Battery** scene (2-tall merged tank beside the ring)
+- [x] `layersFrom(0)` → `layersFrom(1)` in the three scenes that double-showed
+  the base-plate layer
+- [x] `cesg:end_storage` ponder tag added to the index with all 10 components
+- [x] **Gateway schematic re-authored** (`cross_dimensional_gateway_core.nbt`). The old one was
+  captured from a live world, so it shipped a fully fuelled/lit/bound/portal-open gateway: the Core
+  BE held `Eye:4000` plus stale `FrameLit`/`Portal` packed-position lists and a bound overworld
+  `Partner`, and the tank held 3750 mB. The storyboard only flipped the `lit` blockstate, so the
+  glass eye — which reads the BE's fuel — showed full from the first frame and never filled. The
+  frames also predated the `link_north/…/link_down` conduit properties, so every link defaulted to
+  `none` and **no conduit rendered at all**. Rebuilt cold: y=0 checkerboard base plate, ring plane
+  moved to x=1 (y=1..5) with conduit links computed from ring adjacency (`core` on the two frames
+  touching the Core), `lit=false`, `fuel=none`, empty Core tanks, no portal blocks, full source tank
+- [x] Gateway Core scene now drives the real fuel path: conduit `FUEL=EYE` walked around the ring
+  from the pump's inlet frame, then `addEye` in steps to fill the Core (which drives its own
+  `LIT`+`FUEL` via `updateCoreFuelVisual`), then frames light, then the portal opens. 4 text steps
+- [x] Bridge / Controller / Terminal moved to the x=2 column at y=1..3, resting on the base plate;
+  Terminal turned to `FACING=NORTH` so the console face points at the camera
+- [x] Flux Battery scene: single battery on the plate beside the ring, charged for real (fluid set
+  as a fraction of the *configured* capacity, so no hardcoded numbers) and then drained as the Core
+  fills. **Note:** the old scene showed a 1×1×2 stack, which is not a legal array — height is capped
+  to the base width, so a 1-wide battery never stacks
+- [x] **New second battery scene** (`gateway_flux_battery_array.nbt`, 5×5 plate): grows 1×1×1 →
+  2×2×2 → 3×3×3 from one corner, applying the SHAPE/TOP/BOTTOM lid rule and the
+  controller/width/height/tank-size wiring by hand, since Ponder runs neither `ConnectivityHandler`
+  nor `setWindows`. Narrates 1 / 8 / 27 blocks of fuel. Both battery scenes register against the
+  `gateway_flux_battery` component, so W-key cycles them
+
+### Ponder polish pass — round 2 (from in-game screenshots)
+- [x] Gateway Core: stray Ender pearl removed; conduit `FUEL=EYE` and the frame glow (`LIT`) are now
+  set in the **same** ring-walk step, so frames light as the fluid reaches them
+- [x] Storage Bridge: demonstrates the real status gauge — starts `OFFLINE`, goes green `LIVE` when a
+  partner answers (items then cross), then amber `FAULT` when the partner is missing, then back to
+  `LIVE`. 4 text steps; Controller/Terminal stay at 3 and just prime the Bridge to `LIVE`
+- [x] Flux Battery: thrown fuel buckets removed. The schematic now stacks a fluid tank + downward
+  mechanical pump in the x=2 column above the battery slot, so the scene pumps fuel in for real and
+  the window + gauge climb in eight steps; the top-up step then drains the battery while the Core's
+  Eye tank fills, so both gauges move. The Core is primed to only 1/8 so the top-up is visible
+- [x] **Connected textures on the 2×2×2 / 3×3×3 arrays fixed.** `GatewayFluxBatteryCT.connectsTo`
+  resolves neighbours via `ConnectivityHandler.isConnected`, which compares each block entity's
+  controller — but the section mesh is baked when `setBlocks` runs, *before* the controllers are
+  wired, so every cell baked its own unconnected lid. `formBatteryArray` now ends with a no-op
+  `modifyBlocks` over the prism; `ReplaceBlocksInstruction.needsRedraw()` is unconditionally true, so
+  that re-queues the redraw with the controllers in place
+- [x] Base plates added to all four station schematics (`shulker_loader` 4×8 → 8×8,
+  `shulker_unloader` 2×7 → 7×7, `shulker_belt_loader` 3×7 → 7×7, `shulker_belt_unloader` 3×5 → 5×5).
+  Each structure is shifted in x to centre it on its square plate and the storyboard constants moved
+  by the same dx. All original block entity data preserved (verified by byte-exact round trip)
+
+### Ponder polish pass — round 3: real belt transport into the machines
+Ponder cannot do machine pickup at all: every transfer path in this mod and in Create sits behind
+`if (level.isClientSide) return;` and `PonderLevel` is client-side. Confirmed at
+`ShulkerBeltLoaderBlockEntity:89-91` and `AbstractShulkerStationBlockEntity:300-302`. That is why
+Create ships `flapFunnel` / `stallBeltItem` / `changeBeltItemTo` / `removeItemsFromBelt` and scripts
+every hand-off in its own scenes.
+
+What *is* real is the travel — `createItemOnBelt` hands a genuine `TransportedItemStack` to the belt's
+own `DirectBeltInputBehaviour`, and block entities in a shown section do tick
+(`WorldSectionElementImpl.tickableBlockEntities`). So items ride belts at the real speed and direction
+and only the hand-off is scripted.
+
+- [x] `BELT_SPEED` raised 16 → 32. `getBeltMovementSpeed()` is `getSpeed() / 480`, so travel is now
+  15 ticks per block instead of 30. `TICKS_PER_BLOCK` is derived from the speed, not hardcoded
+- [x] New `beltItemConsumedAt` helper: insert on the belt → ride the real distance → `stallBeltItem`
+  where it arrives → flap the funnel → `removeItemsFromBelt`. One item at a time, because
+  `removeItemsFromBelt` clears every item on that belt's handler
+- [x] **Shulker Loader** re-choreographed to match how the schematic is actually built (symmetric about
+  the loader): empty box drops in from the barrel/chute above and docks, items ride in on the z=5-6
+  belt and the funnel loads them, filled box ejects onto the z=2-3 belt and rides away. text_1/text_2
+  rewritten
+- [x] **Shulker Belt Loader**: items now ride the belt from z=1, stall under the hose tip at z=3 and are
+  removed as the hose draws them up, instead of sliding past an unrelated animation
+- [x] Unloader and Belt Unloader needed no change — they push items *out* onto belts, which
+  `createItemOnBelt` already does for real
+- [x] `verify.py` gained a travel-distance check: the `blocks` argument to `beltItemConsumedAt` must
+  equal the real distance between its insert and arrive positions, so a mistimed stall fails the build
+
+**Assumption to confirm in-game:** the Loader scene reads the barrel/chute above the machine as the
+*empty shulker box* feed and the z=5-6 belt as the *item* feed. If the workshop was built the other way
+round, swap text_1 and text_2 and the two feeds.
+
+### Ponder tooling (`tools/ponder/`, currently gitignored — see note)
+`nbtio.py` is a type-preserving NBT reader/writer (round trips all four station schematics
+byte-for-byte). `gen_gateway.py` and `gen_stations.py` author/transform the schematics and are
+idempotent and byte-deterministic (`mtime=0`), so re-running them yields no git diff. `verify.py`
+runs the whole static check suite; `show.py` dumps a schematic.
+
+**Note:** `.gitignore:42` ignores `tools/`, so these generators are not committed even though the
+`.nbt` files they produce are. That makes the committed schematics unreproducible — worth either
+un-ignoring `tools/ponder/` or moving the scripts somewhere tracked.
+
+### Still open — ship
+- [ ] **W-key verify** all 11 ponder scenes in a dev client. Static checks pass
+  (every position in-bounds, every belt/funnel API target is the right block
+  type, no missing lang keys) but nothing has been seen rendering yet. Confirm
+  in particular the belt travel *sign* per scene and that the hose BER updates
+  after `modifyBlockEntity`
+- [ ] Confirm the Ponder level does not re-run `GatewayFluxBatteryBlockEntity.serverTick` →
+  `updateConnectivity()`. If it does, `ConnectivityHandler` may overwrite the width/height the
+  array scene sets by hand and the arrays will render as separate 1×1×1 tanks
+- [ ] The station schematics still carry stale `Controller`/`Source` world positions in their belt
+  block entity NBT (e.g. `Controller: [7,64,16]` in `shulker_loader`). Create normally re-resolves
+  these on placement; confirm the belts render as one run and not as separate segments
+- [ ] In-game: JEI **and** EMI "+" fill the terminal grid from network stock
+- [ ] In-game: all new 1.1 recipes/modules visible in JEI+EMI (battery, modules,
+  7G; bridge once recipe exists)
+- [ ] README feature blurbs updated for 1.1
+- [ ] `docs/publishing/LISTING.md` updated for 1.1 (still cites `1.0.0` jar)
+- [ ] `CHANGELOG.md` — move Unreleased + add Bridge / routing / battery /
+  Crushing+Washing / polish into `[1.1.0]` when releasing
+- [ ] `docs/dev/TESTING.md` Section 5 (Phase 7) added
+
+### Deferred / accepted as-is (not blocking)
+- ❌ Phase 6 cosmetics (enhanced-shulker item icon, station side faces) — WONTFIX
+- ◯ No looping bridge-active hum; station dock/eject + battery bucket stay vanilla
+- ◯ No battery-discharge / continuous LIVE-idle particles
+- ◯ No CESG JEI/EMI category for in-box Crushing/Washing
+- ◯ No terminal R/U "show uses"
 
 ## 7H — Art Pass (collects deferred models/textures)
 
@@ -287,6 +447,11 @@ Follow the palette / PIL recolor workflow in the texture art-direction notes.
 - [x] **7E — Gateway Flux Battery**: Create fluid-tank visual stack (brass/portal
   CT + teal windows + BER fill). Fill colour = stored fuel (lilac Essence /
   green Eye). _Shipped 2026-07-24._
+- [X] **7A — Storage Bridge**: body / body_lit + OFFLINE/LIVE/FAULT textures +
+  glass gauge present in working tree (2026-07-26) — confirm in-game / commit
+- [X] **7D — Crushing + Washing Mk I/II/III icons**: six PNGs present (not magnet
+  copies) — confirm in-game as final
+- N/A 7B / 7C / 7G (no new block/item art surface)
 
-_(Append 7A/7B/7C/7D blocks and any new item icons here as they are built on
-placeholders.)_
+Phase 6 cosmetic carryovers (enhanced-shulker item icon, station side faces) are
+**out of scope / WONTFIX** for 1.1.0 — not tracked here.
