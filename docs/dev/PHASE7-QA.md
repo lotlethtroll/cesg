@@ -226,13 +226,19 @@ Track is feature-complete pending in-game verification. Verify in a two-dimensio
 setup with a bound gateway.
 
 ### Placement & structure
-- [ ] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
-  Network joins the **local** network (terminal count includes it)
-- [ ] Goggles show the 3-state partner status: gray OFFLINE (unbound/unloaded),
+- [x] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
+  Network joins the **local** network (terminal count includes it) _(2026-07-27)_
+- [x] Goggles show the 3-state partner status: gray OFFLINE (unbound/unloaded),
   green LIVE (partner ring has a Bridge + controller), red FAULT (bound+loaded
-  but no partner Bridge / no partner controller)
+  but no partner Bridge / no partner controller) _(2026-07-27 — all three states
+  forced and confirmed)_
 
 ### Remote view (D2)
+- ⚠️ **Fixed 2026-07-27:** the "Partner" label overflowed its tab. `TAB_W` was a
+  fixed 42 px, too narrow for the word plus its 6 px liveness-dot inset. Tabs now
+  size to their own label (`localTabW()` / `partnerTabW()`), so a longer word or
+  any translation can no longer overflow; the search box and hover hit-testing
+  follow the measured widths. **Re-confirm on the next client restart.**
 - [ ] Terminal shows a **Local / Partner** tab strip only when a Bridge is on the
   network; a bridge-less terminal looks exactly as before
 - [ ] Partner tab's liveness dot matches the goggle status (green/grey/red)
@@ -268,9 +274,8 @@ setup with a bound gateway.
   sign-off 2026-07-27: `ERE / DCD / EYE` — 4 End Stone Bricks, 1 Processed Shulker
   Shell, 1 Brass Casing, 2 Ender Pearl Dust, 1 Ender Eye → 1 Bridge)
   _(verified in-game 2026-07-27)_
-- [ ] In-game: OFFLINE / LIVE / FAULT models + glass gauge read correctly
-  — _block places and reads correctly in its default (OFFLINE) state 2026-07-27;
-  **LIVE / FAULT states still untested**_
+- [x] In-game: OFFLINE / LIVE / FAULT models + glass gauge read correctly
+  _(2026-07-27 — all three status models confirmed in-game)_
 
 ## 7B — Gateway Routing
 

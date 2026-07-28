@@ -46,8 +46,11 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int CLEAR_HOVER = 0xFFFF5555;
 
     // Local / Partner tab strip (only shown when a Storage Bridge is on the network).
-    private static final int TAB_W = 42;
+    // Tabs size to their own label rather than a fixed width, so a longer word — or any translation —
+    // cannot overflow the tab the way "Partner" plus its liveness dot did.
     private static final int TAB_H = 12;
+    private static final int TAB_PAD = 8;
+    private static final int TAB_DOT_SPACE = 7;
     private static final int TAB_ACTIVE = 0xFFC6C6C6;
     private static final int TAB_INACTIVE = 0xFF9A9A9A;
     private static final int STATUS_LIVE = 0xFF55DD55;
@@ -138,8 +141,24 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         return remoteStatus != TerminalContentPacket.REMOTE_NONE;
     }
 
+    private static Component localTabLabel() {
+        return Component.translatable("cesg.network.tab.local");
+    }
+
+    private static Component partnerTabLabel() {
+        return Component.translatable("cesg.network.tab.partner");
+    }
+
+    private int localTabW() {
+        return font.width(localTabLabel()) + TAB_PAD;
+    }
+
+    private int partnerTabW() {
+        return font.width(partnerTabLabel()) + TAB_DOT_SPACE + TAB_PAD;
+    }
+
     private int searchWidth() {
-        return tabsShown() ? SEARCH_WIDTH - (2 * TAB_W + 4) : SEARCH_WIDTH;
+        return tabsShown() ? SEARCH_WIDTH - (localTabW() + partnerTabW() + 6) : SEARCH_WIDTH;
     }
 
     private int localTabX() {
@@ -147,7 +166,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     }
 
     private int partnerTabX() {
-        return localTabX() + TAB_W + 2;
+        return localTabX() + localTabW() + 2;
     }
 
     private int maxScrollRow() {
@@ -273,23 +292,24 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     /** Local / Partner tab strip on the search row, with a liveness dot on the Partner tab. */
     private void drawTabs(GuiGraphics graphics, int mouseX, int mouseY) {
-        drawTab(graphics, localTabX(), Component.translatable("cesg.network.tab.local"),
-                !showingRemote, isTabHovered(mouseX, mouseY, localTabX()), 0);
-        drawTab(graphics, partnerTabX(), Component.translatable("cesg.network.tab.partner"),
-                showingRemote, isTabHovered(mouseX, mouseY, partnerTabX()), statusColor());
+        drawTab(graphics, localTabX(), localTabW(), localTabLabel(),
+                !showingRemote, isTabHovered(mouseX, mouseY, localTabX(), localTabW()), 0);
+        drawTab(graphics, partnerTabX(), partnerTabW(), partnerTabLabel(),
+                showingRemote, isTabHovered(mouseX, mouseY, partnerTabX(), partnerTabW()), statusColor());
     }
 
-    private void drawTab(GuiGraphics graphics, int x, Component label, boolean active, boolean hovered, int dot) {
+    private void drawTab(GuiGraphics graphics, int x, int w, Component label, boolean active, boolean hovered,
+            int dot) {
         int y = SEARCH_Y;
         int base = active ? TAB_ACTIVE : (hovered ? HIGHLIGHT_COLOR : TAB_INACTIVE);
-        graphics.fill(x, y, x + TAB_W, y + TAB_H, base);
-        graphics.fill(x, y, x + TAB_W, y + 1, active ? HIGHLIGHT_COLOR : SLOT_HIGHLIGHT);
+        graphics.fill(x, y, x + w, y + TAB_H, base);
+        graphics.fill(x, y, x + w, y + 1, active ? HIGHLIGHT_COLOR : SLOT_HIGHLIGHT);
         graphics.fill(x, y, x + 1, y + TAB_H, active ? HIGHLIGHT_COLOR : SLOT_HIGHLIGHT);
-        graphics.fill(x + TAB_W - 1, y, x + TAB_W, y + TAB_H, SHADOW_COLOR);
+        graphics.fill(x + w - 1, y, x + w, y + TAB_H, SHADOW_COLOR);
         if (!active)
-            graphics.fill(x, y + TAB_H - 1, x + TAB_W, y + TAB_H, SHADOW_COLOR);
-        int textLeft = dot != 0 ? 6 : 0;
-        int tx = x + textLeft + Math.max(1, (TAB_W - textLeft - font.width(label)) / 2);
+            graphics.fill(x, y + TAB_H - 1, x + w, y + TAB_H, SHADOW_COLOR);
+        int textLeft = dot != 0 ? TAB_DOT_SPACE : 0;
+        int tx = x + textLeft + Math.max(1, (w - textLeft - font.width(label)) / 2);
         graphics.drawString(font, label, tx, y + 2, LABEL_COLOR, false);
         if (dot != 0)
             graphics.fill(x + 3, y + 4, x + 7, y + 8, dot);
@@ -361,10 +381,10 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         return index < activeFiltered().size() ? index : -1;
     }
 
-    private boolean isTabHovered(double mouseX, double mouseY, int tabX) {
+    private boolean isTabHovered(double mouseX, double mouseY, int tabX, int tabW) {
         double x = mouseX - leftPos - tabX;
         double y = mouseY - topPos - SEARCH_Y;
-        return x >= 0 && y >= 0 && x < TAB_W && y < TAB_H;
+        return x >= 0 && y >= 0 && x < tabW && y < TAB_H;
     }
 
     private boolean isInGrid(double mouseX, double mouseY) {
@@ -388,11 +408,11 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             return true;
         }
         if (tabsShown() && button == 0) {
-            if (isTabHovered(mouseX, mouseY, localTabX())) {
+            if (isTabHovered(mouseX, mouseY, localTabX(), localTabW())) {
                 setShowingRemote(false);
                 return true;
             }
-            if (isTabHovered(mouseX, mouseY, partnerTabX())) {
+            if (isTabHovered(mouseX, mouseY, partnerTabX(), partnerTabW())) {
                 setShowingRemote(true);
                 return true;
             }
