@@ -1,6 +1,7 @@
 package com.cesg.client;
 
 import com.cesg.gateways.GatewayFluxBatteryBlockEntity;
+import com.cesg.gateways.GatewayFrameBlock;
 import com.cesg.gateways.GatewayFuelHandler;
 import com.cesg.init.CESGFluids;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -37,6 +38,8 @@ import org.joml.Matrix4f;
  */
 public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayFluxBatteryBlockEntity> {
     private static final ResourceLocation WHITE = ResourceLocation.parse("minecraft:block/white_concrete");
+    private static final ResourceLocation BATTERY_TOP =
+            ResourceLocation.fromNamespaceAndPath("cesg", "block/gateway_flux_battery_top");
     private static final ResourceLocation GAUGE_GLASS =
             ResourceLocation.fromNamespaceAndPath("cesg", "block/storage_bridge_glass");
     private static final float FACE_EPS = 0.002f;
@@ -52,15 +55,11 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
 
     private static final float SOCK_MIN = 3f / 16f;
     private static final float SOCK_MAX = 13f / 16f;
-    private static final float SOCK_INNER_MIN = 5f / 16f;
-    private static final float SOCK_INNER_MAX = 11f / 16f;
-    private static final float SOCK_HOLE_MIN = 7f / 16f;
-    private static final float SOCK_HOLE_MAX = 9f / 16f;
+    private static final float BRANCH_MIN = 5.5f / 16f;
+    private static final float BRANCH_MAX = 10.5f / 16f;
+    private static final float BRANCH_LENGTH = 5f / 16f;
 
     private static final int BRASS_R = 206, BRASS_G = 160, BRASS_B = 90;
-    private static final int GUN_R = 56, GUN_G = 56, GUN_B = 56;
-    private static final int TEAL_R = 48, TEAL_G = 110, TEAL_B = 104;
-    private static final int VOID_R = 12, VOID_G = 10, VOID_B = 24;
     private static final int ESSENCE_R = 120, ESSENCE_G = 96, ESSENCE_B = 172;
     private static final int EYE_R = 56, EYE_G = 132, EYE_B = 88;
     private static final int TRACK_R = 40, TRACK_G = 36, TRACK_B = 48;
@@ -233,33 +232,103 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
         if (level == null)
             return;
 
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(WHITE);
+        TextureAtlasSprite sprite =
+                Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(BATTERY_TOP);
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
         Matrix4f m = ms.last().pose();
-        float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
+        // The socket is the centered 10x10 region (pixels 3..13) of the 16x16 top texture.
+        float u0 = Mth.lerp(3f / 16f, sprite.getU0(), sprite.getU1());
+        float u1 = Mth.lerp(13f / 16f, sprite.getU0(), sprite.getU1());
+        float v0 = Mth.lerp(3f / 16f, sprite.getV0(), sprite.getV1());
+        float v1 = Mth.lerp(13f / 16f, sprite.getV0(), sprite.getV1());
         BlockPos pos = be.getBlockPos();
 
-        for (Direction face : Iterate.horizontalDirections) {
+        for (Direction face : Iterate.directions) {
             if (ConnectivityHandler.isConnected(level, pos, pos.relative(face)))
                 continue;
             BlockState neighbor = level.getBlockState(pos.relative(face));
             if (GatewayFuelHandler.isRingBlock(neighbor))
                 renderSocket(vc, m, face, light, u0, u1, v0, v1);
         }
+
+        // Continue the active frame conduit into every adjacent battery socket whose stored fuel
+        // matches the gateway's current travel fuel. Render after all socket quads because the fluid
+        // renderer may switch the active buffer.
+        FluidStack stored = be.storedFluid();
+        if (stored.isEmpty())
+            return;
+        for (Direction face : Iterate.directions) {
+            BlockState frame = level.getBlockState(pos.relative(face));
+            if (isMatchingActiveFrame(frame, stored))
+                renderSupplyBranch(stored, face, ms, buffer, light);
+        }
+    }
+
+    private static boolean isMatchingActiveFrame(BlockState state, FluidStack stored) {
+        if (!(state.getBlock() instanceof GatewayFrameBlock)
+                || !state.getValue(GatewayFrameBlock.LIT))
+            return false;
+        GatewayFrameBlock.FrameFuel activeFuel = state.getValue(GatewayFrameBlock.FUEL);
+        if (activeFuel == GatewayFrameBlock.FrameFuel.ESSENCE)
+            return stored.getFluid().getFluidType() == CESGFluids.TELEPORT_ESSENCE.getType();
+        if (activeFuel == GatewayFrameBlock.FrameFuel.EYE)
+            return stored.getFluid().getFluidType() == CESGFluids.LIQUID_EYE_OF_ENDER.getType();
+        return false;
+    }
+
+    /**
+     * Adds the missing frame-center-to-battery branch. The dimensions match
+     * {@code gateway_conduit_beam.json}, so it joins the existing animated hub without a seam.
+     */
+    private static void renderSupplyBranch(FluidStack fluid, Direction batteryToFrame, PoseStack ms,
+            MultiBufferSource buffer, int light) {
+        float x0 = BRANCH_MIN, y0 = BRANCH_MIN, z0 = BRANCH_MIN;
+        float x1 = BRANCH_MAX, y1 = BRANCH_MAX, z1 = BRANCH_MAX;
+        Direction towardBattery = batteryToFrame.getOpposite();
+        switch (towardBattery) {
+            case NORTH -> {
+                z0 = 0;
+                z1 = BRANCH_LENGTH;
+            }
+            case SOUTH -> {
+                z0 = 1 - BRANCH_LENGTH;
+                z1 = 1;
+            }
+            case WEST -> {
+                x0 = 0;
+                x1 = BRANCH_LENGTH;
+            }
+            case EAST -> {
+                x0 = 1 - BRANCH_LENGTH;
+                x1 = 1;
+            }
+            case DOWN -> {
+                y0 = 0;
+                y1 = BRANCH_LENGTH;
+            }
+            case UP -> {
+                y0 = 1 - BRANCH_LENGTH;
+                y1 = 1;
+            }
+        }
+
+        ms.pushPose();
+        ms.translate(batteryToFrame.getStepX(), batteryToFrame.getStepY(), batteryToFrame.getStepZ());
+        NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(
+                fluid, x0, y0, z0, x1, y1, z1, buffer, ms, light, false, true);
+        ms.popPose();
     }
 
     private static void renderSocket(VertexConsumer vc, Matrix4f m, Direction face, int light,
             float su0, float su1, float sv0, float sv1) {
-        float out = -FACE_EPS;
-        blockFaceQuad(vc, m, face, SOCK_MIN, SOCK_MIN, SOCK_MAX, SOCK_MAX, out,
-                BRASS_R, BRASS_G, BRASS_B, 255, light, su0, su1, sv0, sv1);
-        blockFaceQuad(vc, m, face, SOCK_INNER_MIN, SOCK_INNER_MIN, SOCK_INNER_MAX, SOCK_INNER_MAX, out - FACE_EPS,
-                GUN_R, GUN_G, GUN_B, 255, light, su0, su1, sv0, sv1);
-        blockFaceQuad(vc, m, face, SOCK_INNER_MIN + 1f / 16f, SOCK_INNER_MIN + 1f / 16f,
-                SOCK_INNER_MAX - 1f / 16f, SOCK_INNER_MAX - 1f / 16f, out - 2 * FACE_EPS,
-                TEAL_R, TEAL_G, TEAL_B, 255, LightTexture.FULL_BRIGHT, su0, su1, sv0, sv1);
-        blockFaceQuad(vc, m, face, SOCK_HOLE_MIN, SOCK_HOLE_MIN, SOCK_HOLE_MAX, SOCK_HOLE_MAX, out - 3 * FACE_EPS,
-                VOID_R, VOID_G, VOID_B, 255, light, su0, su1, sv0, sv1);
+        // Exterior insert, flush over the normal side/window face.
+        blockFaceQuad(vc, m, face, SOCK_MIN, SOCK_MIN, SOCK_MAX, SOCK_MAX, -FACE_EPS,
+                255, 255, 255, 255, light, su0, su1, sv0, sv1);
+        // Mirror the insert on the tank-side surface: side walls are one pixel thick and the
+        // top/bottom caps are four. This masks the normal inner face behind every gateway socket.
+        float wallDepth = face.getAxis().isVertical() ? 4f / 16f : 1f / 16f;
+        blockFaceQuad(vc, m, face, SOCK_MIN, SOCK_MIN, SOCK_MAX, SOCK_MAX, wallDepth + FACE_EPS,
+                255, 255, 255, 255, light, su0, su1, sv0, sv1);
     }
 
     /**
@@ -347,6 +416,20 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
                 x2 = x; y2 = v1; z2 = u1;
                 x3 = x; y3 = v1; z3 = u0;
             }
+            case DOWN -> {
+                float y = 0f + out;
+                x0 = u0; y0 = y; z0 = v0;
+                x1 = u1; y1 = y; z1 = v0;
+                x2 = u1; y2 = y; z2 = v1;
+                x3 = u0; y3 = y; z3 = v1;
+            }
+            case UP -> {
+                float y = 1f - out;
+                x0 = u0; y0 = y; z0 = 1f - v0;
+                x1 = u1; y1 = y; z1 = 1f - v0;
+                x2 = u1; y2 = y; z2 = 1f - v1;
+                x3 = u0; y3 = y; z3 = 1f - v1;
+            }
             default -> {
                 return;
             }
@@ -366,9 +449,10 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
     @Override
     public AABB getRenderBoundingBox(GatewayFluxBatteryBlockEntity be) {
         if (!be.isController())
-            return super.getRenderBoundingBox(be);
+            return super.getRenderBoundingBox(be).inflate(1);
         BlockPos p = be.getBlockPos();
-        return new AABB(p).expandTowards(be.getWidth() - 1, be.getHeight() - 1, be.getWidth() - 1);
+        return new AABB(p).expandTowards(be.getWidth() - 1, be.getHeight() - 1, be.getWidth() - 1)
+                .inflate(1);
     }
 
     @Override
