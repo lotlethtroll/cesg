@@ -234,11 +234,20 @@ setup with a bound gateway.
   forced and confirmed)_
 
 ### Remote view (D2)
-- ⚠️ **Fixed 2026-07-27:** the "Partner" label overflowed its tab. `TAB_W` was a
+- [x] **Fixed 2026-07-27:** the "Partner" label overflowed its tab. `TAB_W` was a
   fixed 42 px, too narrow for the word plus its 6 px liveness-dot inset. Tabs now
   size to their own label (`localTabW()` / `partnerTabW()`), so a longer word or
   any translation can no longer overflow; the search box and hover hit-testing
-  follow the measured widths. **Re-confirm on the next client restart.**
+  follow the measured widths. _Confirmed in-game 2026-07-27._
+- ⚠️ **Fixed 2026-07-27 (two placeholder issues):**
+  1. "Partner network is empty" was drawn whenever the *filtered* list came back
+     empty, so a search matching nothing claimed the partner network was empty.
+     It now keys off `remoteEntries.isEmpty()` — a search miss leaves the grid
+     blank exactly like the Local tab. OFFLINE/FAULT still always show, since
+     those are real status rather than a filter result.
+  2. The message was bare text drawn over the slot grid and was unreadable. It
+     now sits on a panel plate with the usual highlight/shadow border.
+  - **Re-confirm on the next client restart.**
 - [ ] Terminal shows a **Local / Partner** tab strip only when a Bridge is on the
   network; a bridge-less terminal looks exactly as before
 - [ ] Partner tab's liveness dot matches the goggle status (green/grey/red)

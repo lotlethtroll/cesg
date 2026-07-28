@@ -323,17 +323,31 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         };
     }
 
-    /** Centered status line shown in the grid when the Partner section is empty or unavailable. */
+    /**
+     * Centered status line shown in the grid when the Partner section is unavailable, or genuinely
+     * holds nothing. A search that simply matches nothing leaves the grid blank exactly like the Local
+     * tab does — claiming the partner network is empty when it merely has no match is misleading.
+     */
     private void drawRemotePlaceholder(GuiGraphics graphics) {
         String key = switch (remoteStatus) {
             case TerminalContentPacket.REMOTE_OFFLINE -> "cesg.network.remote.offline";
             case TerminalContentPacket.REMOTE_FAULT -> "cesg.network.remote.fault";
-            default -> "cesg.network.remote.empty";
+            default -> remoteEntries.isEmpty() ? "cesg.network.remote.empty" : null;
         };
+        if (key == null)
+            return;
         Component msg = Component.translatable(key);
-        int cx = GRID_X + (COLS * CELL) / 2 - font.width(msg) / 2;
-        int cy = GRID_Y + (ROWS * CELL) / 2 - 4;
-        graphics.drawString(font, msg, cx, cy, LABEL_COLOR, false);
+        int w = font.width(msg);
+        int x = GRID_X + (COLS * CELL) / 2 - w / 2;
+        int y = GRID_Y + (ROWS * CELL) / 2 - 4;
+        // Sit the text on a panel plate; bare text over the slot grid is unreadable.
+        int x0 = x - 4, y0 = y - 3, x1 = x + w + 4, y1 = y + 11;
+        graphics.fill(x0, y0, x1, y1, PANEL_COLOR);
+        graphics.fill(x0, y0, x1, y0 + 1, SLOT_HIGHLIGHT);
+        graphics.fill(x0, y0, x0 + 1, y1, SLOT_HIGHLIGHT);
+        graphics.fill(x1 - 1, y0, x1, y1, SHADOW_COLOR);
+        graphics.fill(x0, y1 - 1, x1, y1, SHADOW_COLOR);
+        graphics.drawString(font, msg, x, y, LABEL_COLOR, false);
     }
 
     /** Symmetric 2px-thick × above the left edge of the crafting grid. */
