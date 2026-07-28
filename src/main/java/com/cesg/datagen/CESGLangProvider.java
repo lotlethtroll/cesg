@@ -522,6 +522,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.network.remote.offline", "Partner network offline");
         add("cesg.network.remote.fault", "No partner network found");
         add("cesg.network.remote.empty", "Partner network is empty");
+        add("cesg.network.no_results", "No results");
 
         // Advancements (6C).
         add("advancement.cesg.root", "Create: End Storage & Gateways");

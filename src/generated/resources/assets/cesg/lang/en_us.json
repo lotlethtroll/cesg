@@ -255,6 +255,7 @@
   "cesg.network.count": "%s in network",
   "cesg.network.crafting": "Crafting",
   "cesg.network.no_controller": "No Storage Network Controller connected",
+  "cesg.network.no_results": "No results",
   "cesg.network.remote.empty": "Partner network is empty",
   "cesg.network.remote.fault": "No partner network found",
   "cesg.network.remote.offline": "Partner network offline",

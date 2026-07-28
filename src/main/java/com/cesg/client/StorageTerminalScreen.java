@@ -279,9 +279,9 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             graphics.renderItem(entry.sample(), x, y);
             drawCount(graphics, x, y, entry.total());
         }
-        String placeholder = showingRemote && active.isEmpty() ? remotePlaceholderKey() : null;
+        String placeholder = active.isEmpty() ? placeholderKey() : null;
         if (placeholder != null)
-            drawRemotePlaceholder(graphics, placeholder);
+            drawGridPlaceholder(graphics, placeholder);
 
         // No cell hover while a placeholder plate is up: there is nothing to hover, and the overlay
         // would otherwise paint over the message.
@@ -327,19 +327,24 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     }
 
     /**
-     * Centered status line shown in the grid when the Partner section is unavailable, or genuinely
-     * holds nothing. A search that simply matches nothing leaves the grid blank exactly like the Local
-     * tab does — claiming the partner network is empty when it merely has no match is misleading.
+     * Centered status line for an empty grid, on either tab. Real partner status wins over everything —
+     * an offline or faulted partner is worth saying even mid-search. Otherwise an active query that
+     * matched nothing reports "No results" rather than claiming the network is empty, which would be a
+     * lie whenever the network simply has no match.
      */
-    private String remotePlaceholderKey() {
-        return switch (remoteStatus) {
-            case TerminalContentPacket.REMOTE_OFFLINE -> "cesg.network.remote.offline";
-            case TerminalContentPacket.REMOTE_FAULT -> "cesg.network.remote.fault";
-            default -> remoteEntries.isEmpty() ? "cesg.network.remote.empty" : null;
-        };
+    private String placeholderKey() {
+        if (showingRemote) {
+            if (remoteStatus == TerminalContentPacket.REMOTE_OFFLINE)
+                return "cesg.network.remote.offline";
+            if (remoteStatus == TerminalContentPacket.REMOTE_FAULT)
+                return "cesg.network.remote.fault";
+        }
+        if (searchBox != null && !searchBox.getValue().trim().isEmpty())
+            return "cesg.network.no_results";
+        return showingRemote && remoteEntries.isEmpty() ? "cesg.network.remote.empty" : null;
     }
 
-    private void drawRemotePlaceholder(GuiGraphics graphics, String key) {
+    private void drawGridPlaceholder(GuiGraphics graphics, String key) {
         Component msg = Component.translatable(key);
         int w = font.width(msg);
         int x = GRID_X + (COLS * CELL) / 2 - w / 2;
