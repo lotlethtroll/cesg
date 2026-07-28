@@ -819,6 +819,14 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.eye", ChatFormatting.AQUA, eyeMb, TANK_CAPACITY);
         if (getSpeed() == 0)
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.unpowered", ChatFormatting.GRAY);
+        // The portal also needs a valid ring, which none of the other lines report: a fuelled, powered,
+        // bound gateway with a broken frame otherwise reads as completely healthy and just stays shut.
+        // Name the specific rule that broke — "no frame" alone leaves the player hunting blind.
+        if (level != null) {
+            String frameIssue = GatewayPortalShape.describeFailure(level, worldPosition);
+            if (frameIssue != null)
+                CESGLang.forGoggles(tooltip, frameIssue, ChatFormatting.RED);
+        }
         CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.channel", ChatFormatting.WHITE, activeChannel + 1);
         if (chunkLoading)
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.chunkloading", ChatFormatting.GOLD);

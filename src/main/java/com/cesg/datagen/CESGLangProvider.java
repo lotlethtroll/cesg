@@ -59,7 +59,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("block.cesg.gateway_flux_battery.tooltip.summary",
                 "Buffers _gateway fuel_ beside a _Gateway ring_ and keeps the _Core_ topped up so bursty travel and Port transfers never run the gateway dry. Single-fuel like a _fluid tank_ (locks to the first fuel piped in); _stack them into a 2×2×2 or 3×3×3 array_ for more capacity.");
         add("cesg.goggles.battery.title", "Gateway Flux Battery");
-        add("cesg.goggles.battery.empty", "Empty");
+        add("cesg.goggles.battery.empty", "Empty: 0/%s mB");
         add("cesg.goggles.battery.stored", "%s: %s/%s mB");
         add("cesg.goggles.battery.array", "Array: %sx%sx%s");
         add("cesg.goggles.battery.reserve", "Travel reserve: %s mB (automation paused below this)");
@@ -323,6 +323,11 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.gateway.cross_dimension", "Bound (cross-dimensional — uses Liquid Eye of Ender)");
         add("cesg.goggles.gateway.unbound", "Unbound — imprint and apply a binding crystal");
         add("cesg.goggles.gateway.unpowered", "Unpowered — connect a spinning shaft");
+        add("cesg.goggles.gateway.frame.no_ring", "Build a Gateway Frame ring around this Core");
+        add("cesg.goggles.gateway.frame.not_rect", "Ring has a gap — only Frames and the Core count");
+        add("cesg.goggles.gateway.frame.blocked", "Clear the opening inside the ring");
+        add("cesg.goggles.gateway.frame.size", "Opening must be 1-8 wide and 2-8 tall");
+        add("cesg.goggles.gateway.frame.too_big", "Ring is too large");
         add("cesg.goggles.gateway.travel_cost", "Travel cost: %s mB per entity");
 
         add("cesg.gateway.end_only", "Native gateway physics only function in the End");

@@ -624,7 +624,9 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         CESGLang.forGoggles(tooltip, "cesg.goggles.battery.title", ChatFormatting.WHITE);
         FluidStack fluid = c.tank.getFluid();
         if (fluid.isEmpty())
-            CESGLang.forGoggles(tooltip, "cesg.goggles.battery.empty", ChatFormatting.GRAY);
+            // Still report capacity — sizing an array is exactly when it is empty.
+            CESGLang.forGoggles(tooltip, "cesg.goggles.battery.empty", ChatFormatting.GRAY,
+                    c.tank.getCapacity());
         else
             CESGLang.forGoggles(tooltip, "cesg.goggles.battery.stored", ChatFormatting.AQUA,
                     fluid.getHoverName().getString(), c.tank.getFluidAmount(), c.tank.getCapacity());

@@ -88,50 +88,96 @@ Art: Create fluid-tank visual stack (brass/portal CT + teal windows + fill BER).
 
 ### Load & recipe-viewer
 
-- [ ] World loads with no errors; block appears in the CESG creative tab
-- [ ] JEI/EMI shows the crafting recipe (brass + ender pearls + Create fluid tank)
-- [ ] Block places and renders as a windowed brass tank (not a solid cube); fill shows through windows when fueled
-- [ ] Goggles show title + stored fuel `x/y mB`; on a multi, also `Array: WxWxH`
+- [x] World loads with no errors; block appears in the CESG creative tab
+  _(2026-07-27, `1.1.0-dev`)_
+- [x] JEI/EMI shows the crafting recipe (brass + ender pearl dust + Create fluid
+  tank → 2) _(2026-07-27)_
+- [x] Block places and renders as a windowed brass tank (not a solid cube); fill
+  shows through windows when fueled _(2026-07-27 — level behind the glass rises
+  and tracks the side gauge)_
+- [x] Goggles show title + stored fuel `x/y mB`; on a multi, also `Array: WxWxH`
+  _(2026-07-27. ⚠️ found + fixed: an **empty** array printed a bare "Empty" with
+  no capacity, so you could not read an array's size while building it — exactly
+  when it is empty. `cesg.goggles.battery.empty` now reads `Empty: 0/N mB`.
+  Fix re-verified in-game 2026-07-27.)_
 
 ### Functional — single-fuel + top-up
 
-- [ ] Pumping **Teleport Essence** fills the tank; it then **rejects Liquid Eye of
+- [x] Pumping **Teleport Essence** fills the tank; it then **rejects Liquid Eye of
   Ender** until emptied (single-fuel lock), and vice-versa; junk fluids rejected
-- [ ] Battery adjacent to a gateway ring is found (from **any** array member) and
+  _(2026-07-27 — TE fills, rejects LEE while held; drained → LEE fills and the
+  gauge/visual recolours; water rejected)_
+- [x] Battery adjacent to a gateway ring is found (from **any** array member) and
   tops up the Core's matching tank; does not overfill past the 4000 mB Core cap
-- [ ] Rapid gateway travel that would drain the Core mid-burst stays fueled while
-  the array holds reserve (the core smoothing goal)
-- [ ] Draining the array with a pump reclaims stored fuel; no reachable Core = holds
+  _(2026-07-27 — stops dead at 4000; battery drop matches the Core's gain; found
+  via a plain Gateway Frame as well as the Core, and via a single corner block of
+  a 2×2×2 array. A battery holding the **other** fuel correctly does not top up,
+  and neither tank is corrupted.)_
+- [x] Rapid gateway travel that would drain the Core mid-burst stays fueled while
+  the array holds reserve (the core smoothing goal) _(2026-07-27 — travel stalls
+  with no battery once the Core empties; with a charged array it keeps running and
+  the array visibly drains into the Core)_
+- [x] Draining the array with a pump reclaims stored fuel; no reachable Core = holds
+  _(2026-07-27 — drained to swap fuel types; an orphan array with no ring holds its
+  fuel indefinitely, no leak or void)_
 
 ### Functional — MULTIBLOCK (the rework)
 
-- [ ] Four batteries in a **2×2** square merge into one array (goggle shows 2×2×1)
-- [ ] Stacking a second 2×2 layer forms **2×2×2**; a 3×3 base stacks to **3×3×3**
-- [ ] A lone 1×1 does **not** stack vertically (max height = base width)
-- [ ] Combined capacity = `block count × per-block` (goggle max scales with size)
-- [ ] Piping fuel into **any** member block fills the shared array tank
-- [ ] Breaking a member **splits** the array and redistributes fluid — **no dupe,
+- [x] Four batteries in a **2×2** square merge into one array (goggle shows 2×2×1)
+  _(2026-07-27)_
+- [x] Stacking a second 2×2 layer forms **2×2×2**; a 3×3 base stacks to **3×3×3**
+  _(2026-07-27)_
+- [x] A lone 1×1 does **not** stack vertically (max height = base width)
+  _(2026-07-27 — the two blocks stay separate BEs)_
+- [x] Combined capacity = `block count × per-block` (goggle max scales with size)
+  _(2026-07-27 — 1×1×1 = 8000, 2×2×1 = 32000 confirmed on the goggle readout)_
+- [x] Piping fuel into **any** member block fills the shared array tank
+  _(2026-07-27 — filled via a corner block)_
+- [x] Breaking a member **splits** the array and redistributes fluid — **no dupe,
   no loss** across form/split cycles (the multiblock dupe-bug check)
-- [ ] Fuel already in a small array is preserved when it grows (form absorbs it)
-- [ ] **One-click layer placer**: clicking the top (or bottom) face of a formed 2×2
+  _(2026-07-27 — **clean, and better than the deferred note predicted.** 2×2×2
+  holding 32 000: broke a top block → bottom 2×2×1 kept all 32 000, top tanks
+  empty. Repeated at 33 000 → 32 000 bottom + 1 000 in one top tank = 33 000
+  exactly. Re-merging preserves the level. No dupe **and** no loss.)_
+- [x] Fuel already in a small array is preserved when it grows (form absorbs it)
+  _(2026-07-27 — 1×1 holding 8 000 grown to 2×2 still reports 8 000)_
+- [x] **One-click layer placer**: clicking the top (or bottom) face of a formed 2×2
   (or 3×3) array with batteries in hand auto-places the whole W×W layer, but only
   if the stack holds enough for the full layer; sneak-place still places one; an
-  obstructed footprint places nothing extra
+  obstructed footprint places nothing extra _(2026-07-27 — 2×2, 3×3, top and
+  bottom faces all pass)_
+  - **Wording note for future testers:** "places nothing extra" means nothing
+    beyond the single block vanilla placement already put down. `place()` runs
+    `super.place` first and only then tries the layer fill, so a short stack or an
+    obstructed footprint still leaves **one** normally-placed battery. That is
+    intended (it mirrors Create's `FluidTankItem`), and that lone block correctly
+    does **not** merge — a 2×2×1 plus one block is not a rectangular prism.
 
 ### Functional — fuel governor (port cost + reserve)
 
 - [ ] With `gateway.portTransferCostMb = 0` (default), Gateway Ports transfer for
   free exactly as in 1.0 (governor inert)
-- [ ] With a port cost set and **no battery** on the ring, Ports spend that fuel
+- [x] With a port cost set and **no battery** on the ring, Ports spend that fuel
   from the Core per flush, and may drain it to empty (no gating)
-- [ ] With a battery on the ring, automated Port transfers **pause** once combined
+  _(2026-07-27, `portTransferCostMb = 200`)_
+  - Asked during QA and confirmed in code: a fuel-gated Port **buffers** the items
+    it could not send, and that buffer is both **capped** and **dropped on break**.
+    `SLOTS = 9` per handler with no slot-limit override, so send+receive is 18
+    slots (≤1152 items worst case, not unbounded), and
+    `GatewayPortBlock.onRemove` drops every non-empty slot. No hoard, no void.
+- [x] With a battery on the ring, automated Port transfers **pause** once combined
   Core+battery fuel would drop below `battery.reserveFloorMb`…
-- [ ] …while **player travel still works**, drawing into that reserve (travel is
-  never gated)
-- [ ] A **dry** battery on the ring pauses automation (the safety), even though it
-  holds nothing
-- [ ] A battery holding the *other* fuel does not gate the current fuel's transfers
-- [ ] Goggles show `Travel reserve: X mB` on the battery when a port cost is set
+  _(2026-07-27 — settles at exactly 1000 mB combined: the gate refuses once
+  `(core + battery) - cost < floor`, i.e. below 1200 at cost 200)_
+- [x] …while **player travel still works**, drawing into that reserve (travel is
+  never gated) _(2026-07-27)_
+- [x] A **dry** battery on the ring pauses automation (the safety), even though it
+  holds nothing _(2026-07-27 — pauses once the **Core alone** reaches the floor,
+  rather than draining to 0 as it does with no battery present)_
+- [x] A battery holding the *other* fuel does not gate the current fuel's transfers
+  _(2026-07-27 — same-dimension/Essence gateway ignores an Eye-filled battery)_
+- [x] Goggles show `Travel reserve: X mB` on the battery when a port cost is set
+  _(2026-07-27 — shown alongside the corrected `Empty: 0/N mB` capacity line)_
 
 ### Config
 
@@ -218,11 +264,13 @@ setup with a bound gateway.
   battery reserve
 
 ### Recipe & art
-- [ ] Crafting recipe visible in JEI/EMI and craftable at a bench (authored after
+- [x] Crafting recipe visible in JEI/EMI and craftable at a bench (authored after
   sign-off 2026-07-27: `ERE / DCD / EYE` — 4 End Stone Bricks, 1 Processed Shulker
   Shell, 1 Brass Casing, 2 Ender Pearl Dust, 1 Ender Eye → 1 Bridge)
+  _(verified in-game 2026-07-27)_
 - [ ] In-game: OFFLINE / LIVE / FAULT models + glass gauge read correctly
-  (art present in working tree; confirm on client load)
+  — _block places and reads correctly in its default (OFFLINE) state 2026-07-27;
+  **LIVE / FAULT states still untested**_
 
 ## 7B — Gateway Routing
 
@@ -265,7 +313,8 @@ placed-only, and pauses while the GUI is open — check contents by breaking/pee
 or piping out, not by watching the open GUI).
 
 ### Craft & install
-- [ ] All 6 items appear in the CESG creative tab with names + tooltips
+- [x] All 6 items appear in the CESG creative tab with names + tooltips
+  _(2026-07-27 — names + dedicated icons confirmed, no placeholders)_
 - [ ] Crushing Mk I crafts (millstone + iron sheets + shell); Washing Mk I crafts
   (encased fan + water bucket + iron sheets + shell), bucket returned
 - [ ] Mk II/III craft as shapeless upgrades of the prior tier
@@ -306,6 +355,26 @@ core set wired; Bridge ponder authored. Phase 6 cosmetics **WONTFIX**.
 - [x] Config knobs present with comments/defaults (`battery` / `bridge` /
   `gateway.portTransferCostMb` / `gateway.allowFanOut`)
 - [x] Lang keys for new 1.1 blocks/items/GUIs/route/filter/subtitles/bridge ponder
+- [x] **Goggle diagnostics gap fixed (found during 2C, 2026-07-27).** A gateway
+  that is powered, bound and fully fuelled but whose ring fails
+  `GatewayPortalShape.detect()` showed an entirely healthy tooltip and simply
+  never opened — `refreshPortalState()` gates on the shape, but the tooltip had
+  lines only for unpowered / unbound / fuel. `hasValidFrame()` existed and was
+  unused. The Core goggle now names the specific broken rule via
+  `GatewayPortalShape.describeFailure()` → `cesg.goggles.gateway.frame.*`
+  (`no_ring` / `not_rect` / `blocked` / `size` / `too_big`), and `not_rect`
+  reports the span and the found-vs-needed frame counts so the player can tell a
+  gap from a stray block by arithmetic.
+  - **This immediately diagnosed a live confusion:** a dead gateway reported
+    `spans 4x5 with 13 frames, a clean ring needs 14`. Cause: a **Gateway Port had
+    been built into the ring perimeter**. A Port is not a ring block in either
+    `GatewayPortalShape.isRingBlock` or the canonical
+    `GatewayFuelHandler.isRingBlock` (frames + Core only), so it reads as a hole.
+    Ports attach **beside** the ring; only the Core may occupy a perimeter slot.
+  - Other silent failure modes the diagnostic now surfaces: a **stray Gateway
+    Frame touching the ring** in the same vertical plane (the flood fill absorbs
+    it — this also bites two gateways built in a shared plane), any **non-air
+    block in the interior**, and an interior outside 1–8 wide / 2–8 tall.
 
 ### Ponder polish pass (done — static verification only, see below)
 - [x] All 10 storyboards wrapped in Create's `CreateSceneBuilder`; every scene now
@@ -423,8 +492,9 @@ un-ignoring `tools/ponder/` or moving the scripts somewhere tracked.
   block entity NBT (e.g. `Controller: [7,64,16]` in `shulker_loader`). Create normally re-resolves
   these on placement; confirm the belts render as one run and not as separate segments
 - [ ] In-game: JEI **and** EMI "+" fill the terminal grid from network stock
-- [ ] In-game: all new 1.1 recipes/modules visible in JEI+EMI (battery, modules,
-  7G; bridge once recipe exists)
+- [x] In-game: all new 1.1 recipes/modules visible in JEI+EMI (battery, modules,
+  7G, bridge) _(2026-07-27. The corner sprite on Washing Mk I's water bucket is
+  JEI drawing the vanilla crafting remainder — the bucket is returned, expected.)_
 - [ ] README feature blurbs updated for 1.1
 - [ ] `docs/publishing/LISTING.md` updated for 1.1 (still cites `1.0.0` jar)
 - [ ] `CHANGELOG.md` — move Unreleased + add Bridge / routing / battery /
