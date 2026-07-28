@@ -239,15 +239,20 @@ setup with a bound gateway.
   size to their own label (`localTabW()` / `partnerTabW()`), so a longer word or
   any translation can no longer overflow; the search box and hover hit-testing
   follow the measured widths. _Confirmed in-game 2026-07-27._
-- ⚠️ **Fixed 2026-07-27 (two placeholder issues):**
+- [x] **Grid placeholder reworked 2026-07-27** (three issues found by review, all
+  confirmed fixed in-game):
   1. "Partner network is empty" was drawn whenever the *filtered* list came back
      empty, so a search matching nothing claimed the partner network was empty.
-     It now keys off `remoteEntries.isEmpty()` — a search miss leaves the grid
-     blank exactly like the Local tab. OFFLINE/FAULT still always show, since
-     those are real status rather than a filter result.
-  2. The message was bare text drawn over the slot grid and was unreadable. It
-     now sits on a panel plate with the usual highlight/shadow border.
-  - **Re-confirm on the next client restart.**
+  2. The message was bare text over the slot grid and was unreadable — it now
+     sits on a panel plate with the usual highlight/shadow border.
+  3. The cell hover overlay is drawn after the placeholder, so it painted on top
+     of the plate. Suppressed while a placeholder is up (the grid is empty by
+     definition, and `hoveredEntry` already returned -1 there).
+  - Both tabs now share one `placeholderKey()` with deliberate precedence:
+    partner **OFFLINE/FAULT wins even mid-search** (real status, not a query
+    result) → an active query that matched nothing says **"No results"** on
+    *either* tab → only a genuinely empty partner says "Partner network is
+    empty". A Local tab with an empty network and no query stays blank.
 - [x] Terminal shows a **Local / Partner** tab strip only when a Bridge is on the
   network; a bridge-less terminal looks exactly as before _(2026-07-27)_
 - [x] Partner tab's liveness dot matches the goggle status (green/grey/red)
