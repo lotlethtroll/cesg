@@ -25,23 +25,30 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 
 import org.joml.Matrix4f;
 
 /**
- * Controller: fluid fill through windows + one full-height charge gauge per exterior array face.
+ * Controller: fluid fill through windows + one full-height charge gauge on the array's front face.
  * Every member: Port-style conduit socket only on faces that touch a gateway frame/core.
  */
 public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayFluxBatteryBlockEntity> {
     private static final ResourceLocation WHITE = ResourceLocation.parse("minecraft:block/white_concrete");
+    private static final ResourceLocation GAUGE_GLASS =
+            ResourceLocation.fromNamespaceAndPath("cesg", "block/storage_bridge_glass");
     private static final float FACE_EPS = 0.002f;
 
-    // One gauge per array face: narrow strip on the left pillar (avoids covering center windows)
-    private static final float GAUGE_W = 2.5f / 16f;
+    // One gauge on the front face: narrow strip on the left pillar (avoids covering center windows).
+    // A 1px bezel around the strip makes the indicator read as recessed into the casing.
+    // Well width is 1px narrower than the pillar allows: with the 1px bezel the outer footprint is
+    // 3.5px, which stops short of the window glass on a single (width=1) battery.
+    private static final float GAUGE_W = 1.5f / 16f;
     private static final float GAUGE_INSET = 2f / 16f; // from the left edge of the face
     private static final float GAUGE_PAD_Y = 3f / 16f;
+    private static final float GAUGE_BEZEL = 1f / 16f;
 
     private static final float SOCK_MIN = 3f / 16f;
     private static final float SOCK_MAX = 13f / 16f;
@@ -58,12 +65,21 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
     private static final int EYE_R = 56, EYE_G = 132, EYE_B = 88;
     private static final int TRACK_R = 40, TRACK_G = 36, TRACK_B = 48;
 
+    /** How much of the fuel colour bleeds into the unfilled well when the gauge is backlit. */
+    private static final float BACKLIGHT = 0.35f;
+
+    private static int mix(int from, int to, float t) {
+        return Mth.clamp(Math.round(from + (to - from) * t), 0, 255);
+    }
+
     public GatewayFluxBatteryRenderer(BlockEntityRendererProvider.Context context) {}
 
     @Override
     protected void renderSafe(GatewayFluxBatteryBlockEntity be, float partialTicks, PoseStack ms,
             MultiBufferSource buffer, int light, int overlay) {
-        if (be.isController()) {
+        // Array fluid/gauges only while the full connectivity prism is present — avoids ghosts
+        // when client width/height briefly outlive removed members.
+        if (be.isController() && be.isArrayPrismIntact()) {
             if (be.hasWindow())
                 renderFluid(be, partialTicks, ms, buffer, light);
             renderArrayGauges(be, partialTicks, ms, buffer, light);
@@ -119,7 +135,7 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
         if (level == null)
             return;
 
-        float fill = 0f;
+        float fill;
         LerpedFloat fluidLevel = controller.getFluidLevel();
         if (fluidLevel != null)
             fill = Mth.clamp(fluidLevel.getValue(partialTicks), 0f, 1f);
@@ -135,9 +151,10 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
         }
 
         TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(WHITE);
-        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
+        TextureAtlasSprite glass = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(GAUGE_GLASS);
         Matrix4f m = ms.last().pose();
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
+        float gu0 = glass.getU0(), gu1 = glass.getU1(), gv0 = glass.getV0(), gv1 = glass.getV1();
 
         int w = controller.getWidth();
         int h = controller.getHeight();
@@ -145,39 +162,62 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
         float y0 = GAUGE_PAD_Y;
         float y1 = h - GAUGE_PAD_Y;
 
-        for (Direction face : Iterate.horizontalDirections) {
-            // Skip faces that are entirely against a ring (socket handles those) or blocked
-            if (faceFullyAgainstRing(level, origin, w, h, face))
-                continue;
+        // One gauge only, on the array's front face: placer-facing, re-aimable with the wrench.
+        Direction face = controller.getGaugeFacing();
+        // Skip a front that is entirely against a ring (socket handles those) or blocked
+        if (face.getAxis().isVertical() || faceFullyAgainstRing(level, origin, w, h, face))
+            return;
 
-            // Left side of the face when viewed from outside (brass pillar, not window glass)
-            float uA = GAUGE_INSET;
-            float uB = GAUGE_INSET + GAUGE_W;
-            float out = -FACE_EPS;
+        // Left side of the face when viewed from outside (brass pillar, not window glass)
+        float uA = GAUGE_INSET;
+        float uB = GAUGE_INSET + GAUGE_W;
+        float out = -FACE_EPS;
 
-            // Track spanning full array height
-            arrayFaceQuad(vc, m, face, w, uA, y0, uB, y1, out,
-                    TRACK_R, TRACK_G, TRACK_B, 255, light, u0, u1, v0, v1);
-            if (fill <= 0.001f)
-                continue;
+        // Fetch each buffer immediately before writing to it: MultiBufferSource ends the previous
+        // builder when a different RenderType is requested, so a held-open consumer throws "Not building!".
+        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
+
+        // Backlight, same trick as the Bridge's body_lit model (block_light 15 on the lens + recess):
+        // with any fuel stored the well floor and the glass go full-bright, so the empty part of the
+        // column glows faintly in the fuel's colour instead of reading as a dead slot. Dry = ambient.
+        boolean lit = fill > 0.001f;
+        int gaugeLight = lit ? LightTexture.FULL_BRIGHT : light;
+        int wellR = lit ? mix(TRACK_R, fillR, BACKLIGHT) : TRACK_R;
+        int wellG = lit ? mix(TRACK_G, fillG, BACKLIGHT) : TRACK_G;
+        int wellB = lit ? mix(TRACK_B, fillB, BACKLIGHT) : TRACK_B;
+
+        // Brass 1px surround masks the casing and frames the gauge, matching the conduit sockets.
+        // Left at ambient light so it still reads as metal against the glowing well.
+        arrayFaceQuad(vc, m, face, w, uA - GAUGE_BEZEL, y0 - GAUGE_BEZEL,
+                uB + GAUGE_BEZEL, y1 + GAUGE_BEZEL, out,
+                BRASS_R, BRASS_G, BRASS_B, 255, light, u0, u1, v0, v1);
+        arrayFaceQuad(vc, m, face, w, uA, y0, uB, y1, out - FACE_EPS,
+                wellR, wellG, wellB, 255, gaugeLight, u0, u1, v0, v1);
+        if (lit) {
             float fillTop = y0 + fill * (y1 - y0);
-            arrayFaceQuad(vc, m, face, w, uA + 1f / 64f, y0, uB - 1f / 64f, fillTop, out - FACE_EPS,
-                    fillR, fillG, fillB, 255, LightTexture.FULL_BRIGHT, u0, u1, v0, v1);
+            arrayFaceQuad(vc, m, face, w, uA + 1f / 64f, y0, uB - 1f / 64f, fillTop,
+                    out - 2 * FACE_EPS, fillR, fillG, fillB, 255, LightTexture.FULL_BRIGHT,
+                    u0, u1, v0, v1);
         }
+
+        // Flush glass lens over the recessed gauge, shared with the Storage Bridge.
+        VertexConsumer glassVc = buffer.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
+        arrayFaceQuad(glassVc, m, face, w, uA, y0, uB, y1, out - 3 * FACE_EPS,
+                255, 255, 255, 255, gaugeLight, gu0, gu1, gv0, gv1);
     }
 
     private static boolean faceFullyAgainstRing(Level level, BlockPos origin, int w, int h, Direction face) {
+        if (face.getAxis().isVertical())
+            return false;
+        // Exterior layer on `face`: `i` runs along the face, the depth axis is pinned to the near (0)
+        // or far (w - 1) slice depending on which way the face points.
+        boolean spansX = face.getAxis() == Direction.Axis.Z;
+        int depth = face.getAxisDirection() == Direction.AxisDirection.POSITIVE ? w - 1 : 0;
         int ringHits = 0;
         int total = 0;
         for (int y = 0; y < h; y++) {
             for (int i = 0; i < w; i++) {
-                BlockPos cell = switch (face) {
-                    case NORTH -> origin.offset(i, y, 0);
-                    case SOUTH -> origin.offset(i, y, w - 1);
-                    case WEST -> origin.offset(0, y, i);
-                    case EAST -> origin.offset(w - 1, y, i);
-                    default -> origin;
-                };
+                BlockPos cell = spansX ? origin.offset(i, y, depth) : origin.offset(depth, y, i);
                 total++;
                 if (GatewayFuelHandler.isRingBlock(level.getBlockState(cell.relative(face))))
                     ringHits++;
@@ -235,12 +275,11 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
         switch (face) {
             case NORTH -> {
                 float z = 0f + out;
-                x0 = u0; yA = y0; z0 = z;
-                x1 = u1; yB = y0; z1 = z;
-                x2 = u1; yC = y1; z2 = z;
-                x3 = u0; yD = y1; z3 = z;
-                // viewing from north: left is +X, so u increases to the right — swap for CCW
-                x0 = width - u0; x1 = width - u1; x2 = width - u1; x3 = width - u0;
+                // viewing from north: left is +X, so u increases to the right — mirror for CCW
+                x0 = width - u0; yA = y0; z0 = z;
+                x1 = width - u1; yB = y0; z1 = z;
+                x2 = width - u1; yC = y1; z2 = z;
+                x3 = width - u0; yD = y1; z3 = z;
             }
             case SOUTH -> {
                 float z = width - out;
@@ -325,7 +364,16 @@ public class GatewayFluxBatteryRenderer extends SafeBlockEntityRenderer<GatewayF
     }
 
     @Override
+    public AABB getRenderBoundingBox(GatewayFluxBatteryBlockEntity be) {
+        if (!be.isController())
+            return super.getRenderBoundingBox(be);
+        BlockPos p = be.getBlockPos();
+        return new AABB(p).expandTowards(be.getWidth() - 1, be.getHeight() - 1, be.getWidth() - 1);
+    }
+
+    @Override
     public boolean shouldRenderOffScreen(GatewayFluxBatteryBlockEntity be) {
-        return be.isController();
+        // Rely on the expanded controller AABB + normal frustum culling.
+        return false;
     }
 }

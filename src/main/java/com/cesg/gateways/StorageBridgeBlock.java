@@ -14,11 +14,14 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
@@ -29,8 +32,37 @@ import net.minecraft.world.phys.BlockHitResult;
 public class StorageBridgeBlock extends BaseEntityBlock {
     private static final MapCodec<StorageBridgeBlock> MAP_CODEC = simpleCodec(StorageBridgeBlock::new);
 
+    /**
+     * Mirrors {@link StorageBridgeBlockEntity#remoteStatus()} onto the block so partner liveness is
+     * readable at a glance. Without this a FAULT bridge — bound and loaded, but with no partner Bridge on
+     * the far ring — looks identical to a healthy one unless the player wears goggles and hovers it.
+     * Driven server-side from the flush tick; vanilla handles the client sync.
+     */
+    public static final EnumProperty<StorageBridgeBlockEntity.RemoteStatus> STATUS =
+            EnumProperty.create("status", StorageBridgeBlockEntity.RemoteStatus.class);
+
+    /**
+     * World light shed by the backlit gauge, per status. Dim on purpose: enough to read the bridge's state
+     * across a dark room and to match the emissive lens, but well under a lantern so a bank of bridges
+     * doesn't light the base by itself.
+     */
+    public static int lightLevel(BlockState state) {
+        return switch (state.getValue(STATUS)) {
+            case LIVE -> 7;
+            case FAULT -> 5;
+            case OFFLINE -> 0;
+        };
+    }
+
     public StorageBridgeBlock(Properties properties) {
         super(properties);
+        registerDefaultState(stateDefinition.any()
+                .setValue(STATUS, StorageBridgeBlockEntity.RemoteStatus.OFFLINE));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(STATUS);
     }
 
     @Override

@@ -1,6 +1,12 @@
 {
   "variants": {
-    "": {
+    "status=fault": {
+      "model": "cesg:block/storage_bridge_fault"
+    },
+    "status=live": {
+      "model": "cesg:block/storage_bridge_live"
+    },
+    "status=offline": {
       "model": "cesg:block/storage_bridge"
     }
   }

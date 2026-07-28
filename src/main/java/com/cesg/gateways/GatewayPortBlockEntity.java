@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.cesg.gateways.teleport.GatewayPartner;
 import com.cesg.init.CESGBlockEntities;
+import com.cesg.init.CESGSounds;
 import com.cesg.util.CESGLang;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 
@@ -18,9 +19,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -55,6 +58,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
     private static final int SYNC_INTERVAL = 10;
 
     private long nextFlushTime;
+    private long nextTransferFxTime;
     private boolean syncDirty;
 
     final ItemStackHandler sendItems = new ItemStackHandler(SLOTS) {
@@ -108,7 +112,10 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         }
         if (level.getGameTime() < be.nextFlushTime)
             return;
+        int before = be.outgoingAmount();
         be.nextFlushTime = level.getGameTime() + be.flush();
+        if (be.outgoingAmount() < before && level instanceof ServerLevel serverLevel)
+            be.emitTransferFx(serverLevel);
     }
 
     private boolean hasOutgoing() {
@@ -118,6 +125,23 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
             if (!sendItems.getStackInSlot(slot).isEmpty())
                 return true;
         return false;
+    }
+
+    private int outgoingAmount() {
+        int amount = sendTank.getFluidAmount();
+        for (int slot = 0; slot < sendItems.getSlots(); slot++)
+            amount += sendItems.getStackInSlot(slot).getCount();
+        return amount;
+    }
+
+    private void emitTransferFx(ServerLevel level) {
+        if (level.getGameTime() < nextTransferFxTime)
+            return;
+        nextTransferFxTime = level.getGameTime() + 20;
+        level.playSound(null, worldPosition, CESGSounds.TRANSFER.value(), SoundSource.BLOCKS, 0.3f, 0.9f);
+        level.sendParticles(ParticleTypes.PORTAL, worldPosition.getX() + 0.5,
+                worldPosition.getY() + 0.55, worldPosition.getZ() + 0.5,
+                4, 0.15, 0.18, 0.15, 0.03);
     }
 
     /** Attempts a transfer; returns the delay (ticks) until the next attempt. */

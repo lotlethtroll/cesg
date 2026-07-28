@@ -20,6 +20,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -191,6 +193,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
         if (tubePhase == TubePhase.RETRACTED) {
             tubePhase = TubePhase.EXTENDING;
             prevTubeAnimTicks = tubeAnimTicks = 0;
+            level.playSound(null, worldPosition, SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 0.3f, 1.35f);
             syncTubeState();
         } else if (tubePhase == TubePhase.RETRACTING) {
             tubePhase = TubePhase.EXTENDED;
@@ -204,6 +207,7 @@ public class ShulkerBeltUnloaderBlockEntity extends AbstractShulkerStationBlockE
             return;
         tubePhase = TubePhase.RETRACTING;
         prevTubeAnimTicks = tubeAnimTicks = 0;
+        level.playSound(null, worldPosition, SoundEvents.PISTON_CONTRACT, SoundSource.BLOCKS, 0.25f, 1.45f);
         syncTubeState();
     }
 

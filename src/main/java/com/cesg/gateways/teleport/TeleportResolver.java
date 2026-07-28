@@ -3,14 +3,17 @@ package com.cesg.gateways.teleport;
 import java.util.Optional;
 
 import com.cesg.init.CESGRegistration;
+import com.cesg.init.CESGSounds;
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,7 +39,9 @@ public final class TeleportResolver {
             return;
         }
         BlockPos target = findCentralIslandTarget(endLevel);
+        emitTeleportFx((ServerLevel) player.level(), player.position());
         placeSafely(player, endLevel, target, KEEP_YAW);
+        emitTeleportFx(endLevel, Vec3.atBottomCenterOf(target));
         player.displayClientMessage(Component.translatable("cesg.gateway.central_island"), true);
     }
 
@@ -70,6 +75,8 @@ public final class TeleportResolver {
 
         float yaw = Float.isNaN(result.exitYaw()) ? traveler.getYRot() : result.exitYaw();
         Vec3 spawn = Vec3.atBottomCenterOf(result.position());
+        if (traveler.level() instanceof ServerLevel sourceLevel)
+            emitTeleportFx(sourceLevel, traveler.position());
         if (!targetLevel.equals(traveler.level())) {
             traveler.changeDimension(new DimensionTransition(targetLevel, spawn, traveler.getDeltaMovement(),
                     yaw, traveler.getXRot(), DimensionTransition.DO_NOTHING));
@@ -77,6 +84,7 @@ public final class TeleportResolver {
             traveler.moveTo(spawn.x, spawn.y, spawn.z, yaw, traveler.getXRot());
         }
         traveler.fallDistance = 0;
+        emitTeleportFx(targetLevel, spawn);
     }
 
     public static void teleportBound(ServerPlayer traveler, GatewaySideState thisSide, GatewaySideState partner) {
@@ -106,12 +114,15 @@ public final class TeleportResolver {
 
         float exitYaw = Float.isNaN(result.exitYaw()) ? traveler.getYRot() : result.exitYaw();
         boolean crossDimensional = !targetLevel.equals(traveler.level());
+        if (traveler.level() instanceof ServerLevel sourceLevel)
+            emitTeleportFx(sourceLevel, traveler.position());
         if (crossDimensional) {
             Vec3 spawn = Vec3.atBottomCenterOf(result.position());
             traveler.changeDimension(new DimensionTransition(targetLevel, spawn, traveler.getDeltaMovement(),
                     exitYaw, traveler.getXRot(), DimensionTransition.DO_NOTHING));
         }
         placeSafely(traveler, targetLevel, result.position(), result.exitYaw());
+        emitTeleportFx(targetLevel, Vec3.atBottomCenterOf(result.position()));
         if (crossDimensional)
             awardTravelAdvancement(traveler);
     }
@@ -340,6 +351,15 @@ public final class TeleportResolver {
         float yaw = Float.isNaN(exitYaw) ? player.getYRot() : exitYaw;
         player.teleportTo(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, player.getXRot());
         player.fallDistance = 0;
+    }
+
+    private static void emitTeleportFx(ServerLevel level, Vec3 position) {
+        level.playSound(null, position.x, position.y, position.z, CESGSounds.TELEPORT.value(),
+                SoundSource.PLAYERS, 0.8f, 0.95f + level.random.nextFloat() * 0.1f);
+        level.sendParticles(ParticleTypes.PORTAL, position.x, position.y + 0.8, position.z,
+                32, 0.45, 0.8, 0.45, 0.12);
+        level.sendParticles(ParticleTypes.END_ROD, position.x, position.y + 0.8, position.z,
+                8, 0.25, 0.55, 0.25, 0.035);
     }
 
     private record ExitPlan(BlockPos feet, float yaw) {}

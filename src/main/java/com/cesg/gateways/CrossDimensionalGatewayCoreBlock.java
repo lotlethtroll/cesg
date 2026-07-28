@@ -1,7 +1,6 @@
 package com.cesg.gateways;
 
 import com.cesg.init.CESGBlockEntities;
-import com.cesg.init.CESGRegistration;
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 
@@ -10,6 +9,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
@@ -91,6 +92,7 @@ public class CrossDimensionalGatewayCoreBlock extends DirectionalKineticBlock im
                     player.setItemInHand(hand, new ItemStack(Items.BUCKET));
                 serverPlayer.displayClientMessage(Component.translatable("cesg.gateway.fuel_added",
                         CrossDimensionalGatewayCoreBlockEntity.ESSENCE_FUEL_MB), true);
+                level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 0.8f, 1.15f);
             } else {
                 serverPlayer.displayClientMessage(Component.translatable("cesg.gateway.fuel_full"), true);
             }
@@ -103,6 +105,7 @@ public class CrossDimensionalGatewayCoreBlock extends DirectionalKineticBlock im
                     player.setItemInHand(hand, new ItemStack(Items.BUCKET));
                 serverPlayer.displayClientMessage(Component.translatable("cesg.gateway.fuel_added",
                         CrossDimensionalGatewayCoreBlockEntity.LIQUID_EYE_FUEL_MB), true);
+                level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 0.8f, 0.9f);
             } else {
                 serverPlayer.displayClientMessage(Component.translatable("cesg.gateway.fuel_full"), true);
             }
@@ -125,6 +128,7 @@ public class CrossDimensionalGatewayCoreBlock extends DirectionalKineticBlock im
             }
             player.setItemInHand(hand, net.minecraft.world.item.ItemUtils.createFilledResult(held, player, filled));
             serverPlayer.displayClientMessage(Component.translatable("cesg.gateway.fuel_drained", bucket), true);
+            level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 0.8f, 1.0f);
             return ItemInteractionResult.SUCCESS;
         }
 
@@ -179,8 +183,9 @@ public class CrossDimensionalGatewayCoreBlock extends DirectionalKineticBlock im
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
-            if (getBlockEntity(level, pos) != null)
-                getBlockEntity(level, pos).clearPortal();
+            CrossDimensionalGatewayCoreBlockEntity be = getBlockEntity(level, pos);
+            if (be != null)
+                be.clearPortal();
             GatewayFuelHandler.invalidateRing(level, pos);
         }
         super.onRemove(state, level, pos, newState, movedByPiston);

@@ -14,6 +14,7 @@ import com.cesg.gateways.teleport.GatewaySideState;
 import com.cesg.gateways.teleport.TeleportResolver;
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.init.CESGRegistration;
+import com.cesg.init.CESGSounds;
 import com.cesg.util.CESGLang;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 
@@ -21,9 +22,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -631,6 +634,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
     }
 
     private void activate(GatewayPortalShape shape) {
+        boolean opening = activePortalCells.isEmpty();
         BlockState portal = CESGRegistration.GATEWAY_PORTAL.get().defaultBlockState()
                 .setValue(GatewayPortalBlock.AXIS, shape.axis);
         boolean changed = false;
@@ -650,8 +654,16 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         for (BlockPos frameCell : shape.frame)
             changed |= setFrameFuel(frameCell, fuel);
         activeFrameCells = new ArrayList<>(shape.frame);
-        if (changed)
+        if (changed) {
             notifyUpdate();
+            if (opening && level instanceof ServerLevel serverLevel) {
+                serverLevel.playSound(null, worldPosition, CESGSounds.PORTAL_OPEN.value(), SoundSource.BLOCKS,
+                        0.9f, 1.0f);
+                serverLevel.sendParticles(ParticleTypes.REVERSE_PORTAL,
+                        worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
+                        24, 0.45, 0.7, 0.45, 0.08);
+            }
+        }
     }
 
     private void deactivate() {
@@ -665,6 +677,13 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         activePortalCells = List.of();
         activeFrameCells = List.of();
         notifyUpdate();
+        if (level instanceof ServerLevel serverLevel) {
+            serverLevel.playSound(null, worldPosition, CESGSounds.PORTAL_CLOSE.value(), SoundSource.BLOCKS,
+                    0.75f, 1.0f);
+            serverLevel.sendParticles(ParticleTypes.SMOKE,
+                    worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
+                    10, 0.35, 0.45, 0.35, 0.02);
+        }
     }
 
     /** Called by the block on removal so a broken Core never leaves orphaned portal/lit-frame blocks. */

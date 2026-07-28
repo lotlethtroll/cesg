@@ -19,6 +19,14 @@ public class CESGLangProvider extends LanguageProvider {
         add("block.cesg.shulker_unloader", "Shulker Unloader");
         add("block.cesg.shulker_belt_loader", "Shulker Belt Loader");
         add("block.cesg.shulker_belt_unloader", "Shulker Belt Unloader");
+        add("block.cesg.shulker_loader.tooltip.summary",
+                "Docks a _shulker box_ and loads it from adjacent item automation.");
+        add("block.cesg.shulker_unloader.tooltip.summary",
+                "Docks a _shulker box_ and extracts its contents into adjacent item automation.");
+        add("block.cesg.shulker_belt_loader.tooltip.summary",
+                "Extends a hose to _load a docked shulker_ from a belt two blocks below.");
+        add("block.cesg.shulker_belt_unloader.tooltip.summary",
+                "Extends a hose to _unload a docked shulker_ onto a belt two blocks below.");
         add("block.cesg.shulker_cage", "Shulker Cage");
         add("block.cesg.shulker_cage.occupied", "Holds a captured Shulker");
         add("block.cesg.shulker_cage.tooltip.summary",
@@ -62,6 +70,11 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.battery.need_bucket_fuel",
                 "Need %s mB stored to fill a bucket (only %s mB)");
         add("cesg.battery.wrong_fuel", "Battery is locked to %s — empty it first");
+        add("cesg.battery.gauge_moved", "Charge gauge moved to the %s face");
+        add("cesg.direction.north", "north");
+        add("cesg.direction.south", "south");
+        add("cesg.direction.east", "east");
+        add("cesg.direction.west", "west");
         add("block.cesg.storage_bridge", "Cross-Dimensional Storage Bridge");
         add("block.cesg.storage_bridge.tooltip.summary",
                 "Links two _Storage Networks_ through a bound gateway. Place beside a _Gateway Frame_ or _Core_ that is _adjacent to a Storage Network_; a matching Bridge on the partner ring surfaces that network's items on this side's _Storage Terminal_ as a separate section. Moves items _both ways_ with per-side filters while the gateway is powered and fueled.");
@@ -192,12 +205,16 @@ public class CESGLangProvider extends LanguageProvider {
                 "_Refine_ a Shulker Shell — farm shells with a _Shulker Cage_ in the _End_, then _process_ them into this.");
 
         add("item.cesg.ender_pearl_dust", "Ender Pearl Dust");
+        add("item.cesg.ender_pearl_dust.tooltip.summary",
+                "Finely _crushed Ender Pearl_ used to begin CESG's liquid teleportation chain.");
         add("block.cesg.liquid_ender_pearl", "Liquid Ender Pearl");
         add("fluid_type.cesg.liquid_ender_pearl", "Liquid Ender Pearl");
         add("fluid.cesg.liquid_ender_pearl", "Liquid Ender Pearl");
         add("fluid.cesg.teleport_essence", "Teleport Essence");
         add("fluid.cesg.liquid_eye_of_ender", "Liquid Eye of Ender");
         add("item.cesg.liquid_ender_pearl_bucket", "Bucket of Liquid Ender Pearl");
+        add("item.cesg.liquid_ender_pearl_bucket.tooltip.summary",
+                "A volatile _teleporting liquid_ and precursor for _Teleport Essence_.");
 
         add("block.cesg.teleport_essence", "Teleport Essence");
         add("fluid_type.cesg.teleport_essence", "Teleport Essence");
@@ -316,6 +333,8 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.gateway.need_fuel", "Gateway requires fuel");
         add("cesg.gateway.no_frame", "No gateway frame — build a complete Gateway Frame rectangle (corners included) with the Core as one of its blocks");
         add("block.cesg.ender_infuser", "Ender Infuser");
+        add("block.cesg.ender_infuser.tooltip.summary",
+                "Uses _rotational force_ and catalysts to convert teleportation fluids between recipe stages.");
         add("cesg.goggles.ender_infuser.input", "Input: %s (%s/%s mB)");
         add("cesg.goggles.ender_infuser.output", "Output: %s (%s/%s mB)");
         add("cesg.goggles.ender_infuser.catalyst", "Catalyst: %sx %s");
@@ -326,6 +345,13 @@ public class CESGLangProvider extends LanguageProvider {
 
         add("cesg.gateway.ready", "Gateway ready — walk through the portal to travel");
         add("cesg.gateway.teleport_resistant", "Warp Resistance blocks all teleportation");
+        add("subtitles.cesg.portal_open", "Gateway opens");
+        add("subtitles.cesg.portal_close", "Gateway closes");
+        add("subtitles.cesg.teleport", "Gateway transports");
+        add("subtitles.cesg.machine_process", "Ender Infuser processes");
+        add("subtitles.cesg.link_live", "Dimensional link established");
+        add("subtitles.cesg.link_fault", "Dimensional link faults");
+        add("subtitles.cesg.transfer", "Items cross dimensions");
         add("cesg.gateway.denied", "Travel denied");
 
         // Teleport potions (6F)
@@ -343,14 +369,62 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.minecraft.tipped_arrow.effect.teleport_resistance", "Arrow of Warp Resistance");
 
         // Ponder scenes (6C) — header = scene title, text_N matches showText() order in CESGPonderScenes
+        add("cesg.ponder.tag.end_storage", "End Storage & Gateways");
+        add("cesg.ponder.tag.end_storage.description",
+                "Shulker automation, ender processing, and the cross-dimensional Gateway network");
         add("cesg.ponder.shulker_loader.header", "Shulker Loader");
-        add("cesg.ponder.shulker_loader.text_1", "The Shulker Loader accepts a shulker box, docking it in place");
-        add("cesg.ponder.shulker_loader.text_2", "Items arrive by belt and funnel to fill the docked shulker");
-        add("cesg.ponder.shulker_loader.text_3", "When full, the loaded shulker ejects onto an output belt");
+        add("cesg.ponder.shulker_loader.text_1",
+                "An empty shulker box drops in from above and docks in the Shulker Loader");
+        add("cesg.ponder.shulker_loader.text_2",
+                "Items ride in on a belt and the funnel loads them into the docked box");
+        add("cesg.ponder.shulker_loader.text_3", "When full, the loaded shulker ejects onto the output belt");
         add("cesg.ponder.shulker_unloader.header", "Shulker Unloader");
         add("cesg.ponder.shulker_unloader.text_1", "A full shulker box docks in the Shulker Unloader");
-        add("cesg.ponder.shulker_unloader.text_2", "Its contents are pushed out the front of the funnel onto a belt");
+        add("cesg.ponder.shulker_unloader.text_2", "Its contents are pushed out through the funnel onto a belt");
         add("cesg.ponder.shulker_unloader.text_3", "The empty shulker then drops down into storage below");
+        add("cesg.ponder.ender_infuser.header", "Ender Infuser");
+        add("cesg.ponder.ender_infuser.text_1", "Supply rotational force and pipe a recipe fluid into the input");
+        add("cesg.ponder.ender_infuser.text_2", "Insert the required catalysts into the Infuser");
+        add("cesg.ponder.ender_infuser.text_3", "Completed fluid leaves through the output connection");
+        add("cesg.ponder.storage_bridge.header", "Cross-Dimensional Storage Bridge");
+        add("cesg.ponder.storage_bridge.text_1",
+                "Attach a Storage Bridge to a powered, bound Gateway ring");
+        add("cesg.ponder.storage_bridge.text_2",
+                "Its gauge reads OFFLINE until a matching Bridge on the far ring answers");
+        add("cesg.ponder.storage_bridge.text_3",
+                "A green LIVE gauge means the pair is up — filtered items cross the Gateway");
+        add("cesg.ponder.storage_bridge.text_4",
+                "If the partner Bridge is missing or unloaded the gauge turns amber and reads FAULT");
+        add("cesg.ponder.storage_network_controller.header", "Storage Network Controller");
+        add("cesg.ponder.storage_network_controller.text_1",
+                "The Storage Network Controller anchors a cluster of adjacent storage blocks");
+        add("cesg.ponder.storage_network_controller.text_2",
+                "Place it touching the Bridge to expose that storage to the Gateway");
+        add("cesg.ponder.storage_network_controller.text_3",
+                "Right-click the Controller to read back the network's size and contents");
+        add("cesg.ponder.storage_terminal.header", "Storage Terminal");
+        add("cesg.ponder.storage_terminal.text_1",
+                "The Storage Terminal is the console for a Controller's network");
+        add("cesg.ponder.storage_terminal.text_2",
+                "It must touch a cluster that contains a Storage Network Controller");
+        add("cesg.ponder.storage_terminal.text_3",
+                "Open it to browse local stock and, across a Bridge, the remote network's contents");
+        add("cesg.ponder.gateway_flux_battery.header", "Gateway Flux Battery");
+        add("cesg.ponder.gateway_flux_battery.text_1",
+                "A Gateway Flux Battery stores gateway fuel beside the ring");
+        add("cesg.ponder.gateway_flux_battery.text_2",
+                "Pump Liquid Eye of Ender or Teleport Essence in — the window and gauge fill as it charges");
+        add("cesg.ponder.gateway_flux_battery.text_3",
+                "While it holds fuel, the battery keeps the Gateway Core topped up");
+        add("cesg.ponder.gateway_flux_battery_array.header", "Flux Battery Arrays");
+        add("cesg.ponder.gateway_flux_battery_array.text_1",
+                "A lone Gateway Flux Battery is a 1x1x1 tank holding one block of fuel");
+        add("cesg.ponder.gateway_flux_battery_array.text_2",
+                "A 2x2 footprint stacks two high: eight blocks merged into one 2x2x2 tank");
+        add("cesg.ponder.gateway_flux_battery_array.text_3",
+                "A 3x3 footprint stacks three high — the largest array, holding twenty-seven blocks");
+        add("cesg.ponder.gateway_flux_battery_array.text_4",
+                "Any face of the array accepts fuel, and one face carries the charge gauge");
         add("cesg.ponder.shulker_belt_loader.header", "Shulker Belt Loader");
         add("cesg.ponder.shulker_belt_loader.text_1", "The Shulker Belt Loader sits two blocks above a belt");
         add("cesg.ponder.shulker_belt_loader.text_2", "Its hose extends down to draw items off the belt into a shulker");
@@ -362,7 +436,8 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.ponder.cross_dimensional_gateway_core.header", "Cross-Dimensional Gateway Core");
         add("cesg.ponder.cross_dimensional_gateway_core.text_1", "Build a vertical Gateway Frame ring with the Core as one of its blocks");
         add("cesg.ponder.cross_dimensional_gateway_core.text_2", "Pump Liquid Eye of Ender into any frame to fuel and light the ring");
-        add("cesg.ponder.cross_dimensional_gateway_core.text_3", "Powered and bound, the interior opens into a portal");
+        add("cesg.ponder.cross_dimensional_gateway_core.text_3", "The Core's glass eye fills with the fuel it is holding");
+        add("cesg.ponder.cross_dimensional_gateway_core.text_4", "Powered and bound, the interior opens into a portal");
         add("cesg.gateway.invalid_partner", "Invalid partner gateway");
         add("cesg.gateway.crystal_imprinted", "Binding crystal imprinted with this gateway");
         add("cesg.gateway.crystal_empty", "Binding crystal is empty — sneak + use on a gateway to imprint");

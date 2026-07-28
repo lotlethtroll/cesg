@@ -10,12 +10,16 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
@@ -93,11 +97,40 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
         return RenderShape.MODEL;
     }
 
+    /**
+     * Wrenching a horizontal face the gauge isn't on moves the gauge there; wrenching the face it is
+     * already on (or a top/bottom face) toggles windows as before.
+     */
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
-        if (context.getLevel().getBlockEntity(context.getClickedPos()) instanceof GatewayFluxBatteryBlockEntity be)
-            be.toggleWindows();
+        Level level = context.getLevel();
+        if (!(level.getBlockEntity(context.getClickedPos()) instanceof GatewayFluxBatteryBlockEntity be))
+            return InteractionResult.SUCCESS;
+        if (level.isClientSide)
+            return InteractionResult.SUCCESS;
+
+        Direction face = context.getClickedFace();
+        GatewayFluxBatteryBlockEntity controller = be.getControllerBE();
+        if (face.getAxis().isHorizontal() && controller != null && controller.getGaugeFacing() != face) {
+            be.setGaugeFacing(face);
+            if (context.getPlayer() instanceof ServerPlayer serverPlayer)
+                serverPlayer.displayClientMessage(Component.translatable("cesg.battery.gauge_moved",
+                        Component.translatable("cesg.direction." + face.getSerializedName())), true);
+            return InteractionResult.SUCCESS;
+        }
+        be.toggleWindows();
         return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer,
+            ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (level.isClientSide || placer == null)
+            return;
+        // Gauge faces the placer: the face of the block they were looking at.
+        if (level.getBlockEntity(pos) instanceof GatewayFluxBatteryBlockEntity be)
+            be.setOwnGaugeFacing(placer.getDirection().getOpposite());
     }
 
     /**
@@ -122,9 +155,9 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
         ItemStack held = player.getItemInHand(hand);
         ServerPlayer serverPlayer = player instanceof ServerPlayer sp ? sp : null;
 
-        if (tryPourBucket(tank, held, player, hand, CESGFluids.TELEPORT_ESSENCE.getSource(),
+        if (tryPourBucket(level, pos, tank, held, player, hand, CESGFluids.TELEPORT_ESSENCE.getSource(),
                 CESGFluids.TELEPORT_ESSENCE.get().getBucket(), serverPlayer)
-                || tryPourBucket(tank, held, player, hand, CESGFluids.LIQUID_EYE_OF_ENDER.getSource(),
+                || tryPourBucket(level, pos, tank, held, player, hand, CESGFluids.LIQUID_EYE_OF_ENDER.getSource(),
                         CESGFluids.LIQUID_EYE_OF_ENDER.get().getBucket(), serverPlayer))
             return ItemInteractionResult.SUCCESS;
 
@@ -141,14 +174,16 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
             player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, filled));
             if (serverPlayer != null)
                 serverPlayer.displayClientMessage(Component.translatable("cesg.battery.fuel_drained", BUCKET_MB), true);
+            level.playSound(null, pos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 0.8f, 1.0f);
             return ItemInteractionResult.SUCCESS;
         }
 
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
-    private static boolean tryPourBucket(IFluidHandler tank, ItemStack held, Player player, InteractionHand hand,
-            Fluid fluid, net.minecraft.world.item.Item bucket, @Nullable ServerPlayer serverPlayer) {
+    private static boolean tryPourBucket(Level level, BlockPos pos, IFluidHandler tank, ItemStack held, Player player,
+            InteractionHand hand, Fluid fluid, net.minecraft.world.item.Item bucket,
+            @Nullable ServerPlayer serverPlayer) {
         if (!held.is(bucket))
             return false;
         FluidStack resource = new FluidStack(fluid, BUCKET_MB);
@@ -175,6 +210,8 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
             player.setItemInHand(hand, new ItemStack(Items.BUCKET));
         if (serverPlayer != null)
             serverPlayer.displayClientMessage(Component.translatable("cesg.battery.fuel_added", BUCKET_MB), true);
+        level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 0.8f,
+                fluid == CESGFluids.TELEPORT_ESSENCE.getSource() ? 1.15f : 0.9f);
         return true;
     }
 

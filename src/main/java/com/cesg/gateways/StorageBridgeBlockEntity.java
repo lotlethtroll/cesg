@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.cesg.CESGConfig;
 import com.cesg.init.CESGBlockEntities;
+import com.cesg.init.CESGSounds;
 import com.cesg.network.TerminalContentPacket;
 import com.cesg.storage.network.StorageNetwork;
 import com.cesg.util.CESGLang;
@@ -22,9 +23,12 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -54,19 +58,34 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     private static final int FLUSH_INTERVAL = 10;
     private static final int IDLE_BACKOFF = 40;
     private static final int SYNC_INTERVAL = 10;
+    /** How often partner liveness is re-resolved when no transfer is happening to resolve it for us. */
+    private static final int STATUS_INTERVAL = 20;
     private static final int RING_SCAN_LIMIT = 64;
 
-    /** Liveness of the partner section, mirroring the Port's 3-state model. */
-    public enum RemoteStatus {
+    /**
+     * Liveness of the partner section, mirroring the Port's 3-state model. Also drives
+     * {@link StorageBridgeBlock#STATUS} so the state is legible on the block itself, not only through
+     * goggles — hence {@link StringRepresentable}.
+     */
+    public enum RemoteStatus implements StringRepresentable {
         /** Partner unloaded / gateway unbound: silent, greyed section (not an error). */
         OFFLINE,
         /** Partner resolved and its network scanned. */
         LIVE,
         /** Bound and loaded, but no partner Bridge or no operational partner network: a verified fault. */
-        FAULT
+        FAULT;
+
+        private final String serialized = name().toLowerCase(java.util.Locale.ROOT);
+
+        @Override
+        public String getSerializedName() {
+            return serialized;
+        }
     }
 
     private long nextFlushTime;
+    private long nextStatusTime;
+    private long nextTransferFxTime;
     private boolean syncDirty;
 
     // Items removed from the LOCAL network, awaiting insert into the REMOTE network (push, local -> remote).
@@ -125,9 +144,54 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             be.syncDirty = false;
             level.sendBlockUpdated(pos, state, state, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
         }
+        // Liveness is a property of the wiring, not of having work to do, so it is resolved on its own
+        // cadence rather than as a side effect of a transfer. A bridge with push and pull both off (or a
+        // gateway that is bound but out of fuel) never reaches the resolve inside flushPassive(), and used
+        // to sit at OFFLINE until something else — a terminal opening, say — happened to resolve it.
+        if (level.getGameTime() >= be.nextStatusTime && level instanceof ServerLevel serverLevel) {
+            be.resolveStatus(serverLevel);
+            be.syncStatusToState(level, pos);
+        }
         if (level.getGameTime() < be.nextFlushTime)
             return;
         be.nextFlushTime = level.getGameTime() + be.flushPassive();
+        be.syncStatusToState(level, pos);
+    }
+
+    /**
+     * {@link #resolveRemote} plus a stamp on the status cadence, so a flush-driven resolve counts as this
+     * interval's status check and a busy bridge does not walk the ring twice.
+     */
+    @Nullable
+    private RemoteEndpoint resolveStatus(ServerLevel level) {
+        nextStatusTime = level.getGameTime() + STATUS_INTERVAL;
+        return resolveRemote(level);
+    }
+
+    /**
+     * Publishes {@link #remoteStatus} onto {@link StorageBridgeBlock#STATUS}, and only writes when the
+     * value actually changed, so an idle bridge never issues block updates. Re-reads the state rather than
+     * trusting the ticker's copy, which goes stale the moment this writes.
+     */
+    private void syncStatusToState(Level level, BlockPos pos) {
+        BlockState current = level.getBlockState(pos);
+        if (!current.hasProperty(StorageBridgeBlock.STATUS)
+                || current.getValue(StorageBridgeBlock.STATUS) == remoteStatus)
+            return;
+        RemoteStatus previous = current.getValue(StorageBridgeBlock.STATUS);
+        level.setBlock(pos, current.setValue(StorageBridgeBlock.STATUS, remoteStatus),
+                net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+        if (level instanceof ServerLevel serverLevel && previous != remoteStatus) {
+            if (remoteStatus == RemoteStatus.LIVE) {
+                serverLevel.playSound(null, pos, CESGSounds.LINK_LIVE.value(), SoundSource.BLOCKS, 0.7f, 1.0f);
+                serverLevel.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 0.65,
+                        pos.getZ() + 0.5, 8, 0.22, 0.3, 0.22, 0.025);
+            } else if (remoteStatus == RemoteStatus.FAULT) {
+                serverLevel.playSound(null, pos, CESGSounds.LINK_FAULT.value(), SoundSource.BLOCKS, 0.7f, 1.0f);
+                serverLevel.sendParticles(ParticleTypes.SMOKE, pos.getX() + 0.5, pos.getY() + 0.65,
+                        pos.getZ() + 0.5, 5, 0.18, 0.2, 0.18, 0.015);
+            }
+        }
     }
 
     // ---- Remote resolution ---------------------------------------------------------------------
@@ -270,7 +334,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         if (core == null || !core.canTravel())
             return IDLE_BACKOFF; // no active gateway: hold whatever is buffered, retry slowly
 
-        RemoteEndpoint remote = resolveRemote(serverLevel); // active channel; also sets remoteStatus
+        RemoteEndpoint remote = resolveStatus(serverLevel); // active channel; also sets remoteStatus
         boolean routing = core.isRouteMode();
         // Non-route: nothing moves while the active partner is down. Route: push may still fan out to
         // other channels, so only bail when there is no push work AND the active channel is down.
@@ -285,31 +349,36 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             return IDLE_BACKOFF;
 
         int max = CESGConfig.bridgeMaxItemsPerFlush();
+        int moved = 0;
         // PUSH: pull items out of the LOCAL network into outBuffer, then deliver. In route mode the
         // per-channel filters are the only gate (extract whatever some channel accepts, then fan out);
         // otherwise the Bridge's own send filter decides, delivered to the active partner.
         if (pushEnabled) {
             if (routing)
-                fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, max, s -> core.routeChannel(s) >= 0);
+                moved += fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, max,
+                        s -> core.routeChannel(s) >= 0);
             else
-                fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, sendFilter, sendBlacklist, max);
+                moved += fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, sendFilter, sendBlacklist, max);
         }
         if (routing)
-            flushBufferRouted(serverLevel, core, outBuffer);
-        else
-            flushBufferToNetwork(remote.level, remote.anchor, outBuffer);
+            moved += flushBufferRouted(serverLevel, core, outBuffer);
+        else if (remote != null) // non-route already bailed above when the partner is down
+            moved += flushBufferToNetwork(remote.level, remote.anchor, outBuffer);
         // PULL (active channel only — fan-out is a distribution/send concern). Draining inBuffer into the
         // LOCAL network always runs, since local is reachable even when the partner is down.
         if (remote != null && pullEnabled)
-            fillBufferFromNetwork(remote.level, remote.anchor, inBuffer, pullFilter, pullBlacklist, max);
-        flushBufferToNetwork(serverLevel, worldPosition, inBuffer);
+            moved += fillBufferFromNetwork(remote.level, remote.anchor, inBuffer, pullFilter, pullBlacklist, max);
+        moved += flushBufferToNetwork(serverLevel, worldPosition, inBuffer);
+        if (moved > 0)
+            emitTransferFx(serverLevel);
         return FLUSH_INTERVAL;
     }
 
     /** Delivers each buffered stack to the partner network of the channel whose filter accepts it. */
-    private void flushBufferRouted(ServerLevel level, CrossDimensionalGatewayCoreBlockEntity core,
+    private int flushBufferRouted(ServerLevel level, CrossDimensionalGatewayCoreBlockEntity core,
             ItemStackHandler buffer) {
         Map<Integer, RemoteEndpoint> cache = new HashMap<>();
+        int moved = 0;
         for (int slot = 0; slot < buffer.getSlots(); slot++) {
             ItemStack stack = buffer.getStackInSlot(slot);
             if (stack.isEmpty())
@@ -322,24 +391,27 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
                 continue; // that channel's partner is down: hold, retry next flush
             ItemStack remainder = StorageNetwork.insert(remote.level, remote.anchor, stack.copy());
             buffer.setStackInSlot(slot, remainder);
+            moved += stack.getCount() - remainder.getCount();
         }
+        return moved;
     }
 
     /** Extracts up to {@code max} filtered items out of a network into {@code buffer} (never overfills it). */
-    private static void fillBufferFromNetwork(Level level, BlockPos anchor, ItemStackHandler buffer,
+    private static int fillBufferFromNetwork(Level level, BlockPos anchor, ItemStackHandler buffer,
             ItemStackHandler filter, boolean blacklist, int max) {
-        fillBufferFromNetwork(level, anchor, buffer, max, sample -> passesFilter(sample, filter, blacklist));
+        return fillBufferFromNetwork(level, anchor, buffer, max, sample -> passesFilter(sample, filter, blacklist));
     }
 
     /** As above, but with an arbitrary acceptance test (route mode extracts whatever any channel accepts). */
-    private static void fillBufferFromNetwork(Level level, BlockPos anchor, ItemStackHandler buffer, int max,
+    private static int fillBufferFromNetwork(Level level, BlockPos anchor, ItemStackHandler buffer, int max,
             java.util.function.Predicate<ItemStack> accept) {
         StorageNetwork.Scan scan = StorageNetwork.scan(level, anchor);
         if (!scan.operational())
-            return;
+            return 0;
         int budget = max - countItems(buffer);
         if (budget <= 0)
-            return;
+            return 0;
+        int moved = 0;
         Object2IntMap<ItemStack> totals = StorageNetwork.aggregate(scan);
         for (Object2IntMap.Entry<ItemStack> entry : totals.object2IntEntrySet()) {
             if (budget <= 0)
@@ -354,19 +426,35 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             ItemStack overflow = insertIntoBuffer(buffer, pulled);
             if (!overflow.isEmpty())
                 StorageNetwork.insert(level, anchor, overflow);
-            budget -= pulled.getCount() - overflow.getCount();
+            int inserted = pulled.getCount() - overflow.getCount();
+            moved += inserted;
+            budget -= inserted;
         }
+        return moved;
     }
 
     /** Delivers everything in {@code buffer} into a network; whatever does not fit stays buffered. */
-    private static void flushBufferToNetwork(Level level, BlockPos anchor, ItemStackHandler buffer) {
+    private static int flushBufferToNetwork(Level level, BlockPos anchor, ItemStackHandler buffer) {
+        int moved = 0;
         for (int slot = 0; slot < buffer.getSlots(); slot++) {
             ItemStack stack = buffer.getStackInSlot(slot);
             if (stack.isEmpty())
                 continue;
             ItemStack remainder = StorageNetwork.insert(level, anchor, stack.copy());
             buffer.setStackInSlot(slot, remainder);
+            moved += stack.getCount() - remainder.getCount();
         }
+        return moved;
+    }
+
+    private void emitTransferFx(ServerLevel level) {
+        if (level.getGameTime() < nextTransferFxTime)
+            return;
+        nextTransferFxTime = level.getGameTime() + 20;
+        level.playSound(null, worldPosition, CESGSounds.TRANSFER.value(), SoundSource.BLOCKS, 0.35f, 1.0f);
+        level.sendParticles(ParticleTypes.REVERSE_PORTAL, worldPosition.getX() + 0.5,
+                worldPosition.getY() + 0.65, worldPosition.getZ() + 0.5,
+                4, 0.16, 0.2, 0.16, 0.025);
     }
 
     private static ItemStack insertIntoBuffer(ItemStackHandler buffer, ItemStack stack) {

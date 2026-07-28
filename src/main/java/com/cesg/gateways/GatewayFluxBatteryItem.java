@@ -72,13 +72,18 @@ public class GatewayFluxBatteryItem extends BlockItem {
                 BlockState state = level.getBlockState(startPos.offset(x, 0, z));
                 if (state.getBlock() instanceof GatewayFluxBatteryBlock)
                     continue;
-                if (!state.canBeReplaced())
+                if (!state.canBeReplaced()) {
+                    // First block from super.place already remains; re-form via its controller.
+                    scheduleControllerReform(level, pos);
                     return; // layer footprint is obstructed — don't half-place
+                }
                 toPlace++;
             }
         }
-        if (!player.isCreative() && stack.getCount() < toPlace)
+        if (!player.isCreative() && stack.getCount() < toPlace) {
+            scheduleControllerReform(level, pos);
             return;
+        }
 
         for (int x = 0; x < width; x++) {
             for (int z = 0; z < width; z++) {
@@ -88,5 +93,18 @@ public class GatewayFluxBatteryItem extends BlockItem {
                 super.place(BlockPlaceContext.at(ctx, offsetPos, face));
             }
         }
+    }
+
+    /** After an aborted auto-fill, the first placed cell may have joined mid-form — re-form its controller. */
+    private static void scheduleControllerReform(Level level, BlockPos placedPos) {
+        if (level.isClientSide)
+            return;
+        GatewayFluxBatteryBlockEntity part =
+                ConnectivityHandler.partAt(CESGBlockEntities.GATEWAY_FLUX_BATTERY.get(), level, placedPos);
+        if (part == null)
+            return;
+        GatewayFluxBatteryBlockEntity ctrl = part.getControllerBE();
+        if (ctrl != null)
+            ctrl.scheduleConnectivityUpdate();
     }
 }

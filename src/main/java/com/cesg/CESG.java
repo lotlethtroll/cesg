@@ -43,6 +43,7 @@ public class CESG {
         CESGCapabilities.register(modEventBus);
         CESGDataComponents.register(modEventBus);
         com.cesg.init.CESGEffects.register(modEventBus);
+        com.cesg.init.CESGSounds.register(modEventBus);
         com.cesg.init.CESGPotions.register(modEventBus);
         modEventBus.addListener(com.cesg.init.CESGPotions::addToCreativeTab);
 

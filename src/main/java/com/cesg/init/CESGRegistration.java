@@ -55,6 +55,7 @@ public class CESGRegistration {
                     })))
             .item()
             .model(CESGPlaceholderModels::shulkerLoaderItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.shulker_loader"))
             .build()
             .register();
 
@@ -71,6 +72,7 @@ public class CESGRegistration {
                     })))
             .item()
             .model(CESGPlaceholderModels::shulkerUnloaderItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.shulker_unloader"))
             .build()
             .register();
 
@@ -87,6 +89,7 @@ public class CESGRegistration {
                     })))
             .item(com.cesg.storage.station.BeltStationBlockItem::new)
             .model(CESGPlaceholderModels::shulkerBeltLoaderItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.shulker_belt_loader"))
             .build()
             .register();
 
@@ -103,6 +106,8 @@ public class CESGRegistration {
                     })))
             .item(com.cesg.storage.station.BeltStationBlockItem::new)
             .model(CESGPlaceholderModels::shulkerBeltUnloaderItem)
+            .onRegisterAfter(Registries.ITEM,
+                    item -> ItemDescription.useKey(item, "block.cesg.shulker_belt_unloader"))
             .build()
             .register();
 
@@ -188,6 +193,7 @@ public class CESGRegistration {
     public static final ItemEntry<net.minecraft.world.item.Item> ENDER_PEARL_DUST = CESG.REGISTRATE
             .item("ender_pearl_dust", net.minecraft.world.item.Item::new)
             .model(CESGPlaceholderModels::enderPearlDust)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.ender_pearl_dust"))
             .register();
 
     public static final BlockEntry<ShulkerCageBlock> SHULKER_CAGE =
@@ -250,7 +256,8 @@ public class CESGRegistration {
     public static final BlockEntry<com.cesg.gateways.StorageBridgeBlock> STORAGE_BRIDGE =
             CESG.REGISTRATE.block("storage_bridge", com.cesg.gateways.StorageBridgeBlock::new)
                     .initialProperties(() -> Blocks.END_STONE_BRICKS)
-                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE))
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE)
+                            .lightLevel(com.cesg.gateways.StorageBridgeBlock::lightLevel))
                     .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
                     .blockstate(CESGPlaceholderModels::storageBridge)
                     .item()
@@ -266,7 +273,8 @@ public class CESGRegistration {
                     .blockstate(CESGPlaceholderModels::gatewayFluxBattery)
                     .onRegister(CreateRegistrate.blockModel(
                             () -> com.cesg.client.GatewayFluxBatteryModel::standard))
-                    .addLayer(() -> net.minecraft.client.renderer.RenderType::cutoutMipped)
+                    // Render layer comes from "render_type" in the hand-authored block models
+                    // (BlockBuilder#addLayer is deprecated for removal).
                     .item(com.cesg.gateways.GatewayFluxBatteryItem::new)
                     .model(CESGPlaceholderModels::gatewayFluxBatteryItem)
                     .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_flux_battery"))
