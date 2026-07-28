@@ -119,15 +119,24 @@ public final class GatewayPortalShape {
                 || interiorHeight < MIN_HEIGHT || interiorHeight > MAX_HEIGHT)
             return Attempt.fail("size", ring.size());
 
-        // The ring must be exactly the rectangle's perimeter — no gaps (missing corner/edge) and nothing extra.
+        // The ring must be exactly the rectangle's perimeter. Split the two failures, because the fixes
+        // are opposites. A block strictly inside the bounding box means the walk absorbed frames beyond
+        // one clean perimeter — most often a neighbouring gateway whose frames touch this ring, or a
+        // stray block that stretched the box. Only once everything sits on the perimeter is a shortfall
+        // an ordinary gap the player should fill in.
+        for (BlockPos cell : ring) {
+            int u = coord(cell, widthAxis);
+            if (u != uMin && u != uMax && cell.getY() != yMin && cell.getY() != yMax)
+                return Attempt.fail("extra", ring.size());
+        }
         if (ring.size() != 2 * outerWidth + 2 * outerHeight - 4)
-            return Attempt.fail("not_rect", ring.size());
+            return Attempt.fail("gap", ring.size());
         for (int u = uMin; u <= uMax; u++)
             if (!ring.contains(make(widthAxis, u, yMin, planeFixed)) || !ring.contains(make(widthAxis, u, yMax, planeFixed)))
-                return Attempt.fail("not_rect", ring.size());
+                return Attempt.fail("gap", ring.size());
         for (int y = yMin; y <= yMax; y++)
             if (!ring.contains(make(widthAxis, uMin, y, planeFixed)) || !ring.contains(make(widthAxis, uMax, y, planeFixed)))
-                return Attempt.fail("not_rect", ring.size());
+                return Attempt.fail("gap", ring.size());
 
         // Interior must all be fillable (air or an existing portal cell).
         List<BlockPos> interior = new ArrayList<>();

@@ -96,7 +96,9 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.bridge.filter.hint", "Click with an item to filter this direction (the item is not consumed).");
         add("block.cesg.gateway_frame", "Gateway Frame");
         add("block.cesg.gateway_frame.tooltip.summary",
-                "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal.");
+                "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal. "
+                        + "Leave _a block of space_ between neighbouring gateways — rings whose frames touch "
+                        + "break each other.");
         add("block.cesg.gateway_portal", "Gateway Portal");
 
         add("block.cesg.enhanced_shulker_box", "Shulker Box");
@@ -324,7 +326,8 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.gateway.unbound", "Unbound — imprint and apply a binding crystal");
         add("cesg.goggles.gateway.unpowered", "Unpowered — connect a spinning shaft");
         add("cesg.goggles.gateway.frame.no_ring", "Build a Gateway Frame ring around this Core");
-        add("cesg.goggles.gateway.frame.not_rect", "Ring has a gap — only Frames and the Core count");
+        add("cesg.goggles.gateway.frame.gap", "Ring has a gap — only Frames and the Core count");
+        add("cesg.goggles.gateway.frame.extra", "Extra Frames touching the ring — keep gateways apart");
         add("cesg.goggles.gateway.frame.blocked", "Clear the opening inside the ring");
         add("cesg.goggles.gateway.frame.size", "Opening must be 1-8 wide and 2-8 tall");
         add("cesg.goggles.gateway.frame.too_big", "Ring is too large");

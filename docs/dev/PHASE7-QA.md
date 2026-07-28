@@ -375,6 +375,14 @@ core set wired; Bridge ponder authored. Phase 6 cosmetics **WONTFIX**.
     Frame touching the ring** in the same vertical plane (the flood fill absorbs
     it — this also bites two gateways built in a shared plane), any **non-air
     block in the interior**, and an interior outside 1–8 wide / 2–8 tall.
+  - The gap/extra split matters because the fixes are opposites: any ring block
+    strictly **inside** the bounding box means frames were absorbed beyond one
+    perimeter (`extra`), while a shortfall with everything **on** the perimeter is
+    an ordinary missing block (`gap`). Counting alone is not enough — a single
+    protruding frame stretches the bounding box and reads as a shortfall.
+  - [ ] **Re-verify in-game:** build two gateways with touching frames and confirm
+    the goggle says "Extra Frames touching the ring", and that a genuinely missing
+    frame still says "Ring has a gap".
 
 ### Ponder polish pass (done — static verification only, see below)
 - [x] All 10 storyboards wrapped in Create's `CreateSceneBuilder`; every scene now

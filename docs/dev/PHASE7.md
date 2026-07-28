@@ -685,7 +685,24 @@ defers), and no placeholder cubes remain in the creative tab for 1.1 content.
 - **NBT back-compat:** additions to persisted records/BEs must default cleanly so
   1.0 worlds load unchanged (this keeps 1.1 a MINOR release).
 - **Config defaults = current behaviour** so untouched servers are unaffected.
-- **Ring membership single source of truth:** `GatewayFuelHandler.isRingBlock`.
+- **Ring membership single source of truth:** `GatewayFuelHandler.isRingBlock`
+  (Gateway Frames + the Core). A **Gateway Port is not a ring block** — Ports and
+  Bridges attach *beside* the ring; only the Core may occupy a perimeter slot.
+- **Known limitation (1.1, accepted 2026-07-27): two gateways may not share a
+  vertical plane with touching frames.** `GatewayPortalShape.tryAxis` flood-fills
+  every Gateway Frame in the Core's plane and demands the result be exactly one
+  rectangle's perimeter, so two rings whose frames touch absorb each other and
+  **both** fail to open. A foreign Core halts the walk (it is not a frame), so
+  only frame-to-frame contact bites; one block of separation avoids it entirely.
+  Mitigated rather than fixed for 1.1: the Core goggle now reports
+  `cesg.goggles.gateway.frame.extra` ("Extra Frames touching the ring — keep
+  gateways apart") and the Gateway Frame tooltip states the spacing rule.
+  **1.2 candidate:** rewrite detection to find the *minimal* valid rectangle
+  containing the Core (nether-portal style) instead of requiring the whole
+  flood-fill to be that rectangle. Deliberately not done in 1.1 — it is the
+  function every gateway system sits on (fuel walks, Ports, Bridge, travel, frame
+  lighting), and changing which structures validate risks invalidating 1.0 worlds,
+  which would force a MAJOR re-scope.
 - **Game-bus vs mod-bus:** brewing/registration events differ (Phase 6 note);
   sounds register on the mod bus.
 - **Build gotcha:** repo is under OneDrive — gradle intermittently fails with
