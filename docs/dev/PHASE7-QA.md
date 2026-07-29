@@ -284,6 +284,17 @@ setup with a bound gateway.
 - [ ] Two Bridges on one ring (same partner) do **not** double-count the partner's
   items in the section
 - [ ] Breaking the Bridge drops the in-transit buffer (no dupe, no loss)
+  - **How to actually test this.** "Break it mid-transfer" is not testable — extract
+    and deliver both happen inside one `flushPassive()`, so a successful transfer
+    leaves the buffer empty and there is no window to race. Force the hold instead:
+    make the partner side **Bridge + Controller only, with no storage boxes**. It
+    still resolves LIVE (operational controller, so not FAULT) but `insert` has
+    nowhere to go, so push extracts into `outBuffer` and the remainder stays there,
+    self-limiting at `BUFFER_SLOTS = 9`. Then break the Bridge and check
+    `dropped + local + partner` against the starting total.
+  - [ ] Variant: with items held in the buffer, unbind the gateway / cut its fuel
+    and confirm they hold indefinitely rather than draining, then restore and
+    confirm they deliver once the partner can accept.
 - [ ] Drain fuel below the battery reserve → transfer gated (idle = free)
 - [x] Viewed (open-GUI) shulker boxes skipped on **both** sides — _**not reachable
   the obvious way, by design.** `EnhancedShulkerBoxBlock.useWithoutItem` refuses to
