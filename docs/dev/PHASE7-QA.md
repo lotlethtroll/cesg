@@ -265,13 +265,16 @@ setup with a bound gateway.
   to the cross-dimension pass (3E) and is still untested**_
 
 ### Transfer via terminal
-- [ ] On the Partner tab: click withdraws remote→cursor, shift-click→inventory,
-  right-click→**half a stack**; carried-stack click deposits player→remote
+- [x] On the Partner tab: click withdraws remote→cursor, shift-click→inventory,
+  right-click→**half**; carried-stack click deposits player→remote _(2026-07-27)_
   - ⚠️ **Changed 2026-07-27:** right-click withdrew exactly **1** item, which
-    fights vanilla slot muscle memory (right-click takes half). Now takes half a
-    *stack* — "half" of an entry total that can run to thousands is meaningless,
-    and the cursor caps at a stack anyway. The **deposit** side deliberately stays
-    at 1, because vanilla right-click *places* a single item.
+    fights vanilla slot muscle memory (right-click takes half). It now takes half
+    of **what a left-click would give** — `min(total, maxStackSize)`, halved and
+    rounded up as vanilla does. That reading survives both ends: a pile of 10
+    yields 5, a pile of 5000 yields half a stack. Halving the raw entry total
+    would be meaningless (the cursor caps at a stack) and a fixed half-stack would
+    be wrong for small piles and for items that do not stack to 64. The **deposit**
+    side deliberately stays at 1, because vanilla right-click *places* one item.
 - [ ] ⚠️ **Fixed 2026-07-27 — silent fuel gating.** A transfer refused by the
   battery reserve did nothing at all: no message, while the Core read healthy and
   the liveness dot stayed green. Found live at Core 1160 mB with cost 200 and
@@ -283,7 +286,10 @@ setup with a bound gateway.
   to an unfuelled gateway is rejected (no free transfer)
 - [ ] Two Bridges on one ring (same partner) do **not** double-count the partner's
   items in the section
-- [ ] Breaking the Bridge drops the in-transit buffer (no dupe, no loss)
+- [x] Breaking the Bridge drops the in-transit buffer (no dupe, no loss)
+  _(2026-07-27 — **clean.** Started 64 iron in local; after buffering, local read
+  **0**, the Bridge goggle read **64 out**, partner **0**; breaking dropped
+  exactly **64**. Nothing gained, nothing voided.)_
   - **How to actually test this.** "Break it mid-transfer" is not testable — extract
     and deliver both happen inside one `flushPassive()`, so a successful transfer
     leaves the buffer empty and there is no window to race. Force the hold instead:
