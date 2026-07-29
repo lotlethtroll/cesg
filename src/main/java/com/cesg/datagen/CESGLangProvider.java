@@ -84,8 +84,13 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.bridge.status.fault", "Partner network: no Bridge or controller found");
         add("cesg.goggles.bridge.transit", "In transit: %s out, %s in");
         add("cesg.bridge.gui.title", "Storage Bridge");
-        add("cesg.bridge.push", "Push → Partner");
-        add("cesg.bridge.pull", "Pull ← Partner");
+        add("cesg.bridge.partner", "Partner");
+        add("cesg.bridge.push.to", "Push → %s");
+        add("cesg.bridge.pull.from", "Pull ← %s");
+        add("cesg.bridge.push.routed", "Push → routed by channel");
+        add("cesg.bridge.push.routed.tip",
+                "Route mode is on for this gateway, so this filter is ignored — the Core's per-channel "
+                        + "filters decide where each item goes. Turn Route off on the Core to use this row.");
         add("cesg.bridge.on", "On");
         add("cesg.bridge.off", "Off");
         add("cesg.bridge.whitelist_short", "WL");
@@ -325,6 +330,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.gateway.cross_dimension", "Bound (cross-dimensional — uses Liquid Eye of Ender)");
         add("cesg.goggles.gateway.unbound", "Unbound — imprint and apply a binding crystal");
         add("cesg.goggles.gateway.unpowered", "Unpowered — connect a spinning shaft");
+        add("cesg.goggles.gateway.route", "Route mode: pushed items follow the channel filters");
         add("cesg.goggles.gateway.frame.no_ring", "Build a Gateway Frame ring around this Core");
         add("cesg.goggles.gateway.frame.gap", "Ring has a gap — only Frames and the Core count");
         add("cesg.goggles.gateway.frame.extra", "Extra Frames touching the ring — keep gateways apart");

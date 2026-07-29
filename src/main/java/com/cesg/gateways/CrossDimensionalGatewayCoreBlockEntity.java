@@ -828,6 +828,10 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
                 CESGLang.forGoggles(tooltip, frameIssue, ChatFormatting.RED);
         }
         CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.channel", ChatFormatting.WHITE, activeChannel + 1);
+        // Without this the tooltip implies the active channel is where everything goes, when route mode
+        // sends pushed items to whichever channel's filter accepts them instead.
+        if (isRouteMode())
+            CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.route", ChatFormatting.YELLOW);
         if (chunkLoading)
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.chunkloading", ChatFormatting.GOLD);
         if (getPartner().isBound() && getPartner().hasName())

@@ -26,6 +26,8 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     private static final int SLOT_SHADOW = 0xFF373737;
     private static final int SLOT_HIGHLIGHT = 0xFFFFFFFF;
     private static final int LABEL_COLOR = 0x404040;
+    private static final int DISABLED_LABEL = 0x808080;
+    private static final int DISABLED_VEIL = 0xA0C6C6C6;
 
     private static final int ON_FILL = 0xFF4C9A4C;
     private static final int OFF_FILL = 0xFF8B8B8B;
@@ -61,6 +63,13 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
 
         drawFilterRow(graphics, x0 + StorageBridgeMenu.SEND_X, y0 + StorageBridgeMenu.SEND_Y);
         drawFilterRow(graphics, x0 + StorageBridgeMenu.PULL_X, y0 + StorageBridgeMenu.PULL_Y);
+        // Route mode bypasses the send filter, so veil it rather than leaving a live-looking control.
+        if (menu.isRouteMode()) {
+            int rx = x0 + StorageBridgeMenu.SEND_X;
+            int ry = y0 + StorageBridgeMenu.SEND_Y;
+            graphics.fill(rx, ry, rx + StorageBridgeMenu.FILTER_COLS * StorageBridgeMenu.SLOT,
+                    ry + StorageBridgeMenu.SLOT, DISABLED_VEIL);
+        }
 
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < 9; col++)
@@ -112,9 +121,14 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.drawString(font, title, titleLabelX, titleLabelY, LABEL_COLOR, false);
-        graphics.drawString(font, Component.translatable("cesg.bridge.push"),
-                8, PUSH_HEADER_Y + 2, LABEL_COLOR, false);
-        graphics.drawString(font, Component.translatable("cesg.bridge.pull"),
+        // Name where items actually go. "Push → Partner" never said which partner, and in route mode
+        // the answer is "whichever channel filter accepts it" — not this row's filter at all.
+        boolean routed = menu.isRouteMode();
+        Component push = routed
+                ? Component.translatable("cesg.bridge.push.routed")
+                : Component.translatable("cesg.bridge.push.to", menu.destinationLabel());
+        graphics.drawString(font, push, 8, PUSH_HEADER_Y + 2, routed ? DISABLED_LABEL : LABEL_COLOR, false);
+        graphics.drawString(font, Component.translatable("cesg.bridge.pull.from", menu.destinationLabel()),
                 8, PULL_HEADER_Y + 2, LABEL_COLOR, false);
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);
     }
@@ -140,7 +154,15 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
 
     /** Empty ghost slots have no item tooltip of their own — hint how to configure them. */
     private void renderGhostHint(GuiGraphics graphics, int mouseX, int mouseY) {
-        if (hoveredSlot != null && hoveredSlot.index < 2 * StorageBridgeMenu.FILTER_COLS && !hoveredSlot.hasItem())
+        if (hoveredSlot == null || hoveredSlot.index >= 2 * StorageBridgeMenu.FILTER_COLS)
+            return;
+        // The send row is inert in route mode, so say so on hover instead of the "click to filter" hint.
+        if (hoveredSlot.index < StorageBridgeMenu.FILTER_COLS && menu.isRouteMode()) {
+            graphics.renderComponentTooltip(font,
+                    List.of(Component.translatable("cesg.bridge.push.routed.tip")), mouseX, mouseY);
+            return;
+        }
+        if (!hoveredSlot.hasItem())
             graphics.renderComponentTooltip(font,
                     List.of(Component.translatable("cesg.bridge.filter.hint")), mouseX, mouseY);
     }

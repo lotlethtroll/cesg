@@ -5,6 +5,7 @@ import com.cesg.init.CESGRegistration;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -137,10 +138,40 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
         // Ghost slots hold a type-only COPY of whatever is on the cursor; nothing is consumed.
         if (slotId >= 0 && slotId < GHOST_END && slots.get(slotId) instanceof GhostSlot ghost) {
+            // In route mode the send filter is bypassed entirely (the Core's channel filters are the
+            // only gate), so refuse edits rather than letting the player configure a dead control.
+            if (slotId < PULL_SLOT_START && isRouteMode())
+                return;
             ghost.setFilter(getCarried());
             return;
         }
         super.clicked(slotId, button, clickType, player);
+    }
+
+    @Nullable
+    private CrossDimensionalGatewayCoreBlockEntity core() {
+        return GatewayFuelHandler.findCore(player.level(), pos);
+    }
+
+    /**
+     * Whether the Core this Bridge hangs off is fanning items out by channel filter. The Core syncs
+     * {@code RouteMode} and its bindings to the client, so this reads live on both sides rather than
+     * needing its own container slot.
+     */
+    public boolean isRouteMode() {
+        CrossDimensionalGatewayCoreBlockEntity core = core();
+        return core != null && core.isRouteMode();
+    }
+
+    /** The active channel's destination name, for labelling the rows with where items actually go. */
+    public Component destinationLabel() {
+        CrossDimensionalGatewayCoreBlockEntity core = core();
+        if (core != null) {
+            com.cesg.gateways.teleport.GatewayPartner partner = core.getPartner();
+            if (partner.isBound() && partner.hasName())
+                return Component.literal(partner.name());
+        }
+        return Component.translatable("cesg.bridge.partner");
     }
 
     @Override
