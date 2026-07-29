@@ -233,6 +233,29 @@ partner never double-count. The reverse of the hub-and-spoke case matters: many
 spoke networks can each see one shared hub, but a terminal only ever shows the
 **one** partner its Bridge's active channel points at.
 
+**Links must be mutual (added 2026-07-29).** A Bridge only transacts with a
+partner whose Core has **this** Core bound on *some* channel. Gateway binding is
+one-way addressing, so without this any gateway that knew a position could bind to
+it and quietly drain that network — the far side never agreed to the link. A
+partner that is reachable but has no binding back reports the new **UNLINKED**
+status (gold goggle line, amber terminal dot, fault-coloured block) and moves
+nothing.
+- **Any channel, not the active one.** This is what keeps hub-and-spoke alive: a
+  hub binds each spoke on its own channel and serves all of them at once, whereas
+  requiring the *active* channels to match would reduce a hub to a single spoke.
+- **Route mode is unaffected in kind** — it still fans out to bound channels, but
+  each of those partners must also have bound this gateway back.
+- **Gateway Ports are deliberately NOT subject to this.** Ports shipped in 1.0, and
+  adding a handshake requirement would break existing one-way Port setups in live
+  worlds — that is a MAJOR change, not a MINOR one. Bridges are new in 1.1, so the
+  rule costs no compatibility there.
+
+**Destination names resolve live.** `GatewayPartner.name` is a copy taken at bind
+time, so a renamed gateway used to show its old label forever in every binding that
+pointed at it. `displayName(level)` reads through to the partner Core when its chunk
+is loaded and falls back to the stored copy only when it is not (unloaded or
+cross-dimension partners still need something to show).
+
 **Cross-dimension safety.** Every move is modelled extract-then-insert with an
 in-transit buffer: nothing commits until the source extract succeeds, so an
 unloaded partner or a broken Bridge can never dupe or void items (breaking a

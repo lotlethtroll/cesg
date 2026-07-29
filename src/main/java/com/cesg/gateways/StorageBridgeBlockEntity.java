@@ -74,7 +74,12 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         /** Partner resolved and its network scanned. */
         LIVE,
         /** Bound and loaded, but no partner Bridge or no operational partner network: a verified fault. */
-        FAULT;
+        FAULT,
+        /**
+         * Partner resolved, but it has no binding pointing back at this gateway. The link is one-way, so
+         * this Bridge must not reach into a network that never linked to it.
+         */
+        UNLINKED;
 
         private final String serialized = name().toLowerCase(java.util.Locale.ROOT);
 
@@ -224,6 +229,12 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         }
         if (!(partnerLevel.getBlockEntity(partner.position()) instanceof CrossDimensionalGatewayCoreBlockEntity partnerCore)) {
             remoteStatus = RemoteStatus.FAULT;
+            return null;
+        }
+        // The link must be mutual. Binding is one-way addressing, so without this any gateway that knows
+        // a position could reach in and drain that network unilaterally — the far side never consented.
+        if (!partnerCore.hasBindingTo(level.dimension(), core.getBlockPos())) {
+            remoteStatus = RemoteStatus.UNLINKED;
             return null;
         }
         List<StorageBridgeBlockEntity> bridges = findBridges(partnerLevel, partnerCore.getBlockPos());
@@ -671,6 +682,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         ChatFormatting statusColor = switch (remoteStatus) {
             case LIVE -> ChatFormatting.GREEN;
             case FAULT -> ChatFormatting.RED;
+            case UNLINKED -> ChatFormatting.GOLD;
             case OFFLINE -> ChatFormatting.GRAY;
         };
         CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.status." + remoteStatus.name().toLowerCase(), statusColor);

@@ -49,7 +49,7 @@ public class StorageBridgeBlock extends BaseEntityBlock {
     public static int lightLevel(BlockState state) {
         return switch (state.getValue(STATUS)) {
             case LIVE -> 7;
-            case FAULT -> 5;
+            case FAULT, UNLINKED -> 5; // both are lit wiring faults, and both use the fault gauge art
             case OFFLINE -> 0;
         };
     }

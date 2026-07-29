@@ -305,7 +305,9 @@ public final class CESGPlaceholderModels {
             String suffix = switch (state.getValue(com.cesg.gateways.StorageBridgeBlock.STATUS)) {
                 case OFFLINE -> "";
                 case LIVE -> "_live";
-                case FAULT -> "_fault";
+                // UNLINKED reuses the fault art deliberately: it is a wiring problem the player must fix,
+                // and a fourth texture set would reopen the 7H art pass for no extra information.
+                case FAULT, UNLINKED -> "_fault";
             };
             return ConfiguredModel.builder()
                     .modelFile(prov.models()

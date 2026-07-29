@@ -82,6 +82,8 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.bridge.status.live", "Partner network: linked");
         add("cesg.goggles.bridge.status.offline", "Partner network: offline (unbound or unloaded)");
         add("cesg.goggles.bridge.status.fault", "Partner network: no Bridge or controller found");
+        add("cesg.goggles.bridge.status.unlinked",
+                "Partner network: one-way link — bind the far gateway back to this one");
         add("cesg.goggles.bridge.transit", "In transit: %s out, %s in");
         add("cesg.bridge.gui.title", "Storage Bridge");
         add("cesg.bridge.partner", "Partner");
@@ -528,6 +530,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.network.remote.offline", "Partner network offline");
         add("cesg.network.remote.fault", "No partner network found");
         add("cesg.network.remote.empty", "Partner network is empty");
+        add("cesg.network.remote.unlinked", "One-way link — bind the far gateway back");
         add("cesg.network.no_results", "No results");
         add("cesg.network.remote.unfuelled", "Not enough gateway fuel — a Flux Battery is holding back the travel reserve");
 

@@ -18,73 +18,6 @@
     },
     {
       "apply": {
-        "model": "cesg:block/gateway_conduit_hub_eye"
-      },
-      "when": {
-        "fuel": "eye"
-      }
-    },
-    {
-      "apply": {
-        "model": "cesg:block/gateway_conduit_beam_eye"
-      },
-      "when": {
-        "fuel": "eye",
-        "link_north": "frame|core"
-      }
-    },
-    {
-      "apply": {
-        "model": "cesg:block/gateway_conduit_beam_eye",
-        "y": 180
-      },
-      "when": {
-        "fuel": "eye",
-        "link_south": "frame|core"
-      }
-    },
-    {
-      "apply": {
-        "model": "cesg:block/gateway_conduit_beam_eye",
-        "y": 90
-      },
-      "when": {
-        "fuel": "eye",
-        "link_east": "frame|core"
-      }
-    },
-    {
-      "apply": {
-        "model": "cesg:block/gateway_conduit_beam_eye",
-        "y": 270
-      },
-      "when": {
-        "fuel": "eye",
-        "link_west": "frame|core"
-      }
-    },
-    {
-      "apply": {
-        "model": "cesg:block/gateway_conduit_beam_eye",
-        "x": 270
-      },
-      "when": {
-        "fuel": "eye",
-        "link_up": "frame|core"
-      }
-    },
-    {
-      "apply": {
-        "model": "cesg:block/gateway_conduit_beam_eye",
-        "x": 90
-      },
-      "when": {
-        "fuel": "eye",
-        "link_down": "frame|core"
-      }
-    },
-    {
-      "apply": {
         "model": "cesg:block/gateway_conduit_hub_essence"
       },
       "when": {
@@ -147,6 +80,73 @@
       },
       "when": {
         "fuel": "essence",
+        "link_down": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_hub_eye"
+      },
+      "when": {
+        "fuel": "eye"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye"
+      },
+      "when": {
+        "fuel": "eye",
+        "link_north": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "y": 180
+      },
+      "when": {
+        "fuel": "eye",
+        "link_south": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "y": 90
+      },
+      "when": {
+        "fuel": "eye",
+        "link_east": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "y": 270
+      },
+      "when": {
+        "fuel": "eye",
+        "link_west": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "x": 270
+      },
+      "when": {
+        "fuel": "eye",
+        "link_up": "frame|core"
+      }
+    },
+    {
+      "apply": {
+        "model": "cesg:block/gateway_conduit_beam_eye",
+        "x": 90
+      },
+      "when": {
+        "fuel": "eye",
         "link_down": "frame|core"
       }
     },

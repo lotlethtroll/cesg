@@ -108,6 +108,20 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         return bindings.getOrDefault(channel, GatewayPartner.EMPTY);
     }
 
+    /**
+     * Whether this Core has {@code pos} in {@code dimension} bound on ANY channel — not necessarily the
+     * active one. A Storage Bridge only transacts with a partner that knows it back, so a gateway can
+     * never reach into a network that never linked to it. Any-channel rather than active-channel keeps
+     * hub-and-spoke working: a hub binds each spoke on its own channel and serves all of them at once,
+     * which an active-channel handshake would reduce to a single spoke.
+     */
+    public boolean hasBindingTo(net.minecraft.resources.ResourceKey<Level> dimension, BlockPos pos) {
+        for (GatewayPartner partner : bindings.values())
+            if (partner.isBound() && partner.dimension().equals(dimension) && partner.position().equals(pos))
+                return true;
+        return false;
+    }
+
     public void setBinding(int channel, GatewayPartner partner) {
         if (partner.isBound())
             bindings.put(channel, partner);
@@ -836,7 +850,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.chunkloading", ChatFormatting.GOLD);
         if (getPartner().isBound() && getPartner().hasName())
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.destination", ChatFormatting.AQUA,
-                    getPartner().name());
+                    getPartner().displayName(level));
         if (getPartner().isBound()) {
             CESGLang.forGoggles(tooltip, partnerIsCrossDimension() ? "cesg.goggles.gateway.cross_dimension"
                     : "cesg.goggles.gateway.same_dimension", ChatFormatting.GREEN);

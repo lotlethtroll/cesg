@@ -225,6 +225,23 @@ in the working tree 2026-07-26; crafting recipe signed off + authored 2026-07-27
 Track is feature-complete pending in-game verification. Verify in a two-dimension
 setup with a bound gateway.
 
+### ⚠️ Re-check required after the mutual-link change (2026-07-29)
+Bridges now refuse to transact unless the partner Core has this Core bound on some
+channel, which changes `resolveRemote` and adds a fourth status. 3B and 3D are
+untouched; **3A liveness and 3C transfers must be re-run.**
+- [ ] A one-way binding (A→B only) now shows **UNLINKED**: gold goggle line, amber
+  terminal dot, "One-way link — bind the far gateway back" in the grid, and moves
+  **nothing** in either direction
+- [ ] Binding B back to A flips it to LIVE and transfers resume
+- [ ] The third-gateway drain is closed: with A↔B linked and C bound to B but B not
+  bound to C, C can no longer pull from B (the original report)
+- [ ] Hub-and-spoke still works: a hub with several spokes bound on separate
+  channels serves **every** spoke, not just the active one
+- [ ] Gateway **Ports** are unchanged — a one-way Port link still transfers (1.0
+  compatibility; deliberately exempt)
+- [ ] Renaming a gateway updates the name shown on bound partners' channel picker,
+  Core goggle and Bridge GUI without re-binding
+
 ### Placement & structure
 - [x] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
   Network joins the **local** network (terminal count includes it) _(2026-07-27)_

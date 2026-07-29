@@ -168,8 +168,11 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
         CrossDimensionalGatewayCoreBlockEntity core = core();
         if (core != null) {
             com.cesg.gateways.teleport.GatewayPartner partner = core.getPartner();
-            if (partner.isBound() && partner.hasName())
-                return Component.literal(partner.name());
+            if (partner.isBound()) {
+                String name = partner.displayName(player.level()); // live, so a rename shows through
+                if (!name.isBlank())
+                    return Component.literal(name);
+            }
         }
         return Component.translatable("cesg.bridge.partner");
     }

@@ -112,7 +112,8 @@ public class GatewayChannelScreen extends Screen {
         if (!binding.isBound())
             return Component.translatable("cesg.gateway.channel_unbound");
         if (binding.hasName())
-            return Component.translatable("cesg.gateway.channel_bound_named", binding.name(),
+            return Component.translatable("cesg.gateway.channel_bound_named",
+                    binding.displayName(core.getLevel()), // live, so a renamed destination shows through
                     binding.dimension().location().toString(),
                     binding.position().getX(), binding.position().getY(), binding.position().getZ());
         return Component.translatable("cesg.gateway.channel_bound",

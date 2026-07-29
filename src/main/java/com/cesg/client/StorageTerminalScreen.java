@@ -56,6 +56,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int STATUS_LIVE = 0xFF55DD55;
     private static final int STATUS_OFFLINE = 0xFFAAAAAA;
     private static final int STATUS_FAULT = 0xFFFF5555;
+    private static final int STATUS_UNLINKED = 0xFFE0A030;
 
     private List<TerminalContentPacket.Entry> entries = List.of();
     private List<TerminalContentPacket.Entry> filtered = List.of();
@@ -322,6 +323,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         return switch (remoteStatus) {
             case TerminalContentPacket.REMOTE_LIVE -> STATUS_LIVE;
             case TerminalContentPacket.REMOTE_FAULT -> STATUS_FAULT;
+            case TerminalContentPacket.REMOTE_UNLINKED -> STATUS_UNLINKED;
             default -> STATUS_OFFLINE;
         };
     }
@@ -338,6 +340,8 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
                 return "cesg.network.remote.offline";
             if (remoteStatus == TerminalContentPacket.REMOTE_FAULT)
                 return "cesg.network.remote.fault";
+            if (remoteStatus == TerminalContentPacket.REMOTE_UNLINKED)
+                return "cesg.network.remote.unlinked";
         }
         if (searchBox != null && !searchBox.getValue().trim().isEmpty())
             return "cesg.network.no_results";
