@@ -60,9 +60,9 @@ public record TerminalActionPacket(int containerId, int mode, ItemStack sample, 
                 case WITHDRAW_TO_INVENTORY -> withdrawToInventory(player, menu, packet);
                 case DEPOSIT -> deposit(player, menu, packet);
                 case CLEAR_CRAFT -> menu.clearCraftingGrid();
-                case REMOTE_WITHDRAW_TO_CURSOR -> remoteWithdrawToCursor(menu, packet);
+                case REMOTE_WITHDRAW_TO_CURSOR -> remoteWithdrawToCursor(player, menu, packet);
                 case REMOTE_WITHDRAW_TO_INVENTORY -> remoteWithdrawToInventory(player, menu, packet);
-                case REMOTE_DEPOSIT -> remoteDeposit(menu, packet);
+                case REMOTE_DEPOSIT -> remoteDeposit(player, menu, packet);
                 default -> {
                 }
             }
@@ -118,7 +118,8 @@ public record TerminalActionPacket(int containerId, int mode, ItemStack sample, 
 
     // ---- Partner-section variants (routed across the gateway via network Storage Bridges) ---------
 
-    private static void remoteWithdrawToCursor(StorageTerminalMenu menu, TerminalActionPacket packet) {
+    private static void remoteWithdrawToCursor(ServerPlayer player, StorageTerminalMenu menu,
+            TerminalActionPacket packet) {
         ItemStack sample = packet.sample();
         StorageBridgeBlockEntity bridge = menu.primaryBridge();
         if (sample.isEmpty() || bridge == null)
@@ -129,7 +130,7 @@ public record TerminalActionPacket(int containerId, int mode, ItemStack sample, 
         int want = Math.min(packet.count(), sample.getMaxStackSize() - carried.getCount());
         if (want <= 0)
             return;
-        ItemStack pulled = bridge.terminalWithdrawRemote(sample, want);
+        ItemStack pulled = bridge.terminalWithdrawRemote(sample, want, player);
         if (pulled.isEmpty())
             return;
         if (carried.isEmpty())
@@ -143,12 +144,13 @@ public record TerminalActionPacket(int containerId, int mode, ItemStack sample, 
         StorageBridgeBlockEntity bridge = menu.primaryBridge();
         if (packet.sample().isEmpty() || bridge == null)
             return;
-        ItemStack pulled = bridge.terminalWithdrawRemote(packet.sample(), packet.count());
+        ItemStack pulled = bridge.terminalWithdrawRemote(packet.sample(), packet.count(), player);
         if (!pulled.isEmpty())
             player.getInventory().placeItemBackInInventory(pulled);
     }
 
-    private static void remoteDeposit(StorageTerminalMenu menu, TerminalActionPacket packet) {
+    private static void remoteDeposit(ServerPlayer player, StorageTerminalMenu menu,
+            TerminalActionPacket packet) {
         ItemStack carried = menu.getCarried();
         StorageBridgeBlockEntity bridge = menu.primaryBridge();
         if (carried.isEmpty() || bridge == null)
@@ -156,7 +158,7 @@ public record TerminalActionPacket(int containerId, int mode, ItemStack sample, 
         int amount = Math.min(Math.max(packet.count(), 0), carried.getCount());
         if (amount <= 0)
             return;
-        ItemStack remainder = bridge.terminalDepositRemote(carried.copyWithCount(amount));
+        ItemStack remainder = bridge.terminalDepositRemote(carried.copyWithCount(amount), player);
         int inserted = amount - remainder.getCount();
         if (inserted <= 0)
             return;

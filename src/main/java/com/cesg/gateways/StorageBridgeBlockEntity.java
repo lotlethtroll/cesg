@@ -26,6 +26,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringRepresentable;
@@ -485,12 +486,22 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     // ---- Terminal actions on the remote section (immediate, both sides loaded) --------------------
 
     /**
+     * Tells the player why a terminal transfer did nothing. Without this the click is silently ignored,
+     * which reads as a broken terminal — the gateway can look perfectly healthy (green, fuelled) and
+     * still refuse, because a Gateway Flux Battery on the ring holds back the travel reserve.
+     */
+    private static void notifyGated(ServerPlayer player) {
+        if (player != null)
+            player.displayClientMessage(Component.translatable("cesg.network.remote.unfuelled"), true);
+    }
+
+    /**
      * Terminal withdraw: pull up to {@code count} of {@code sample} out of the REMOTE network to hand to
      * the player. Fuel is charged only on a successful extract (bounced back to the remote net if the
      * gateway can't pay), so a click that finds nothing — or an unfuelled gateway — costs nothing.
      * Returns the extracted stack ({@link ItemStack#EMPTY} if nothing moved).
      */
-    public ItemStack terminalWithdrawRemote(ItemStack sample, int count) {
+    public ItemStack terminalWithdrawRemote(ItemStack sample, int count, ServerPlayer player) {
         if (!(level instanceof ServerLevel serverLevel) || sample.isEmpty() || count <= 0)
             return ItemStack.EMPTY;
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
@@ -504,6 +515,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             return ItemStack.EMPTY;
         if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost())) {
             StorageNetwork.insert(remote.level, remote.anchor, pulled); // unfuelled: put it back
+            notifyGated(player);
             return ItemStack.EMPTY;
         }
         invalidateRemoteSnapshot();
@@ -515,7 +527,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
      * front (an insert can't be cleanly rolled back), so an unfuelled gateway rejects the deposit
      * outright rather than moving items for free. Returns whatever did not fit.
      */
-    public ItemStack terminalDepositRemote(ItemStack stack) {
+    public ItemStack terminalDepositRemote(ItemStack stack, ServerPlayer player) {
         if (!(level instanceof ServerLevel serverLevel) || stack.isEmpty())
             return stack;
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
@@ -524,8 +536,10 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         RemoteEndpoint remote = resolveRemote(serverLevel);
         if (remote == null)
             return stack;
-        if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost()))
+        if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost())) {
+            notifyGated(player);
             return stack;
+        }
         ItemStack remainder = StorageNetwork.insert(remote.level, remote.anchor, stack.copy());
         if (remainder.getCount() < stack.getCount())
             invalidateRemoteSnapshot();

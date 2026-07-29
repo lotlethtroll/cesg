@@ -266,14 +266,37 @@ setup with a bound gateway.
 
 ### Transfer via terminal
 - [ ] On the Partner tab: click withdraws remote→cursor, shift-click→inventory,
-  right-click→one; carried-stack click deposits player→remote
+  right-click→**half a stack**; carried-stack click deposits player→remote
+  - ⚠️ **Changed 2026-07-27:** right-click withdrew exactly **1** item, which
+    fights vanilla slot muscle memory (right-click takes half). Now takes half a
+    *stack* — "half" of an entry total that can run to thousands is meaningless,
+    and the cursor caps at a stack anyway. The **deposit** side deliberately stays
+    at 1, because vanilla right-click *places* a single item.
+- [ ] ⚠️ **Fixed 2026-07-27 — silent fuel gating.** A transfer refused by the
+  battery reserve did nothing at all: no message, while the Core read healthy and
+  the liveness dot stayed green. Found live at Core 1160 mB with cost 200 and
+  floor 1000 — correct behaviour (`(1160 + 0) - 200 < 1000` with a battery on the
+  ring, so it needs ≥1200), but indistinguishable from a broken terminal. Both
+  `terminalWithdrawRemote` and `terminalDepositRemote` now take the `ServerPlayer`
+  and show `cesg.network.remote.unfuelled` at the refusal site.
 - [ ] Withdraw that finds nothing (or an unfuelled gateway) costs no fuel; deposit
   to an unfuelled gateway is rejected (no free transfer)
 - [ ] Two Bridges on one ring (same partner) do **not** double-count the partner's
   items in the section
 - [ ] Breaking the Bridge drops the in-transit buffer (no dupe, no loss)
 - [ ] Drain fuel below the battery reserve → transfer gated (idle = free)
-- [ ] Viewed (open-GUI) shulker boxes skipped on **both** sides
+- [x] Viewed (open-GUI) shulker boxes skipped on **both** sides — _**not reachable
+  the obvious way, by design.** `EnhancedShulkerBoxBlock.useWithoutItem` refuses to
+  open any box whose network `scan(...).operational()`, showing
+  `cesg.network.box_locked`; boxes on a live network are terminal-only. So the L4
+  hazard is prevented structurally rather than mitigated by the skip, which is a
+  stronger guarantee than the checkbox assumed. `isViewed()` remains as
+  defence-in-depth: `EnhancedShulkerBlockItemHandler.locked()` reports 0 slots
+  while `openCount > 0`, so any writer that does reach a viewed box no-ops._
+  - [ ] **Residual path still worth exercising:** open a box while its network is
+    NOT operational (break the controller), then restore the controller while the
+    GUI is still open, and confirm Bridge/terminal operations skip that box
+    instead of clobbering the open snapshot.
 
 ### Passive auto-transfer (config GUI)
 - [ ] Right-click the Bridge (empty hand) opens the config menu; push + pull rows

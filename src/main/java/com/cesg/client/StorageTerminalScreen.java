@@ -455,7 +455,12 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
                 ItemStack sample = entry.sample().copyWithCount(1);
                 boolean toInventory = hasShiftDown() && button == 0;
                 int mode = withdrawMode(toInventory);
-                int count = button == 1 ? 1 : Math.min(entry.total(), entry.sample().getMaxStackSize());
+                // Vanilla slot muscle memory: right-click takes HALF (a half stack here, since the
+                // entry total can be thousands), left-click takes a full stack. Note the deposit side
+                // above stays at 1, because vanilla right-click *places* a single item.
+                int max = entry.sample().getMaxStackSize();
+                int count = button == 1 ? Math.max(1, max / 2) : max;
+                count = Math.min(entry.total(), count);
                 PacketDistributor.sendToServer(
                         new TerminalActionPacket(menu.containerId, mode, sample, count));
             }
