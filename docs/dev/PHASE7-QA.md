@@ -315,16 +315,18 @@ setup with a bound gateway.
     GUI is still open, and confirm Bridge/terminal operations skip that box
     instead of clobbering the open snapshot.
 
-### Passive auto-transfer (config GUI)
-- [ ] Right-click the Bridge (empty hand) opens the config menu; push + pull rows
+### Passive auto-transfer (config GUI) — ✅ GREEN 2026-07-27
+- [x] Right-click the Bridge (empty hand) opens the config menu; push + pull rows
   each show 9 filter slots and enable + WL/BL toggles
-- [ ] Click a filter slot with an item → sets a ghost copy (item not consumed);
+- [x] Click a filter slot with an item → sets a ghost copy (item not consumed);
   click again empty / shift-click clears it
-- [ ] Toggles persist across close/reopen and a world reload
-- [ ] Enable push + whitelist a couple items → only those flow local→partner;
+- [x] Toggles persist across close/reopen and a world reload _(NBT round-trip
+  confirmed via save-and-quit, not just menu reopen)_
+- [x] Enable push + whitelist a couple items → only those flow local→partner;
   enable pull + blacklist an item → everything but it flows partner→local
-- [ ] Empty whitelist moves nothing; empty blacklist moves everything
-- [ ] Idle (both disabled) costs no fuel; enabled flush is fuel-gated by the
+- [x] Empty whitelist moves nothing; empty blacklist moves everything
+  _(confirmed literally: empty WL moved nothing, empty BL moved everything)_
+- [x] Idle (both disabled) costs no fuel; enabled flush is fuel-gated by the
   battery reserve
 
 ### Recipe & art
