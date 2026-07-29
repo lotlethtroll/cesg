@@ -79,7 +79,7 @@ The jar is written to the Gradle `libs` output directory as
 
 ## Links
 
-- **Source & issues:** [codeberg.org/lotleth/cesg](https://codeberg.org/lotleth/cesg)
+- **Source & issues:** [github.com/lotlethtroll/cesg](https://github.com/lotlethtroll/cesg)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 
 ## License

@@ -12,7 +12,7 @@ the feature set changes; the description below is the canonical listing copy.
 | Summary | Industrial End storage, shulker logistics, and fueled dimensional gateways for Create. |
 | Icon | `docs/publishing/project-icon-400.png` (400×400; same art as the in-jar `logo.png`) |
 | License | MIT |
-| Source / issues | https://codeberg.org/lotleth/cesg (issues: `/issues`) |
+| Source / issues | https://github.com/lotlethtroll/cesg (issues: `/issues`) |
 | Environment | Required on **both** client and server |
 
 ## Versions & dependencies (per file upload)
