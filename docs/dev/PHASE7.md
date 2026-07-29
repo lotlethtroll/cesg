@@ -233,22 +233,26 @@ partner never double-count. The reverse of the hub-and-spoke case matters: many
 spoke networks can each see one shared hub, but a terminal only ever shows the
 **one** partner its Bridge's active channel points at.
 
-**Links must be mutual (added 2026-07-29).** A Bridge only transacts with a
-partner whose Core has **this** Core bound on *some* channel. Gateway binding is
-one-way addressing, so without this any gateway that knew a position could bind to
-it and quietly drain that network — the far side never agreed to the link. A
-partner that is reachable but has no binding back reports the new **UNLINKED**
-status (gold goggle line, amber terminal dot, fault-coloured block) and moves
-nothing.
-- **Any channel, not the active one.** This is what keeps hub-and-spoke alive: a
-  hub binds each spoke on its own channel and serves all of them at once, whereas
-  requiring the *active* channels to match would reduce a hub to a single spoke.
-- **Route mode is unaffected in kind** — it still fans out to bound channels, but
-  each of those partners must also have bound this gateway back.
-- **Gateway Ports are deliberately NOT subject to this.** Ports shipped in 1.0, and
-  adding a handshake requirement would break existing one-way Port setups in live
-  worlds — that is a MAJOR change, not a MINOR one. Bridges are new in 1.1, so the
-  rule costs no compatibility there.
+**Pull reaches into the partner network — and the Lock is the guard.** This is the
+single most surprising thing about the Bridge, and it needs to be stated plainly in
+the wiki. **Pull** does not wait to be sent anything: it reaches across the gateway
+and *extracts* from the partner network. So any gateway bound to yours, with pull
+enabled and a matching filter, will help itself to your items. Nothing about your
+own Bridge's settings stops it — the decision is made entirely on the *other* side.
+- Note that binding is **already reciprocal**: `GatewayBindingItem` binds both Cores
+  when the crystal is applied, so "they're linked" always means both ways.
+- Worked example from QA (2026-07-29): gateway 2 was linked to 1 and pointed at it,
+  yet items placed in 2's network kept ending up in 3 — because *3* had pull
+  enabled and was pointed at 2. Nothing was relaying; 3 was taking.
+- **The Lock** (per-Bridge toggle, title row of its config GUI) is the opt-out:
+  while locked, no remote gateway may extract through that Bridge — passive pull
+  and manual terminal withdrawals alike. Pushing out still works, deposits in still
+  work, and the partner terminal can still *see* the contents. Other Bridges
+  elsewhere are unaffected, so this is a per-node guard rather than a global mode.
+- Rejected alternative (2026-07-29): requiring links to be mutual before a Bridge
+  would transact. It does not actually help — the crystal already binds both ways,
+  so the check passes in exactly the case that prompted it — and it added an
+  unreachable status with no action a player could take to clear it.
 
 **Destination names resolve live.** `GatewayPartner.name` is a copy taken at bind
 time, so a renamed gateway used to show its old label forever in every binding that

@@ -47,17 +47,19 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
     public static final int BTN_PULL = 1;
     public static final int BTN_SEND_BLACKLIST = 2;
     public static final int BTN_PULL_BLACKLIST = 3;
+    public static final int BTN_LOCK = 4;
 
     private static final int DATA_PUSH = 0;
     private static final int DATA_PULL = 1;
     private static final int DATA_SEND_BLACKLIST = 2;
     private static final int DATA_PULL_BLACKLIST = 3;
+    private static final int DATA_LOCK = 4;
 
     private final BlockPos pos;
     private final Player player;
     @Nullable
     private final StorageBridgeBlockEntity bridge;
-    private final ContainerData toggles = new SimpleContainerData(4);
+    private final ContainerData toggles = new SimpleContainerData(5);
 
     public StorageBridgeMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, buf.readBlockPos());
@@ -94,6 +96,7 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
         toggles.set(DATA_PULL, bridge.isPullEnabled() ? 1 : 0);
         toggles.set(DATA_SEND_BLACKLIST, bridge.isSendBlacklist() ? 1 : 0);
         toggles.set(DATA_PULL_BLACKLIST, bridge.isPullBlacklist() ? 1 : 0);
+        toggles.set(DATA_LOCK, bridge.isLocked() ? 1 : 0);
     }
 
     public boolean isPushEnabled() {
@@ -112,6 +115,10 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
         return toggles.get(DATA_PULL_BLACKLIST) != 0;
     }
 
+    public boolean isLocked() {
+        return toggles.get(DATA_LOCK) != 0;
+    }
+
     @Override
     public void broadcastChanges() {
         syncTogglesFromBridge();
@@ -127,6 +134,7 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
             case BTN_PULL -> bridge.togglePullEnabled();
             case BTN_SEND_BLACKLIST -> bridge.toggleSendBlacklist();
             case BTN_PULL_BLACKLIST -> bridge.togglePullBlacklist();
+            case BTN_LOCK -> bridge.toggleLocked();
             default -> {
                 return false;
             }

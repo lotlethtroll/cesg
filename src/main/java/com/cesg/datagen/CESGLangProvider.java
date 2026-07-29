@@ -82,11 +82,16 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.bridge.status.live", "Partner network: linked");
         add("cesg.goggles.bridge.status.offline", "Partner network: offline (unbound or unloaded)");
         add("cesg.goggles.bridge.status.fault", "Partner network: no Bridge or controller found");
-        add("cesg.goggles.bridge.status.unlinked",
-                "Partner network: one-way link — bind the far gateway back to this one");
         add("cesg.goggles.bridge.transit", "In transit: %s out, %s in");
+        add("cesg.goggles.bridge.locked", "Locked — other gateways cannot pull from this network");
         add("cesg.bridge.gui.title", "Storage Bridge");
         add("cesg.bridge.partner", "Partner");
+        add("cesg.bridge.lock_on", "Locked");
+        add("cesg.bridge.lock_off", "Open");
+        add("cesg.bridge.lock.tip",
+                "Locked: other gateways cannot pull items OUT of this network. This Bridge can still push "
+                        + "out, the far side can still deposit in, and its terminal can still see the "
+                        + "contents. Only Bridges here are affected — other networks keep working as before.");
         add("cesg.bridge.push.to", "Push → %s");
         add("cesg.bridge.pull.from", "Pull ← %s");
         add("cesg.bridge.push.routed", "Push → routed by channel");
@@ -530,7 +535,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.network.remote.offline", "Partner network offline");
         add("cesg.network.remote.fault", "No partner network found");
         add("cesg.network.remote.empty", "Partner network is empty");
-        add("cesg.network.remote.unlinked", "One-way link — bind the far gateway back");
+        add("cesg.network.remote.locked", "That network is locked — its Bridge does not allow items to be taken");
         add("cesg.network.no_results", "No results");
         add("cesg.network.remote.unfuelled", "Not enough gateway fuel — a Flux Battery is holding back the travel reserve");
 

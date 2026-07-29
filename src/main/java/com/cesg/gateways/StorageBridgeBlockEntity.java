@@ -74,12 +74,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         /** Partner resolved and its network scanned. */
         LIVE,
         /** Bound and loaded, but no partner Bridge or no operational partner network: a verified fault. */
-        FAULT,
-        /**
-         * Partner resolved, but it has no binding pointing back at this gateway. The link is one-way, so
-         * this Bridge must not reach into a network that never linked to it.
-         */
-        UNLINKED;
+        FAULT;
 
         private final String serialized = name().toLowerCase(java.util.Locale.ROOT);
 
@@ -106,6 +101,8 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     private boolean pullBlacklist;
     private boolean pushEnabled;
     private boolean pullEnabled;
+    /** When set, remote gateways may not EXTRACT from this Bridge's network. See {@link #isLocked}. */
+    private boolean locked;
 
     // Cached view of the partner network, refreshed lazily when a terminal reads it.
     private List<TerminalContentPacket.Entry> remoteEntries = List.of();
@@ -210,6 +207,16 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
      * (with a status set) whenever the remote view cannot be established — unbound/unloaded is OFFLINE,
      * a bound-and-loaded ring with no partner Bridge is a FAULT.
      */
+    /**
+     * Whether the Bridge on the far side has locked its network against being drawn from. Checked at the
+     * point of extraction rather than when resolving the partner, so a locked partner still shows LIVE and
+     * still accepts pushes — only taking from it is refused.
+     */
+    private static boolean partnerLocked(RemoteEndpoint remote) {
+        return remote.level.getBlockEntity(remote.anchor) instanceof StorageBridgeBlockEntity partner
+                && partner.isLocked();
+    }
+
     @Nullable
     private RemoteEndpoint resolveRemote(ServerLevel level) {
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
@@ -229,12 +236,6 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         }
         if (!(partnerLevel.getBlockEntity(partner.position()) instanceof CrossDimensionalGatewayCoreBlockEntity partnerCore)) {
             remoteStatus = RemoteStatus.FAULT;
-            return null;
-        }
-        // The link must be mutual. Binding is one-way addressing, so without this any gateway that knows
-        // a position could reach in and drain that network unilaterally — the far side never consented.
-        if (!partnerCore.hasBindingTo(level.dimension(), core.getBlockPos())) {
-            remoteStatus = RemoteStatus.UNLINKED;
             return null;
         }
         List<StorageBridgeBlockEntity> bridges = findBridges(partnerLevel, partnerCore.getBlockPos());
@@ -378,7 +379,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             moved += flushBufferToNetwork(remote.level, remote.anchor, outBuffer);
         // PULL (active channel only — fan-out is a distribution/send concern). Draining inBuffer into the
         // LOCAL network always runs, since local is reachable even when the partner is down.
-        if (remote != null && pullEnabled)
+        if (remote != null && pullEnabled && !partnerLocked(remote))
             moved += fillBufferFromNetwork(remote.level, remote.anchor, inBuffer, pullFilter, pullBlacklist, max);
         moved += flushBufferToNetwork(serverLevel, worldPosition, inBuffer);
         if (moved > 0)
@@ -501,6 +502,11 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
      * which reads as a broken terminal — the gateway can look perfectly healthy (green, fuelled) and
      * still refuse, because a Gateway Flux Battery on the ring holds back the travel reserve.
      */
+    private static void notifyLocked(ServerPlayer player) {
+        if (player != null)
+            player.displayClientMessage(Component.translatable("cesg.network.remote.locked"), true);
+    }
+
     private static void notifyGated(ServerPlayer player) {
         if (player != null)
             player.displayClientMessage(Component.translatable("cesg.network.remote.unfuelled"), true);
@@ -521,6 +527,10 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         RemoteEndpoint remote = resolveRemote(serverLevel);
         if (remote == null)
             return ItemStack.EMPTY;
+        if (partnerLocked(remote)) {
+            notifyLocked(player);
+            return ItemStack.EMPTY;
+        }
         ItemStack pulled = StorageNetwork.extract(remote.level, remote.anchor, sample, count);
         if (pulled.isEmpty())
             return ItemStack.EMPTY;
@@ -583,6 +593,23 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
 
     public void togglePullEnabled() {
         setPullEnabled(!pullEnabled);
+    }
+
+    /**
+     * Whether this Bridge refuses to let the far side take items out of its network. Pull reaches across
+     * the gateway and extracts from the partner, so by default any bound gateway with pull enabled can
+     * help itself to this network's contents. Locking is the per-node opt-out: it blocks extraction
+     * through this Bridge — passive pull and manual terminal withdrawals alike — while still allowing
+     * this side to push out, and still allowing the far side to deposit in and to view the contents.
+     * Other Bridges elsewhere are unaffected.
+     */
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void toggleLocked() {
+        locked = !locked;
+        contentsChanged();
     }
 
     /** Push filter (local → partner). Ghost items backing the terminal-independent auto-transfer. */
@@ -661,6 +688,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         tag.putBoolean("PullBlacklist", pullBlacklist);
         tag.putBoolean("PushEnabled", pushEnabled);
         tag.putBoolean("PullEnabled", pullEnabled);
+        tag.putBoolean("Locked", locked);
     }
 
     @Override
@@ -674,6 +702,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         pullBlacklist = tag.getBoolean("PullBlacklist");
         pushEnabled = tag.getBoolean("PushEnabled");
         pullEnabled = tag.getBoolean("PullEnabled");
+        locked = tag.getBoolean("Locked");
     }
 
     @Override
@@ -682,10 +711,11 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         ChatFormatting statusColor = switch (remoteStatus) {
             case LIVE -> ChatFormatting.GREEN;
             case FAULT -> ChatFormatting.RED;
-            case UNLINKED -> ChatFormatting.GOLD;
             case OFFLINE -> ChatFormatting.GRAY;
         };
         CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.status." + remoteStatus.name().toLowerCase(), statusColor);
+        if (locked)
+            CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.locked", ChatFormatting.GOLD);
         CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.transit", ChatFormatting.AQUA,
                 countItems(outBuffer), countItems(inBuffer));
         return true;

@@ -225,22 +225,24 @@ in the working tree 2026-07-26; crafting recipe signed off + authored 2026-07-27
 Track is feature-complete pending in-game verification. Verify in a two-dimension
 setup with a bound gateway.
 
-### ⚠️ Re-check required after the mutual-link change (2026-07-29)
-Bridges now refuse to transact unless the partner Core has this Core bound on some
-channel, which changes `resolveRemote` and adds a fourth status. 3B and 3D are
-untouched; **3A liveness and 3C transfers must be re-run.**
-- [ ] A one-way binding (A→B only) now shows **UNLINKED**: gold goggle line, amber
-  terminal dot, "One-way link — bind the far gateway back" in the grid, and moves
-  **nothing** in either direction
-- [ ] Binding B back to A flips it to LIVE and transfers resume
-- [ ] The third-gateway drain is closed: with A↔B linked and C bound to B but B not
-  bound to C, C can no longer pull from B (the original report)
-- [ ] Hub-and-spoke still works: a hub with several spokes bound on separate
-  channels serves **every** spoke, not just the active one
-- [ ] Gateway **Ports** are unchanged — a one-way Port link still transfers (1.0
-  compatibility; deliberately exempt)
+### Bridge Lock (added 2026-07-29)
+Replaces a mutual-link rule that was tried and reverted the same day: binding is
+already reciprocal (`GatewayBindingItem` binds both Cores), so the check passed in
+exactly the case that prompted it, and its error state had no action a player could
+take. The Lock is a per-Bridge opt-out instead — no change to how links resolve, so
+**3A–3D remain valid.**
+- [ ] Bridge config GUI shows a **Locked / Open** button on the title row, with a
+  tooltip explaining it; state persists across close/reopen and a world reload
+- [ ] **Locked** blocks a remote gateway's **passive pull** from that network
+- [ ] **Locked** blocks a remote **terminal withdrawal** too, with the
+  "That network is locked" message rather than a silent no-op
+- [ ] Locked still allows: this Bridge **pushing out**, the far side **depositing
+  in**, and the partner terminal **seeing** the contents
+- [ ] A second, unlocked Bridge elsewhere still pulls normally (per-node, not global)
+- [ ] Goggles on a locked Bridge show the locked line
 - [ ] Renaming a gateway updates the name shown on bound partners' channel picker,
-  Core goggle and Bridge GUI without re-binding
+  Core goggle and Bridge GUI without re-binding _(stale-name fix, kept from the
+  reverted commit)_
 
 ### Placement & structure
 - [x] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage

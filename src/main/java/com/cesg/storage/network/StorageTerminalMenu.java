@@ -356,7 +356,6 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
             case LIVE -> TerminalContentPacket.REMOTE_LIVE;
             case FAULT -> TerminalContentPacket.REMOTE_FAULT;
             case OFFLINE -> TerminalContentPacket.REMOTE_OFFLINE;
-            case UNLINKED -> TerminalContentPacket.REMOTE_UNLINKED;
         };
     }
 }

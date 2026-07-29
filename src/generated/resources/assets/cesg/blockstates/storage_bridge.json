@@ -8,9 +8,6 @@
     },
     "status=offline": {
       "model": "cesg:block/storage_bridge"
-    },
-    "status=unlinked": {
-      "model": "cesg:block/storage_bridge_fault"
     }
   }
 }

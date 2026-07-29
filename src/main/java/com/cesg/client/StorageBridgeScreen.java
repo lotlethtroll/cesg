@@ -41,6 +41,12 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     private static final int MODE_X = 130;
     private static final int BTN_W = 38;
     private static final int BTN_H = 12;
+    // Lock sits on the title row: it guards the whole node, not one direction, so it does not belong
+    // beside the per-row toggles.
+    private static final int LOCK_X = 124;
+    private static final int LOCK_Y = 4;
+    private static final int LOCK_W = 44;
+    private static final int LOCK_FILL = 0xFFC08030;
 
     public StorageBridgeScreen(StorageBridgeMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -87,6 +93,8 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
                 enableLabel(menu.isPullEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PULL_HEADER_Y));
         drawToggle(graphics, MODE_X, PULL_HEADER_Y, menu.isPullBlacklist() ? BL_FILL : WL_FILL,
                 modeLabel(menu.isPullBlacklist()), isBtnHovered(mouseX, mouseY, MODE_X, PULL_HEADER_Y));
+        drawButton(graphics, LOCK_X, LOCK_Y, LOCK_W, menu.isLocked() ? LOCK_FILL : OFF_FILL,
+                lockLabel(menu.isLocked()), isLockHovered(mouseX, mouseY));
     }
 
     private void drawFilterRow(GuiGraphics graphics, int x, int y) {
@@ -102,12 +110,27 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     }
 
     private void drawToggle(GuiGraphics graphics, int x, int y, int fill, Component label, boolean hovered) {
+        drawButton(graphics, x, y, BTN_W, fill, label, hovered);
+    }
+
+    private void drawButton(GuiGraphics graphics, int x, int y, int w, int fill, Component label,
+            boolean hovered) {
         int px = leftPos + x;
         int py = topPos + y;
-        graphics.fill(px - 1, py - 1, px + BTN_W + 1, py + BTN_H + 1, hovered ? HIGHLIGHT_COLOR : SHADOW_COLOR);
-        graphics.fill(px, py, px + BTN_W, py + BTN_H, fill);
-        int tx = px + (BTN_W - font.width(label)) / 2;
+        graphics.fill(px - 1, py - 1, px + w + 1, py + BTN_H + 1, hovered ? HIGHLIGHT_COLOR : SHADOW_COLOR);
+        graphics.fill(px, py, px + w, py + BTN_H, fill);
+        int tx = px + (w - font.width(label)) / 2;
         graphics.drawString(font, label, tx, py + 2, BTN_TEXT, true);
+    }
+
+    private static Component lockLabel(boolean locked) {
+        return Component.translatable(locked ? "cesg.bridge.lock_on" : "cesg.bridge.lock_off");
+    }
+
+    private boolean isLockHovered(double mouseX, double mouseY) {
+        double x = mouseX - leftPos - LOCK_X;
+        double y = mouseY - topPos - LOCK_Y;
+        return x >= 0 && y >= 0 && x < LOCK_W && y < BTN_H;
     }
 
     private static Component enableLabel(boolean on) {
@@ -148,8 +171,10 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
             tip = Component.translatable(menu.isSendBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
         else if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_HEADER_Y))
             tip = Component.translatable(menu.isPullBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
+        else if (isLockHovered(mouseX, mouseY))
+            tip = Component.translatable("cesg.bridge.lock.tip");
         if (tip != null)
-            graphics.renderTooltip(font, tip, mouseX, mouseY);
+            graphics.renderComponentTooltip(font, List.of(tip), mouseX, mouseY);
     }
 
     /** Empty ghost slots have no item tooltip of their own — hint how to configure them. */
@@ -181,6 +206,8 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     }
 
     private int clickedButton(double mouseX, double mouseY) {
+        if (isLockHovered(mouseX, mouseY))
+            return StorageBridgeMenu.BTN_LOCK;
         if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_HEADER_Y))
             return StorageBridgeMenu.BTN_PUSH;
         if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_HEADER_Y))

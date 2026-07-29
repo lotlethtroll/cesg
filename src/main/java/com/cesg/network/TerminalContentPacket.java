@@ -28,8 +28,6 @@ public record TerminalContentPacket(int containerId, List<Entry> entries, List<E
     public static final int REMOTE_LIVE = 2;
     /** Bound + loaded, but no partner Bridge / no partner controller — a verified fault. */
     public static final int REMOTE_FAULT = 3;
-    /** Partner resolved but it has no binding back to this gateway — the link is one-way. */
-    public static final int REMOTE_UNLINKED = 4;
 
     /** One distinct item (components included); {@code sample} always has count 1. */
     public record Entry(ItemStack sample, int total) {
