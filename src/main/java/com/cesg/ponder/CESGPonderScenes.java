@@ -557,47 +557,58 @@ public final class CESGPonderScenes {
     // --- Gateway Flux Battery arrays (gateway_flux_battery_array.nbt, 5x5 plate). The full 3x3x3 is baked
     // into the schematic so the scene bounds reach it; the storyboard clears it and grows
     // 1x1x1 -> 2x2x2 -> 3x3x3 from one corner. ---
-    private static final BlockPos ARRAY_ORIGIN = new BlockPos(1, 1, 1);
+
+    // --- Flux Battery arrays (gateway_flux_battery_array.nbt, 8x4x8 with an 8x8 base plate) ---
+    // The three sizes are REAL captured multiblocks laid side by side, not assembled here. Building them
+    // in-scene never rendered connected: the connected-texture behaviour asks
+    // ConnectivityHandler.isConnected, which compares the two block entities' controllers, and a
+    // modifyBlockEntity write does not land before the section mesh bakes. A capture already has every
+    // cell agreeing on one controller, which is all the equality test needs.
+    private static final BlockPos ARRAY_SINGLE = new BlockPos(0, 1, 3);
+    private static final BlockPos ARRAY_2X2 = new BlockPos(2, 1, 3);
+    private static final BlockPos ARRAY_3X3 = new BlockPos(5, 1, 2);
 
     public static void gatewayFluxBatteryArray(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         scene.title("gateway_flux_battery_array", "Flux Battery Arrays");
-        scene.configureBasePlate(0, 0, 5);
-
-        Selection prism = util.select().fromTo(ARRAY_ORIGIN, ARRAY_ORIGIN.offset(2, 2, 2));
-        scene.world().setBlocks(prism, Blocks.AIR.defaultBlockState(), false);
-        formBatteryArray(scene, util, ARRAY_ORIGIN, 1, 1, 1f);
-
+        scene.configureBasePlate(0, 0, 8);
         scene.showBasePlate();
         scene.idle(10);
-        scene.world().showSection(util.select().layersFrom(1), Direction.DOWN);
-        scene.idle(20);
 
+        Selection single = util.select().position(ARRAY_SINGLE);
+        Selection two = util.select().fromTo(ARRAY_2X2, ARRAY_2X2.offset(1, 1, 1));
+        Selection three = util.select().fromTo(ARRAY_3X3, ARRAY_3X3.offset(2, 2, 2));
+
+        scene.world().showSection(single, Direction.DOWN);
+        scene.idle(15);
         scene.overlay().showText(90)
                 .text("A lone Gateway Flux Battery is a 1x1x1 tank holding one block of fuel")
-                .attachKeyFrame().placeNearTarget().pointAt(util.vector().topOf(ARRAY_ORIGIN));
+                .attachKeyFrame().placeNearTarget().pointAt(util.vector().topOf(ARRAY_SINGLE));
         scene.idle(100);
 
+        scene.world().showSection(two, Direction.DOWN);
+        scene.idle(15);
         scene.overlay().showText(100)
                 .text("A 2x2 footprint stacks two high: eight blocks merged into one 2x2x2 tank")
                 .attachKeyFrame().placeNearTarget()
-                .pointAt(util.vector().centerOf(ARRAY_ORIGIN.offset(1, 1, 1)));
-        formBatteryArray(scene, util, ARRAY_ORIGIN, 2, 2, 1f);
+                .pointAt(util.vector().topOf(ARRAY_2X2.offset(0, 1, 0)));
+        fillBattery(scene, ARRAY_2X2, 1f, 0);
         scene.idle(110);
 
+        scene.world().showSection(three, Direction.DOWN);
+        scene.idle(15);
         scene.overlay().showText(110)
                 .text("A 3x3 footprint stacks three high — the largest array, holding twenty-seven blocks")
                 .attachKeyFrame().placeNearTarget()
-                .pointAt(util.vector().centerOf(ARRAY_ORIGIN.offset(1, 2, 1)));
-        formBatteryArray(scene, util, ARRAY_ORIGIN, 3, 3, 1f);
+                .pointAt(util.vector().topOf(ARRAY_3X3.offset(1, 2, 1)));
         scene.idle(120);
 
         scene.overlay().showText(100)
                 .text("Any face of the array accepts fuel, and one face carries the charge gauge")
                 .attachKeyFrame().placeNearTarget()
-                .pointAt(util.vector().centerOf(ARRAY_ORIGIN.offset(1, 1, 0)));
+                .pointAt(util.vector().centerOf(ARRAY_3X3.offset(1, 1, 0)));
         for (int i = 1; i <= 6; i++)
-            fillBattery(scene, ARRAY_ORIGIN, i / 6f, 14);
+            fillBattery(scene, ARRAY_3X3, i / 6f, 14);
         scene.idle(80);
     }
 
