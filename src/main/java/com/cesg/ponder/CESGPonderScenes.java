@@ -313,18 +313,22 @@ public final class CESGPonderScenes {
     private static final BlockPos INFUSER = LOADER;
 
     // --- Ender Infuser (ender_infuser.nbt, 7x5x7 with a 7x7 base plate) ---
-    // Purpose-built for this scene rather than borrowed from the Loader: a source tank on the west feeds
-    // a mechanical pump and smart pipe east into the Infuser, catalysts arrive along a west-running belt
-    // through a funnel, and the product is pumped up into the tank above. The belt runs along X here, so
-    // a POSITIVE speed carries items west (-X) -- the mirror of the Z-axis station belts.
+    // Purpose-built for this scene rather than borrowed from the Loader, and turned 180 degrees so the
+    // Infuser's working face is toward the camera: a source tank on the EAST feeds a mechanical pump and
+    // smart pipe west into the Infuser, catalysts arrive along an east-running belt through a funnel, and
+    // the product is pumped up into the tank above.
+    //
+    // The belt runs along X, and belt travel ignores the block's facing entirely -- getMovementFacing()
+    // is (speedNegative XOR axisIsX) ? NEGATIVE : POSITIVE. On an X belt that means a NEGATIVE speed
+    // carries items east, the opposite of the Z-axis station scenes.
     private static final BlockPos INFUSER_BLOCK = new BlockPos(3, 2, 3);
-    private static final BlockPos INFUSER_SOURCE_TANK = new BlockPos(0, 2, 3);
-    private static final BlockPos INFUSER_PUMP = new BlockPos(1, 2, 3);
-    private static final BlockPos INFUSER_PIPE = new BlockPos(2, 2, 3);
-    /** Far end of the catalyst belt; items ride west toward the Infuser's funnel. */
-    private static final BlockPos INFUSER_BELT_IN = new BlockPos(5, 1, 3);
-    private static final BlockPos INFUSER_BELT_HEAD = new BlockPos(4, 1, 3);
-    private static final BlockPos INFUSER_FUNNEL = new BlockPos(4, 2, 3);
+    private static final BlockPos INFUSER_SOURCE_TANK = new BlockPos(6, 2, 3);
+    private static final BlockPos INFUSER_PUMP = new BlockPos(5, 2, 3);
+    private static final BlockPos INFUSER_PIPE = new BlockPos(4, 2, 3);
+    /** Far end of the catalyst belt; items ride east toward the Infuser's funnel. */
+    private static final BlockPos INFUSER_BELT_IN = new BlockPos(1, 1, 3);
+    private static final BlockPos INFUSER_BELT_HEAD = new BlockPos(2, 1, 3);
+    private static final BlockPos INFUSER_FUNNEL = new BlockPos(2, 2, 3);
     private static final BlockPos INFUSER_OUT_PUMP = new BlockPos(3, 3, 3);
     private static final BlockPos INFUSER_OUT_TANK = new BlockPos(3, 4, 3);
 
@@ -336,7 +340,8 @@ public final class CESGPonderScenes {
         scene.idle(10);
         scene.world().showSection(util.select().layersFrom(1), Direction.DOWN);
         scene.idle(20);
-        scene.world().setKineticSpeed(util.select().everywhere(), BELT_SPEED);
+        // Negative on an X-axis belt carries items EAST, toward the funnel.
+        scene.world().setKineticSpeed(util.select().everywhere(), -BELT_SPEED);
         scene.world().propagatePipeChange(INFUSER_PIPE);
         scene.idle(10);
 
@@ -349,16 +354,16 @@ public final class CESGPonderScenes {
         scene.overlay().showText(90)
                 .text("Catalysts ride in on a belt and the funnel feeds them to the Infuser")
                 .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_FUNNEL));
-        // Positive speed on an X-axis belt carries items west, so the run is fed from the EAST.
+        // Items travel east, so they must be fed from the WEST (insertFrom must not equal the movement).
         for (int i = 0; i < 2; i++)
-            beltItemConsumedAt(scene, INFUSER_BELT_IN, Direction.EAST, INFUSER_BELT_HEAD,
+            beltItemConsumedAt(scene, INFUSER_BELT_IN, Direction.WEST, INFUSER_BELT_HEAD,
                     INFUSER_FUNNEL, new ItemStack(Items.CHORUS_FRUIT), 1);
         scene.idle(20);
 
         scene.overlay().showText(90)
                 .text("The infused fluid is pumped out into the tank above")
                 .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_OUT_TANK));
-        scene.world().setKineticSpeed(util.select().position(INFUSER_OUT_PUMP), BELT_SPEED);
+        scene.world().setKineticSpeed(util.select().position(INFUSER_OUT_PUMP), -BELT_SPEED);
         for (int step = 1; step <= 4; step++) {
             fillTank(scene, INFUSER_OUT_TANK, CESGFluids.TELEPORT_ESSENCE.get(), step / 4f);
             scene.idle(18);
