@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "M": {
+      "item": "create:millstone"
+    },
+    "S": {
+      "item": "cesg:shulker_shell"
+    }
+  },
+  "pattern": [
+    " I ",
+    "IMI",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:crushing_upgrade_t1"
+  }
+}

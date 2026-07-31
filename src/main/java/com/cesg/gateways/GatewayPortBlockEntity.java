@@ -2,12 +2,16 @@ package com.cesg.gateways;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import com.cesg.gateways.teleport.GatewayPartner;
 import com.cesg.init.CESGBlockEntities;
+import com.cesg.init.CESGSounds;
 import com.cesg.util.CESGLang;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 
@@ -15,9 +19,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -52,6 +58,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
     private static final int SYNC_INTERVAL = 10;
 
     private long nextFlushTime;
+    private long nextTransferFxTime;
     private boolean syncDirty;
 
     final ItemStackHandler sendItems = new ItemStackHandler(SLOTS) {
@@ -105,7 +112,10 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         }
         if (level.getGameTime() < be.nextFlushTime)
             return;
+        int before = be.outgoingAmount();
         be.nextFlushTime = level.getGameTime() + be.flush();
+        if (be.outgoingAmount() < before && level instanceof ServerLevel serverLevel)
+            be.emitTransferFx(serverLevel);
     }
 
     private boolean hasOutgoing() {
@@ -117,6 +127,23 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         return false;
     }
 
+    private int outgoingAmount() {
+        int amount = sendTank.getFluidAmount();
+        for (int slot = 0; slot < sendItems.getSlots(); slot++)
+            amount += sendItems.getStackInSlot(slot).getCount();
+        return amount;
+    }
+
+    private void emitTransferFx(ServerLevel level) {
+        if (level.getGameTime() < nextTransferFxTime)
+            return;
+        nextTransferFxTime = level.getGameTime() + 20;
+        level.playSound(null, worldPosition, CESGSounds.TRANSFER.value(), SoundSource.BLOCKS, 0.3f, 0.9f);
+        level.sendParticles(ParticleTypes.PORTAL, worldPosition.getX() + 0.5,
+                worldPosition.getY() + 0.55, worldPosition.getZ() + 0.5,
+                4, 0.15, 0.18, 0.15, 0.03);
+    }
+
     /** Attempts a transfer; returns the delay (ticks) until the next attempt. */
     private int flush() {
         if (!(level instanceof ServerLevel serverLevel) || !hasOutgoing())
@@ -124,22 +151,85 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
         if (core == null || !core.canTravel())
             return IDLE_BACKOFF; // no active gateway: don't re-run the ring scan at full cadence
+        return core.isRouteMode() ? flushRouted(serverLevel, core) : flushActive(serverLevel, core);
+    }
 
-        var partner = core.getPartner();
-        ServerLevel partnerLevel = serverLevel.getServer().getLevel(partner.dimension());
-        if (partnerLevel == null || !partnerLevel.isLoaded(partner.position()))
-            return IDLE_BACKOFF; // partner chunk unloaded: keep buffering, retry later
-        if (!(partnerLevel.getBlockEntity(partner.position()) instanceof CrossDimensionalGatewayCoreBlockEntity partnerCore))
-            return IDLE_BACKOFF;
+    /** Single-active-channel transfer (1.0/default behaviour): everything goes to the active partner. */
+    private int flushActive(ServerLevel serverLevel, CrossDimensionalGatewayCoreBlockEntity core) {
+        List<GatewayPortBlockEntity> targets = resolveTargets(serverLevel, core.getPartner());
+        if (targets == null || targets.isEmpty())
+            return IDLE_BACKOFF; // partner unloaded or portless: keep buffering, retry later
 
-        List<GatewayPortBlockEntity> targets = findPorts(partnerLevel, partnerCore.getBlockPos());
-        targets.remove(this); // self-bound rings must never loop items back into their own port
-        if (targets.isEmpty())
+        // Automated transfer costs fuel (config; default 0). A Gateway Flux Battery on the ring gates
+        // this against its reserve floor, so automation never starves player travel — see the Core.
+        if (!core.tryConsumeAutomationFuel(com.cesg.CESGConfig.gatewayPortTransferCost()))
             return IDLE_BACKOFF;
 
         pushItems(targets);
         pushFluid(targets);
         return FLUSH_INTERVAL;
+    }
+
+    /**
+     * Fan-out transfer (7B route mode): each send item goes to the first bound channel whose filter
+     * accepts it; fluid follows the active channel (filters are item-only). Partner rings are resolved
+     * once per flush and cached.
+     */
+    private int flushRouted(ServerLevel serverLevel, CrossDimensionalGatewayCoreBlockEntity core) {
+        Map<Integer, List<GatewayPortBlockEntity>> targetsByChannel = new HashMap<>();
+        boolean anyReachable = false;
+        for (int channel = 0; channel < CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT; channel++) {
+            GatewayPartner binding = core.getBinding(channel);
+            if (!binding.isBound())
+                continue;
+            List<GatewayPortBlockEntity> targets = resolveTargets(serverLevel, binding);
+            targetsByChannel.put(channel, targets == null ? List.of() : targets);
+            anyReachable |= targets != null && !targets.isEmpty();
+        }
+        if (!anyReachable)
+            return IDLE_BACKOFF; // no channel reachable: hold everything, no fuel spent
+
+        if (!core.tryConsumeAutomationFuel(com.cesg.CESGConfig.gatewayPortTransferCost()))
+            return IDLE_BACKOFF;
+
+        for (int slot = 0; slot < sendItems.getSlots(); slot++) {
+            ItemStack stack = sendItems.getStackInSlot(slot);
+            if (stack.isEmpty())
+                continue;
+            int channel = core.routeChannel(stack);
+            List<GatewayPortBlockEntity> targets = channel < 0 ? null : targetsByChannel.get(channel);
+            if (targets == null || targets.isEmpty())
+                continue; // unroutable or that channel is down: leave it buffered
+            ItemStack remainder = stack.copy();
+            for (GatewayPortBlockEntity target : targets) {
+                remainder = ItemHandlerHelper.insertItemStacked(target.receiveItems, remainder, false);
+                if (remainder.isEmpty())
+                    break;
+            }
+            sendItems.setStackInSlot(slot, remainder);
+        }
+
+        List<GatewayPortBlockEntity> activeTargets = targetsByChannel.get(core.getActiveChannel());
+        if (activeTargets != null && !activeTargets.isEmpty())
+            pushFluid(activeTargets);
+        return FLUSH_INTERVAL;
+    }
+
+    /**
+     * Ports on {@code partner}'s ring, excluding this one. Null when the partner is unbound, unloaded,
+     * or not a Core (hold + retry); an empty list means reachable but portless.
+     */
+    private List<GatewayPortBlockEntity> resolveTargets(ServerLevel serverLevel, GatewayPartner partner) {
+        if (!partner.isBound())
+            return null;
+        ServerLevel partnerLevel = serverLevel.getServer().getLevel(partner.dimension());
+        if (partnerLevel == null || !partnerLevel.isLoaded(partner.position()))
+            return null;
+        if (!(partnerLevel.getBlockEntity(partner.position()) instanceof CrossDimensionalGatewayCoreBlockEntity partnerCore))
+            return null;
+        List<GatewayPortBlockEntity> targets = findPorts(partnerLevel, partnerCore.getBlockPos());
+        targets.remove(this); // self-bound rings must never loop items back into their own port
+        return targets;
     }
 
     private void pushItems(List<GatewayPortBlockEntity> targets) {
@@ -189,7 +279,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
                 if (checkedNeighbors.add(next)
                         && level.getBlockEntity(next) instanceof GatewayPortBlockEntity port)
                     ports.add(port);
-                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                if (!visited.contains(next) && GatewayFuelHandler.isOwnRingBlock(level, next, corePos)) {
                     visited.add(next);
                     queue.add(next);
                 }

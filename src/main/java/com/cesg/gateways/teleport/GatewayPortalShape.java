@@ -39,14 +39,43 @@ public final class GatewayPortalShape {
 
     public static Optional<GatewayPortalShape> detect(BlockGetter level, BlockPos core) {
         for (Direction.Axis widthAxis : new Direction.Axis[] { Direction.Axis.X, Direction.Axis.Z }) {
-            Optional<GatewayPortalShape> shape = tryAxis(level, core, widthAxis);
-            if (shape.isPresent())
-                return shape;
+            Attempt attempt = tryAxis(level, core, widthAxis);
+            if (attempt.shape() != null)
+                return Optional.of(attempt.shape());
         }
         return Optional.empty();
     }
 
-    private static Optional<GatewayPortalShape> tryAxis(BlockGetter level, BlockPos core, Direction.Axis widthAxis) {
+    /**
+     * Why {@link #detect} found no portal, as a {@code cesg.goggles.gateway.frame.*} lang key, or null
+     * when the ring is valid. Reports whichever axis found the most ring blocks — that is the plane the
+     * player was actually building in, so the message describes the ring they meant to make rather than
+     * the empty perpendicular one.
+     */
+    public static String describeFailure(BlockGetter level, BlockPos core) {
+        Attempt best = null;
+        for (Direction.Axis widthAxis : new Direction.Axis[] { Direction.Axis.X, Direction.Axis.Z }) {
+            Attempt attempt = tryAxis(level, core, widthAxis);
+            if (attempt.shape() != null)
+                return null;
+            if (best == null || attempt.ringSize() > best.ringSize())
+                best = attempt;
+        }
+        return best.reason();
+    }
+
+    /** One axis' worth of detection: either a shape, or why that axis failed (plus how big its ring was). */
+    private record Attempt(GatewayPortalShape shape, String reason, int ringSize) {
+        static Attempt ok(GatewayPortalShape shape) {
+            return new Attempt(shape, null, 0);
+        }
+
+        static Attempt fail(String reason, int ringSize) {
+            return new Attempt(null, "cesg.goggles.gateway.frame." + reason, ringSize);
+        }
+    }
+
+    private static Attempt tryAxis(BlockGetter level, BlockPos core, Direction.Axis widthAxis) {
         Direction.Axis otherAxis = widthAxis == Direction.Axis.X ? Direction.Axis.Z : Direction.Axis.X;
         int planeFixed = coord(core, otherAxis);
         Direction widthPos = Direction.fromAxisAndDirection(widthAxis, Direction.AxisDirection.POSITIVE);
@@ -71,12 +100,16 @@ public final class GatewayPortalShape {
                     continue;
                 if (isRingBlock(level, n, core)) {
                     if (ring.size() > maxRing)
-                        return Optional.empty();
+                        return Attempt.fail("too_big", ring.size());
                     ring.add(n);
                     queue.add(n);
                 }
             }
         }
+
+        // Nothing but the Core (or a stub) — the player has not built a ring here at all.
+        if (ring.size() < 4)
+            return Attempt.fail("no_ring", ring.size());
 
         int outerWidth = uMax - uMin + 1;
         int outerHeight = yMax - yMin + 1;
@@ -84,17 +117,26 @@ public final class GatewayPortalShape {
         int interiorHeight = outerHeight - 2;
         if (interiorWidth < MIN_WIDTH || interiorWidth > MAX_WIDTH
                 || interiorHeight < MIN_HEIGHT || interiorHeight > MAX_HEIGHT)
-            return Optional.empty();
+            return Attempt.fail("size", ring.size());
 
-        // The ring must be exactly the rectangle's perimeter — no gaps (missing corner/edge) and nothing extra.
+        // The ring must be exactly the rectangle's perimeter. Split the two failures, because the fixes
+        // are opposites. A block strictly inside the bounding box means the walk absorbed frames beyond
+        // one clean perimeter — most often a neighbouring gateway whose frames touch this ring, or a
+        // stray block that stretched the box. Only once everything sits on the perimeter is a shortfall
+        // an ordinary gap the player should fill in.
+        for (BlockPos cell : ring) {
+            int u = coord(cell, widthAxis);
+            if (u != uMin && u != uMax && cell.getY() != yMin && cell.getY() != yMax)
+                return Attempt.fail("extra", ring.size());
+        }
         if (ring.size() != 2 * outerWidth + 2 * outerHeight - 4)
-            return Optional.empty();
+            return Attempt.fail("gap", ring.size());
         for (int u = uMin; u <= uMax; u++)
             if (!ring.contains(make(widthAxis, u, yMin, planeFixed)) || !ring.contains(make(widthAxis, u, yMax, planeFixed)))
-                return Optional.empty();
+                return Attempt.fail("gap", ring.size());
         for (int y = yMin; y <= yMax; y++)
             if (!ring.contains(make(widthAxis, uMin, y, planeFixed)) || !ring.contains(make(widthAxis, uMax, y, planeFixed)))
-                return Optional.empty();
+                return Attempt.fail("gap", ring.size());
 
         // Interior must all be fillable (air or an existing portal cell).
         List<BlockPos> interior = new ArrayList<>();
@@ -102,7 +144,7 @@ public final class GatewayPortalShape {
             for (int y = yMin + 1; y <= yMax - 1; y++) {
                 BlockPos cell = make(widthAxis, u, y, planeFixed);
                 if (!isFillable(level, cell))
-                    return Optional.empty();
+                    return Attempt.fail("blocked", ring.size());
                 interior.add(cell);
             }
         }
@@ -110,7 +152,7 @@ public final class GatewayPortalShape {
         for (BlockPos ringCell : ring)
             if (!ringCell.equals(core))
                 frame.add(ringCell);
-        return Optional.of(new GatewayPortalShape(widthAxis, interior, frame));
+        return Attempt.ok(new GatewayPortalShape(widthAxis, interior, frame));
     }
 
     private static int coord(BlockPos p, Direction.Axis axis) {

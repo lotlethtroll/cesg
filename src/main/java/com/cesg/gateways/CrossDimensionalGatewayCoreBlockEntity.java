@@ -14,6 +14,7 @@ import com.cesg.gateways.teleport.GatewaySideState;
 import com.cesg.gateways.teleport.TeleportResolver;
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.init.CESGRegistration;
+import com.cesg.init.CESGSounds;
 import com.cesg.util.CESGLang;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 
@@ -21,13 +22,16 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -51,6 +55,10 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
 
     /** Channel -> bound partner. Only bound channels are stored. */
     private final java.util.Map<Integer, GatewayPartner> bindings = new java.util.HashMap<>();
+    /** Channel -> routing filter (Phase 7B). Only channels whose filter has been edited are stored. */
+    private final java.util.Map<Integer, ChannelFilter> channelFilters = new java.util.HashMap<>();
+    /** Fan-out routing: distribute items to the channel whose filter accepts them, not just the active one. */
+    private boolean routeMode;
     private int activeChannel;
     /** Player-given label for THIS gateway; carried into crystals and partner bindings (Phase 6A UX). */
     private String gatewayName = "";
@@ -120,7 +128,67 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         activeChannel = clamped;
         partnerStatus = PARTNER_UNKNOWN;
         applyChunkLoading();
+        refreshPortalState(); // recolor glass + frames to the new destination's fuel now, not next lazyTick
         notifyUpdate();
+    }
+
+    // ---- Fan-out routing (Phase 7B) --------------------------------------------------------------
+
+    /** Route mode, honouring the server's fan-out allow toggle (off = single active channel). */
+    public boolean isRouteMode() {
+        return routeMode && com.cesg.CESGConfig.gatewayFanOutAllowed();
+    }
+
+    public void setRouteMode(boolean value) {
+        if (routeMode == value)
+            return;
+        routeMode = value;
+        notifyUpdate();
+    }
+
+    /** The editable filter for {@code channel}, created on first edit (used by the filter GUI). */
+    public ChannelFilter getOrCreateChannelFilter(int channel) {
+        return channelFilters.computeIfAbsent(Math.floorMod(channel, CHANNEL_COUNT),
+                c -> new ChannelFilter(this::onChannelFilterChanged));
+    }
+
+    /** True when {@code channel} has a non-default filter (picker indicator). */
+    public boolean hasChannelFilter(int channel) {
+        ChannelFilter filter = channelFilters.get(Math.floorMod(channel, CHANNEL_COUNT));
+        return filter != null && filter.hasContent();
+    }
+
+    public boolean isChannelBlacklist(int channel) {
+        ChannelFilter filter = channelFilters.get(Math.floorMod(channel, CHANNEL_COUNT));
+        return filter != null && filter.isBlacklist();
+    }
+
+    public void toggleChannelBlacklist(int channel) {
+        ChannelFilter filter = getOrCreateChannelFilter(channel);
+        filter.setBlacklist(!filter.isBlacklist());
+        onChannelFilterChanged();
+    }
+
+    private void onChannelFilterChanged() {
+        notifyUpdate();
+    }
+
+    /**
+     * The bound channel that should receive {@code sample}: in route mode, the first bound channel
+     * whose filter accepts it (deterministic, so items never flip-flop); otherwise the active channel.
+     * Returns -1 when nothing accepts it (route mode) or the active channel is unbound.
+     */
+    public int routeChannel(ItemStack sample) {
+        if (!isRouteMode())
+            return getPartner().isBound() ? activeChannel : -1;
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++) {
+            if (!getBinding(channel).isBound())
+                continue;
+            ChannelFilter filter = channelFilters.get(channel);
+            if (filter != null && filter.accepts(sample))
+                return channel;
+        }
+        return -1;
     }
 
     public int getPartnerStatus() {
@@ -287,6 +355,103 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         return true;
     }
 
+    /**
+     * Fuel gate for automation (Gateway Ports now, the Storage Bridge later). Charges {@code cost} of the
+     * active fuel, but respects the Gateway Flux Battery reserve: while a battery of the relevant fuel (or
+     * a dry one) is on the ring, automation may only draw the combined Core+battery fuel down to
+     * {@link CESGConfig#batteryReserveFloor()} — that charge is left for player travel, which is never
+     * gated ({@link #consumeFuel()} ignores this). With no battery on the ring it is a plain fuel spend.
+     *
+     * @return true if the cost was paid and the transfer may proceed; false to pause automation this tick.
+     */
+    public boolean tryConsumeAutomationFuel(int cost) {
+        if (cost <= 0)
+            return true;
+        boolean crossDim = partnerIsCrossDimension();
+        int coreFuel = crossDim ? eyeMb : essenceMb;
+
+        long batteryFuel = 0;
+        boolean batteryPresent = false;
+        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
+            net.neoforged.neoforge.fluids.FluidStack fluid = battery.storedFluid();
+            if (fluid.isEmpty()) {
+                batteryPresent = true; // a dry battery still gates — that is the safety the reserve provides
+            } else if (crossDim ? GatewayFluxBatteryBlockEntity.isEye(fluid)
+                    : GatewayFluxBatteryBlockEntity.isEssence(fluid)) {
+                batteryPresent = true;
+                batteryFuel += fluid.getAmount();
+            }
+        }
+
+        if (batteryPresent && (coreFuel + batteryFuel) - cost < com.cesg.CESGConfig.batteryReserveFloor())
+            return false; // protect the reserve for travel
+        if (coreFuel < cost)
+            return false; // Core not yet topped up this tick — the battery refills it, retry next flush
+
+        if (crossDim)
+            eyeMb -= cost;
+        else
+            essenceMb -= cost;
+        notifyUpdate();
+        updateCoreFuelVisual();
+        return true;
+    }
+
+    /**
+     * True when a Gateway Flux Battery on the ring currently holds the given fuel. While one does, it is
+     * the authoritative source that refills the Core, so the Gateway Frame transit buffers stop feeding
+     * the Core (travel drain then shows cleanly on the battery instead of being split with parked ring
+     * fluid). A dry battery does not count — the ring stays a fallback so an empty battery never bricks
+     * travel while the frames still hold fuel.
+     */
+    public boolean ringHasBatteryWithFuel(boolean eye) {
+        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
+            net.neoforged.neoforge.fluids.FluidStack fluid = battery.storedFluid();
+            if (fluid.isEmpty())
+                continue;
+            if (eye ? GatewayFluxBatteryBlockEntity.isEye(fluid) : GatewayFluxBatteryBlockEntity.isEssence(fluid))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * A ring block this Core's own-ring walks may traverse: frames, and THIS Core — but never another
+     * Core. Stopping at a foreign Core keeps two gateways that share ring blocks from bleeding into each
+     * other's fuel/battery scans (each owns its own side of the shared run). {@code start != this} is a
+     * foreign Core and acts as a boundary.
+     */
+    private boolean isOwnRingBlock(BlockPos pos) {
+        return GatewayFuelHandler.isOwnRingBlock(level, pos, worldPosition);
+    }
+
+    /** Unique Gateway Flux Battery controllers whose array touches this gateway ring. */
+    private java.util.Collection<GatewayFluxBatteryBlockEntity> scanRingBatteries() {
+        java.util.Map<BlockPos, GatewayFluxBatteryBlockEntity> controllers = new java.util.HashMap<>();
+        if (level == null)
+            return controllers.values();
+        java.util.Set<BlockPos> visited = new java.util.HashSet<>();
+        java.util.Queue<BlockPos> queue = new java.util.ArrayDeque<>();
+        queue.add(worldPosition);
+        visited.add(worldPosition);
+        while (!queue.isEmpty() && visited.size() <= 64) {
+            BlockPos pos = queue.poll();
+            for (Direction dir : Direction.values()) {
+                BlockPos next = pos.relative(dir);
+                if (level.getBlockEntity(next) instanceof GatewayFluxBatteryBlockEntity battery) {
+                    GatewayFluxBatteryBlockEntity controller = battery.getControllerBE();
+                    if (controller != null)
+                        controllers.putIfAbsent(controller.getBlockPos(), controller);
+                }
+                if (!visited.contains(next) && isOwnRingBlock(next)) {
+                    visited.add(next);
+                    queue.add(next);
+                }
+            }
+        }
+        return controllers.values();
+    }
+
     public GatewaySideState createSideState() {
         return new GatewaySideState(level.dimension(), worldPosition, getSpeed() != 0, requiredFuel() >= travelCost(),
                 level.dimension().equals(Level.END));
@@ -309,13 +474,24 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         super.lazyTick();
         if (level == null || level.isClientSide)
             return;
+        refreshPortalState();
+        updatePartnerLiveness();
+    }
+
+    /**
+     * Re-evaluate portal shape/fuel/power and repaint the Core glass + frame conduits. Frames are lit
+     * with the ACTIVE channel's fuel, so calling this on a channel switch recolors the ring to the new
+     * destination's fuel immediately instead of lagging a lazyTick.
+     */
+    private void refreshPortalState() {
+        if (level == null || level.isClientSide)
+            return;
         Optional<GatewayPortalShape> shape = GatewayPortalShape.detect(level, worldPosition);
         if (shape.isPresent() && canTravel())
             activate(shape.get());
         else
             deactivate();
         updateCoreFuelVisual();
-        updatePartnerLiveness();
     }
 
     /** Refreshes the eye texture when transit fluid moves through connected frames into an empty tank. */
@@ -352,16 +528,32 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
      * Glass eye shows the fuel in the tanks, or fluid in transit on the ring when the tanks are empty.
      * Liquid Eye of Ender wins when both tanks hold fuel.
      */
-    private GatewayFrameBlock.FrameFuel displayFuel() {
-        if (eyeMb > 0)
-            return GatewayFrameBlock.FrameFuel.EYE;
-        if (essenceMb > 0)
-            return GatewayFrameBlock.FrameFuel.ESSENCE;
-        return transitFuel();
+    /** The fuel the CURRENTLY-ACTIVE channel travels on — Eye (cross-dimension) or Essence (same). */
+    public GatewayFrameBlock.FrameFuel activeFuelType() {
+        return partnerIsCrossDimension() ? GatewayFrameBlock.FrameFuel.EYE : GatewayFrameBlock.FrameFuel.ESSENCE;
     }
 
-    /** Scans connected frame buffers for fuel being pumped toward this core. */
-    private GatewayFrameBlock.FrameFuel transitFuel() {
+    /**
+     * What the Core's glass shows: the ACTIVE channel's fuel when the Core (or ring transit) holds any,
+     * so the visual follows the destination — a same-dim channel reads Essence even while an Eye tank is
+     * full. Falls back to the other stored fuel, then to whatever is in transit through the frames.
+     */
+    private GatewayFrameBlock.FrameFuel displayFuel() {
+        boolean crossDim = partnerIsCrossDimension();
+        GatewayFrameBlock.FrameFuel active = crossDim ? GatewayFrameBlock.FrameFuel.EYE
+                : GatewayFrameBlock.FrameFuel.ESSENCE;
+        GatewayFrameBlock.FrameFuel other = crossDim ? GatewayFrameBlock.FrameFuel.ESSENCE
+                : GatewayFrameBlock.FrameFuel.EYE;
+        if ((crossDim ? eyeMb : essenceMb) > 0)
+            return active;
+        if ((crossDim ? essenceMb : eyeMb) > 0)
+            return other;
+        return transitFuel(active, other);
+    }
+
+    /** Scans connected frame buffers for fuel being pumped toward this core (active fuel preferred). */
+    private GatewayFrameBlock.FrameFuel transitFuel(GatewayFrameBlock.FrameFuel active,
+            GatewayFrameBlock.FrameFuel other) {
         if (level == null)
             return GatewayFrameBlock.FrameFuel.NONE;
         Set<BlockPos> visited = new HashSet<>();
@@ -380,16 +572,18 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             }
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
-                if (!visited.contains(next) && GatewayFuelHandler.isRingBlock(level.getBlockState(next))) {
+                if (!visited.contains(next) && isOwnRingBlock(next)) {
                     visited.add(next);
                     queue.add(next);
                 }
             }
         }
-        if (eye)
-            return GatewayFrameBlock.FrameFuel.EYE;
-        if (essence)
-            return GatewayFrameBlock.FrameFuel.ESSENCE;
+        boolean hasActive = active == GatewayFrameBlock.FrameFuel.EYE ? eye : essence;
+        boolean hasOther = other == GatewayFrameBlock.FrameFuel.EYE ? eye : essence;
+        if (hasActive)
+            return active;
+        if (hasOther)
+            return other;
         return GatewayFrameBlock.FrameFuel.NONE;
     }
 
@@ -440,6 +634,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
     }
 
     private void activate(GatewayPortalShape shape) {
+        boolean opening = activePortalCells.isEmpty();
         BlockState portal = CESGRegistration.GATEWAY_PORTAL.get().defaultBlockState()
                 .setValue(GatewayPortalBlock.AXIS, shape.axis);
         boolean changed = false;
@@ -459,8 +654,16 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         for (BlockPos frameCell : shape.frame)
             changed |= setFrameFuel(frameCell, fuel);
         activeFrameCells = new ArrayList<>(shape.frame);
-        if (changed)
+        if (changed) {
             notifyUpdate();
+            if (opening && level instanceof ServerLevel serverLevel) {
+                serverLevel.playSound(null, worldPosition, CESGSounds.PORTAL_OPEN.value(), SoundSource.BLOCKS,
+                        0.9f, 1.0f);
+                serverLevel.sendParticles(ParticleTypes.REVERSE_PORTAL,
+                        worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
+                        24, 0.45, 0.7, 0.45, 0.08);
+            }
+        }
     }
 
     private void deactivate() {
@@ -474,6 +677,13 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         activePortalCells = List.of();
         activeFrameCells = List.of();
         notifyUpdate();
+        if (level instanceof ServerLevel serverLevel) {
+            serverLevel.playSound(null, worldPosition, CESGSounds.PORTAL_CLOSE.value(), SoundSource.BLOCKS,
+                    0.75f, 1.0f);
+            serverLevel.sendParticles(ParticleTypes.SMOKE,
+                    worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5,
+                    10, 0.35, 0.45, 0.35, 0.02);
+        }
     }
 
     /** Called by the block on removal so a broken Core never leaves orphaned portal/lit-frame blocks. */
@@ -523,6 +733,16 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             bindingList.add(entry);
         });
         tag.put("Bindings", bindingList);
+        net.minecraft.nbt.ListTag filterList = new net.minecraft.nbt.ListTag();
+        channelFilters.forEach((channel, filter) -> {
+            if (!filter.hasContent())
+                return; // don't persist/sync fresh defaults
+            CompoundTag entry = filter.save(registries);
+            entry.putInt("Channel", channel);
+            filterList.add(entry);
+        });
+        tag.put("ChannelFilters", filterList);
+        tag.putBoolean("RouteMode", routeMode);
         tag.putInt("ActiveChannel", activeChannel);
         tag.putInt("PartnerStatus", partnerStatus);
         tag.putString("GatewayName", gatewayName);
@@ -567,6 +787,14 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             if (legacy.isBound())
                 bindings.putIfAbsent(0, legacy);
         }
+        channelFilters.clear();
+        for (net.minecraft.nbt.Tag raw : tag.getList("ChannelFilters", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            CompoundTag entry = (CompoundTag) raw;
+            ChannelFilter filter = new ChannelFilter(this::onChannelFilterChanged);
+            filter.load(registries, entry);
+            channelFilters.put(Math.floorMod(entry.getInt("Channel"), CHANNEL_COUNT), filter);
+        }
+        routeMode = tag.getBoolean("RouteMode");
         activeChannel = Math.floorMod(tag.getInt("ActiveChannel"), CHANNEL_COUNT);
         partnerStatus = Math.floorMod(tag.getInt("PartnerStatus"), 3);
         gatewayName = tag.getString("GatewayName");
@@ -591,12 +819,24 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.eye", ChatFormatting.AQUA, eyeMb, TANK_CAPACITY);
         if (getSpeed() == 0)
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.unpowered", ChatFormatting.GRAY);
+        // The portal also needs a valid ring, which none of the other lines report: a fuelled, powered,
+        // bound gateway with a broken frame otherwise reads as completely healthy and just stays shut.
+        // Name the specific rule that broke — "no frame" alone leaves the player hunting blind.
+        if (level != null) {
+            String frameIssue = GatewayPortalShape.describeFailure(level, worldPosition);
+            if (frameIssue != null)
+                CESGLang.forGoggles(tooltip, frameIssue, ChatFormatting.RED);
+        }
         CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.channel", ChatFormatting.WHITE, activeChannel + 1);
+        // Without this the tooltip implies the active channel is where everything goes, when route mode
+        // sends pushed items to whichever channel's filter accepts them instead.
+        if (isRouteMode())
+            CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.route", ChatFormatting.YELLOW);
         if (chunkLoading)
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.chunkloading", ChatFormatting.GOLD);
         if (getPartner().isBound() && getPartner().hasName())
             CESGLang.forGoggles(tooltip, "cesg.goggles.gateway.destination", ChatFormatting.AQUA,
-                    getPartner().name());
+                    getPartner().displayName(level));
         if (getPartner().isBound()) {
             CESGLang.forGoggles(tooltip, partnerIsCrossDimension() ? "cesg.goggles.gateway.cross_dimension"
                     : "cesg.goggles.gateway.same_dimension", ChatFormatting.GREEN);

@@ -1,0 +1,9 @@
+{
+  "parent": "cesg:block/storage_bridge/body",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "bottom": "cesg:block/storage_bridge_bottom",
+    "side": "cesg:block/storage_bridge",
+    "top": "cesg:block/storage_bridge_top"
+  }
+}

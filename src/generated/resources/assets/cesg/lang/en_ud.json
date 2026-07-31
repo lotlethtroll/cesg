@@ -20,6 +20,7 @@
   "block.cesg.enhanced_shulker_box": "xoᗺ ɹǝʞןnɥS pǝɔuɐɥuƎ",
   "block.cesg.enhanced_white_shulker_box": "xoᗺ ɹǝʞןnɥS ǝʇıɥM pǝɔuɐɥuƎ",
   "block.cesg.enhanced_yellow_shulker_box": "xoᗺ ɹǝʞןnɥS ʍoןןǝʎ pǝɔuɐɥuƎ",
+  "block.cesg.gateway_flux_battery": "ʎɹǝʇʇɐᗺ xnןℲ ʎɐʍǝʇɐ⅁",
   "block.cesg.gateway_frame": "ǝɯɐɹℲ ʎɐʍǝʇɐ⅁",
   "block.cesg.gateway_port": "ʇɹoԀ ʎɐʍǝʇɐ⅁",
   "block.cesg.gateway_portal": "ןɐʇɹoԀ ʎɐʍǝʇɐ⅁",
@@ -46,6 +47,7 @@
   "block.cesg.smooth_purpur_slab": "qɐןS ɹndɹnԀ ɥʇooɯS",
   "block.cesg.smooth_purpur_stairs": "sɹıɐʇS ɹndɹnԀ ɥʇooɯS",
   "block.cesg.smooth_purpur_wall": "ןןɐM ɹndɹnԀ ɥʇooɯS",
+  "block.cesg.storage_bridge": "ǝbpıɹᗺ ǝbɐɹoʇS",
   "block.cesg.storage_network_controller": "ɹǝןןoɹʇuoƆ ʞɹoʍʇǝN ǝbɐɹoʇS",
   "block.cesg.storage_terminal": "ןɐuıɯɹǝ⟘ ǝbɐɹoʇS",
   "block.cesg.teleport_essence": "ǝɔuǝssƎ ʇɹodǝןǝ⟘",
@@ -53,6 +55,9 @@
   "fluid.cesg.liquid_eye_of_ender": "ɹǝpuƎ ɟo ǝʎƎ pınbıꞀ",
   "fluid.cesg.teleport_essence": "ǝɔuǝssƎ ʇɹodǝןǝ⟘",
   "item.cesg.compacting_upgrade": "ǝpɐɹbd∩ buıʇɔɐdɯoƆ",
+  "item.cesg.crushing_upgrade_t1": "Ɩ⟘ ǝpɐɹbd∩ buıɥsnɹƆ",
+  "item.cesg.crushing_upgrade_t2": "ᄅ⟘ ǝpɐɹbd∩ buıɥsnɹƆ",
+  "item.cesg.crushing_upgrade_t3": "Ɛ⟘ ǝpɐɹbd∩ buıɥsnɹƆ",
   "item.cesg.emergency_eye_charge": "ǝbɹɐɥƆ ǝʎƎ ʎɔuǝbɹǝɯƎ",
   "item.cesg.ender_pearl_dust": "ʇsnᗡ ןɹɐǝԀ ɹǝpuƎ",
   "item.cesg.filter_upgrade": "ǝpɐɹbd∩ ɹǝʇןıℲ",
@@ -68,5 +73,8 @@
   "item.cesg.stack_depth_upgrade_t2": "ᄅ⟘ ǝpɐɹbd∩ ɥʇdǝᗡ ʞɔɐʇS",
   "item.cesg.stack_depth_upgrade_t3": "Ɛ⟘ ǝpɐɹbd∩ ɥʇdǝᗡ ʞɔɐʇS",
   "item.cesg.teleport_essence_bucket": "ʇǝʞɔnᗺ ǝɔuǝssƎ ʇɹodǝןǝ⟘",
-  "item.cesg.void_upgrade": "ǝpɐɹbd∩ pıoΛ"
+  "item.cesg.void_upgrade": "ǝpɐɹbd∩ pıoΛ",
+  "item.cesg.washing_upgrade_t1": "Ɩ⟘ ǝpɐɹbd∩ buıɥsɐM",
+  "item.cesg.washing_upgrade_t2": "ᄅ⟘ ǝpɐɹbd∩ buıɥsɐM",
+  "item.cesg.washing_upgrade_t3": "Ɛ⟘ ǝpɐɹbd∩ buıɥsɐM"
 }

@@ -16,6 +16,8 @@ public class CESGMenuScreens {
         public static void onRegister(RegisterMenuScreensEvent event) {
             event.register(CESGMenus.ENHANCED_SHULKER.get(), EnhancedShulkerScreen::new);
             event.register(CESGMenus.STORAGE_TERMINAL.get(), StorageTerminalScreen::new);
+            event.register(CESGMenus.STORAGE_BRIDGE.get(), StorageBridgeScreen::new);
+            event.register(CESGMenus.GATEWAY_FILTER.get(), GatewayFilterScreen::new);
         }
     }
 }

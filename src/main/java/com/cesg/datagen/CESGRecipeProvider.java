@@ -201,6 +201,61 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_magnet_t2", has(CESGRegistration.MAGNET_UPGRADE_T2.get()))
                 .save(output);
 
+        // Crushing module (7D): millstone core; in-box crushing + milling. Tiers chain like magnet.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.CRUSHING_UPGRADE_T1.get())
+                .pattern(" I ")
+                .pattern("IMI")
+                .pattern(" S ")
+                .define('I', AllItems.IRON_SHEET.get())
+                .define('M', AllBlocks.MILLSTONE.get())
+                .define('S', CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.CRUSHING_UPGRADE_T2.get())
+                .requires(CESGRegistration.CRUSHING_UPGRADE_T1.get())
+                .requires(AllItems.ELECTRON_TUBE.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_crushing_t1", has(CESGRegistration.CRUSHING_UPGRADE_T1.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.CRUSHING_UPGRADE_T3.get())
+                .requires(CESGRegistration.CRUSHING_UPGRADE_T2.get())
+                .requires(AllItems.PRECISION_MECHANISM.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_crushing_t2", has(CESGRegistration.CRUSHING_UPGRADE_T2.get()))
+                .save(output);
+
+        // Washing module (7D): encased-fan core over water; in-box splashing. Tiers chain like magnet.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.WASHING_UPGRADE_T1.get())
+                .pattern(" W ")
+                .pattern("IFI")
+                .pattern(" S ")
+                .define('W', Items.WATER_BUCKET)
+                .define('I', AllItems.IRON_SHEET.get())
+                .define('F', AllBlocks.ENCASED_FAN.get())
+                .define('S', CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.WASHING_UPGRADE_T2.get())
+                .requires(CESGRegistration.WASHING_UPGRADE_T1.get())
+                .requires(AllItems.ELECTRON_TUBE.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_washing_t1", has(CESGRegistration.WASHING_UPGRADE_T1.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.WASHING_UPGRADE_T3.get())
+                .requires(CESGRegistration.WASHING_UPGRADE_T2.get())
+                .requires(AllItems.PRECISION_MECHANISM.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_washing_t2", has(CESGRegistration.WASHING_UPGRADE_T2.get()))
+                .save(output);
+
         // Processed Shulker Shells are now made by dousing a Shulker Shell in Liquid Ender Pearl with a
         // Create Spout (see data/cesg/recipe/processed_shulker_shell_from_filling.json), so the old
         // iron-sheet crafting recipe is retired.
@@ -248,8 +303,43 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_gateway_frame", has(CESGRegistration.GATEWAY_FRAME.get()))
                 .save(output);
 
+        // Cross-Dimensional Storage Bridge (7A): the tentpole. Gateway masonry wrapped around an
+        // ender-attuned storage core, so the recipe reads as both subsystems at once. The Processed
+        // Shulker Shell gates it behind the Liquid Ender Pearl economy the Bridge itself runs on.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.STORAGE_BRIDGE.get())
+                .pattern("ERE")
+                .pattern("DCD")
+                .pattern("EYE")
+                .define('E', Blocks.END_STONE_BRICKS)
+                .define('R', CESGRegistration.SHULKER_SHELL.get())
+                .define('C', AllBlocks.BRASS_CASING.get())
+                .define('D', CESGRegistration.ENDER_PEARL_DUST.get())
+                .define('Y', Items.ENDER_EYE)
+                .unlockedBy("has_processed_shulker_shell", has(CESGRegistration.SHULKER_SHELL.get()))
+                .save(output);
+
+        // Gateway Flux Battery (7E): a Create fluid tank ringed in brass + ender pearl dust; buffers
+        // gateway fuel. Yields 2 like Create's own fluid tank — this is a bulk multiblock (a 3x3x3
+        // array is 27 blocks), and the dust ties it to the renewable 7G crushing loop.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_FLUX_BATTERY.get(), 2)
+                .pattern("BDB")
+                .pattern("DTD")
+                .pattern("BDB")
+                .define('B', AllItems.BRASS_INGOT.get())
+                .define('D', CESGRegistration.ENDER_PEARL_DUST.get())
+                .define('T', AllBlocks.FLUID_TANK.get())
+                .unlockedBy("has_fluid_tank", has(AllBlocks.FLUID_TANK.get()))
+                .save(output);
+
         // Teleport Essence and Liquid Eye of Ender are now real fluids made by heated-basin mixing
         // (see data/cesg/recipe/*_from_mixing.json); their buckets are filled from a tank, not crafted.
+
+        // End Cultivation (7G): End materials are made renewable through native Create processing,
+        // authored as static JSON (not datagen'd). Haunting sandstone -> end stone (the essence-free
+        // base path); crushing end stone -> sand + a chance of ender pearl dust; compacting 3 dust ->
+        // 1 ender pearl; optional filling stone with Liquid Ender Pearl -> end stone (premium
+        // accelerant). See data/cesg/recipe/{end_stone_from_haunting, ender_pearl_dust_from_end_stone_
+        // crushing, ender_pearl_from_compacting, end_stone_from_filling}.json.
 
         // Amethyst (structure) + Echo Shard (location imprint/recall) + Ender Eye (dimensional sight).
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_BINDING_ITEM.get())

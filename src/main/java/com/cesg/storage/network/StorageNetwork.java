@@ -47,6 +47,7 @@ public final class StorageNetwork {
     public static boolean isMember(BlockState state) {
         return state.is(CESGRegistration.STORAGE_NETWORK_CONTROLLER.get())
                 || state.is(CESGRegistration.STORAGE_TERMINAL.get())
+                || state.is(CESGRegistration.STORAGE_BRIDGE.get())
                 || state.getBlock() instanceof EnhancedShulkerBoxBlock
                 || state.getBlock() instanceof AbstractShulkerStationBlock
                 || state.getBlock() instanceof com.cesg.storage.enderbarrel.EnderBarrelBlock;
@@ -126,6 +127,22 @@ public final class StorageNetwork {
         // Everything else (stations, enhanced shulkers, barrels) goes through the block capability;
         // the enhanced-shulker handler already re-wraps per change and goes inert while viewed.
         return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+    }
+
+    /**
+     * Member block positions of the cluster containing {@code start} (reuses the brief BFS cache).
+     * Handy for finding typed members — e.g. Storage Bridges — without re-walking per lookup.
+     */
+    public static List<BlockPos> memberPositions(Level level, BlockPos start) {
+        net.minecraft.core.GlobalPos key = net.minecraft.core.GlobalPos.of(level.dimension(), start.immutable());
+        long now = level.getGameTime();
+        CachedCluster cluster = CLUSTER_CACHE.get(key);
+        if (cluster == null || now >= cluster.expiresAt()) {
+            cluster = walkCluster(level, start, now);
+            CLUSTER_CACHE.values().removeIf(entry -> now >= entry.expiresAt());
+            CLUSTER_CACHE.put(key, cluster);
+        }
+        return cluster.members();
     }
 
     /** Aggregated view: one entry per distinct item+components, summed across the network. */

@@ -1,0 +1,18 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "minecraft:end_stone"
+    }
+  ],
+  "processing_time": 300,
+  "results": [
+    {
+      "id": "minecraft:sand"
+    },
+    {
+      "id": "cesg:ender_pearl_dust",
+      "chance": 0.15
+    }
+  ]
+}

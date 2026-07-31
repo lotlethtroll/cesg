@@ -48,9 +48,12 @@ public class GatewayFuelHandler implements IFluidHandler {
     private CrossDimensionalGatewayCoreBlockEntity core() {
         if (core != null)
             return core;
-        if (sourceFrame == null || sourceFrame.getLevel() == null)
+        if (sourceFrame == null)
             return null;
-        return findCore(sourceFrame.getLevel(), sourceFrame.getBlockPos());
+        Level level = sourceFrame.getLevel();
+        if (level == null)
+            return null;
+        return findCore(level, sourceFrame.getBlockPos());
     }
 
     @Override
@@ -60,9 +63,9 @@ public class GatewayFuelHandler implements IFluidHandler {
 
     @Override
     public FluidStack getFluidInTank(int tank) {
-        CrossDimensionalGatewayCoreBlockEntity core = core();
-        int essence = core != null ? core.getEssenceMb() : 0;
-        int eye = core != null ? core.getEyeMb() : 0;
+        CrossDimensionalGatewayCoreBlockEntity resolved = core();
+        int essence = resolved != null ? resolved.getEssenceMb() : 0;
+        int eye = resolved != null ? resolved.getEyeMb() : 0;
         if (sourceFrame != null) {
             FluidStack held = sourceFrame.buffer.getFluid();
             GatewayFrameBlock.FrameFuel type = GatewayFrameBlockEntity.fuelTypeOf(held);
@@ -90,12 +93,12 @@ public class GatewayFuelHandler implements IFluidHandler {
     public int fill(FluidStack resource, FluidAction action) {
         if (resource.isEmpty() || !(isEssence(resource) || isEye(resource)))
             return 0;
-        CrossDimensionalGatewayCoreBlockEntity core = core();
+        CrossDimensionalGatewayCoreBlockEntity resolved = core();
         int filled = 0;
-        if (core != null)
+        if (resolved != null)
             filled = isEssence(resource)
-                    ? core.fillEssence(resource.getAmount(), action.simulate())
-                    : core.fillEye(resource.getAmount(), action.simulate());
+                    ? resolved.fillEssence(resource.getAmount(), action.simulate())
+                    : resolved.fillEye(resource.getAmount(), action.simulate());
         // Core full or absent: overflow parks in the frame buffer (visible transit fluid).
         if (sourceFrame != null && filled < resource.getAmount())
             filled += sourceFrame.buffer.fill(
@@ -112,9 +115,11 @@ public class GatewayFuelHandler implements IFluidHandler {
      * to the Core, so builders SEE the fuel travel (even on an unlit ring). Purely visual.
      */
     private void propagateFlow(com.cesg.gateways.GatewayFrameBlock.FrameFuel fuel) {
-        if (sourceFrame == null || sourceFrame.getLevel() == null)
+        if (sourceFrame == null)
             return;
         Level level = sourceFrame.getLevel();
+        if (level == null)
+            return;
         // BFS with parents from the pumped frame to the core, then walk the path back.
         java.util.Map<BlockPos, BlockPos> parents = new java.util.HashMap<>();
         Queue<BlockPos> queue = new ArrayDeque<>();
@@ -124,6 +129,8 @@ public class GatewayFuelHandler implements IFluidHandler {
         BlockPos corePos = null;
         while (!queue.isEmpty() && parents.size() <= RING_SCAN_LIMIT) {
             BlockPos pos = queue.poll();
+            if (pos == null)
+                break;
             if (level.getBlockEntity(pos) instanceof CrossDimensionalGatewayCoreBlockEntity) {
                 corePos = pos;
                 break;
@@ -158,13 +165,13 @@ public class GatewayFuelHandler implements IFluidHandler {
             if (!fromBuffer.isEmpty())
                 return fromBuffer;
         }
-        CrossDimensionalGatewayCoreBlockEntity core = core();
-        if (core == null)
+        CrossDimensionalGatewayCoreBlockEntity resolved = core();
+        if (resolved == null)
             return FluidStack.EMPTY;
         if (isEssence(resource))
-            return stack(CESGFluids.TELEPORT_ESSENCE.getSource(), core.drainEssence(resource.getAmount(), action.simulate()));
+            return stack(CESGFluids.TELEPORT_ESSENCE.getSource(), resolved.drainEssence(resource.getAmount(), action.simulate()));
         if (isEye(resource))
-            return stack(CESGFluids.LIQUID_EYE_OF_ENDER.getSource(), core.drainEye(resource.getAmount(), action.simulate()));
+            return stack(CESGFluids.LIQUID_EYE_OF_ENDER.getSource(), resolved.drainEye(resource.getAmount(), action.simulate()));
         return FluidStack.EMPTY;
     }
 
@@ -172,13 +179,13 @@ public class GatewayFuelHandler implements IFluidHandler {
     public FluidStack drain(int maxDrain, FluidAction action) {
         if (sourceFrame != null && !sourceFrame.buffer.isEmpty())
             return sourceFrame.buffer.drain(maxDrain, action);
-        CrossDimensionalGatewayCoreBlockEntity core = core();
-        if (core == null)
+        CrossDimensionalGatewayCoreBlockEntity resolved = core();
+        if (resolved == null)
             return FluidStack.EMPTY;
-        if (core.getEssenceMb() > 0)
-            return stack(CESGFluids.TELEPORT_ESSENCE.getSource(), core.drainEssence(maxDrain, action.simulate()));
-        if (core.getEyeMb() > 0)
-            return stack(CESGFluids.LIQUID_EYE_OF_ENDER.getSource(), core.drainEye(maxDrain, action.simulate()));
+        if (resolved.getEssenceMb() > 0)
+            return stack(CESGFluids.TELEPORT_ESSENCE.getSource(), resolved.drainEssence(maxDrain, action.simulate()));
+        if (resolved.getEyeMb() > 0)
+            return stack(CESGFluids.LIQUID_EYE_OF_ENDER.getSource(), resolved.drainEye(maxDrain, action.simulate()));
         return FluidStack.EMPTY;
     }
 
@@ -220,6 +227,19 @@ public class GatewayFuelHandler implements IFluidHandler {
     public static boolean isRingBlock(BlockState state) {
         return state.is(CESGRegistration.GATEWAY_FRAME.get())
                 || state.is(CESGRegistration.CROSS_DIMENSIONAL_GATEWAY_CORE.get());
+    }
+
+    /**
+     * A ring block a walk rooted at the Core {@code ownCore} may traverse: any Gateway Frame, or that
+     * Core itself — but NOT a foreign Core. Foreign cores act as boundaries so two gateways that share
+     * ring blocks stay isolated (each owns its own side of the shared run) for fuel, battery, port and
+     * bridge scans alike.
+     */
+    public static boolean isOwnRingBlock(Level level, BlockPos pos, BlockPos ownCore) {
+        BlockState state = level.getBlockState(pos);
+        if (state.is(CESGRegistration.GATEWAY_FRAME.get()))
+            return true;
+        return pos.equals(ownCore) && state.is(CESGRegistration.CROSS_DIMENSIONAL_GATEWAY_CORE.get());
     }
 
     /**

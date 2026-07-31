@@ -10,6 +10,8 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -59,12 +61,14 @@ public abstract class AbstractShulkerStationBlock<T extends AbstractShulkerStati
         ItemStack held = player.getItemInHand(hand);
         if (!held.isEmpty() && ShulkerInventoryAccess.isShulkerBox(held) && be.getHeldShulker().isEmpty()) {
             be.setHeldShulker(held.split(1));
+            level.playSound(null, pos, SoundEvents.SHULKER_BOX_CLOSE, SoundSource.BLOCKS, 0.65f, 1.15f);
             return ItemInteractionResult.SUCCESS;
         }
 
         if (held.isEmpty() && !be.getHeldShulker().isEmpty()) {
             player.getInventory().placeItemBackInInventory(be.getHeldShulker());
             be.setHeldShulker(ItemStack.EMPTY);
+            level.playSound(null, pos, SoundEvents.SHULKER_BOX_OPEN, SoundSource.BLOCKS, 0.65f, 1.1f);
             return ItemInteractionResult.SUCCESS;
         }
 

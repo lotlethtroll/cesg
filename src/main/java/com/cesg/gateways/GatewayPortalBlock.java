@@ -2,7 +2,10 @@ package com.cesg.gateways;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
@@ -47,5 +50,20 @@ public class GatewayPortalBlock extends Block {
     @Override
     protected RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+        if (random.nextInt(3) != 0)
+            return;
+        Direction.Axis axis = state.getValue(AXIS);
+        double x = pos.getX() + random.nextDouble();
+        double y = pos.getY() + random.nextDouble();
+        double z = pos.getZ() + random.nextDouble();
+        double normal = (random.nextDouble() - 0.5) * 0.08;
+        level.addParticle(ParticleTypes.REVERSE_PORTAL, x, y, z,
+                axis == Direction.Axis.X ? 0 : normal,
+                (random.nextDouble() - 0.5) * 0.03,
+                axis == Direction.Axis.Z ? 0 : normal);
     }
 }

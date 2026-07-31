@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "D": {
+      "item": "cesg:ender_pearl_dust"
+    },
+    "E": {
+      "item": "minecraft:end_stone_bricks"
+    },
+    "R": {
+      "item": "cesg:shulker_shell"
+    },
+    "Y": {
+      "item": "minecraft:ender_eye"
+    }
+  },
+  "pattern": [
+    "ERE",
+    "DCD",
+    "EYE"
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:storage_bridge"
+  }
+}

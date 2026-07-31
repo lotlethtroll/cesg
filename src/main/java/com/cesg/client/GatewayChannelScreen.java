@@ -1,7 +1,9 @@
 package com.cesg.client;
 
+import com.cesg.CESGConfig;
 import com.cesg.gateways.CrossDimensionalGatewayCoreBlockEntity;
 import com.cesg.gateways.teleport.GatewayPartner;
+import com.cesg.network.OpenGatewayFilterPacket;
 import com.cesg.network.SetGatewayChannelPacket;
 
 import net.minecraft.ChatFormatting;
@@ -29,13 +31,16 @@ public class GatewayChannelScreen extends Screen {
     private final CrossDimensionalGatewayCoreBlockEntity core;
     private EditBox nameBox;
     private int gridTop;
+    private int gridLeft;
     private boolean sent;
     private boolean chunkLoading;
+    private boolean routeMode;
 
     public GatewayChannelScreen(CrossDimensionalGatewayCoreBlockEntity core) {
         super(Component.translatable("cesg.gateway.channel_screen"));
         this.core = core;
         this.chunkLoading = core.isChunkLoading();
+        this.routeMode = core.isRouteMode();
     }
 
     @Override
@@ -47,6 +52,7 @@ public class GatewayChannelScreen extends Screen {
         int x0 = (width - gridWidth) / 2;
         int y0 = (height - gridHeight) / 2 + 22; // header: title, name box, active-channel line
         gridTop = y0;
+        gridLeft = x0;
 
         nameBox = new EditBox(font, x0, y0 - 32, gridWidth, 14,
                 Component.translatable("cesg.gateway.name_hint"));
@@ -64,6 +70,18 @@ public class GatewayChannelScreen extends Screen {
                 b.setMessage(chunkLoadLabel());
             }).bounds(x0, gridBottom + 6, gridWidth, 16)
                     .tooltip(Tooltip.create(Component.translatable("cesg.gateway.chunkload_tooltip")))
+                    .build());
+        }
+
+        if (CESGConfig.gatewayFanOutAllowed()) {
+            int rowsTotal = CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT / COLS;
+            int gridBottom = y0 + rowsTotal * BUTTON_SIZE + (rowsTotal - 1) * GAP;
+            int extra = com.cesg.CESGConfig.gatewayChunkLoadingAllowed() ? 20 : 0;
+            addRenderableWidget(Button.builder(routeLabel(), b -> {
+                routeMode = !routeMode;
+                b.setMessage(routeLabel());
+            }).bounds(x0, gridBottom + 6 + extra, gridWidth, 16)
+                    .tooltip(Tooltip.create(Component.translatable("cesg.gateway.route_tooltip")))
                     .build());
         }
 
@@ -94,7 +112,8 @@ public class GatewayChannelScreen extends Screen {
         if (!binding.isBound())
             return Component.translatable("cesg.gateway.channel_unbound");
         if (binding.hasName())
-            return Component.translatable("cesg.gateway.channel_bound_named", binding.name(),
+            return Component.translatable("cesg.gateway.channel_bound_named",
+                    binding.displayName(core.getLevel()), // live, so a renamed destination shows through
                     binding.dimension().location().toString(),
                     binding.position().getX(), binding.position().getY(), binding.position().getZ());
         return Component.translatable("cesg.gateway.channel_bound",
@@ -107,20 +126,50 @@ public class GatewayChannelScreen extends Screen {
                 ? "cesg.gateway.chunkload_on" : "cesg.gateway.chunkload_off");
     }
 
+    private Component routeLabel() {
+        return Component.translatable(routeMode ? "cesg.gateway.route_on" : "cesg.gateway.route_off");
+    }
+
     private void select(int channel) {
-        PacketDistributor.sendToServer(
-                new SetGatewayChannelPacket(core.getBlockPos(), channel, nameBox.getValue(), chunkLoading));
+        PacketDistributor.sendToServer(new SetGatewayChannelPacket(
+                core.getBlockPos(), channel, nameBox.getValue(), chunkLoading, routeMode));
         sent = true;
         onClose();
     }
 
+    /** Right-click a channel to edit its routing filter (commits pending settings first). */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 1 && CESGConfig.gatewayFanOutAllowed()) {
+            int channel = channelAt(mouseX, mouseY);
+            if (channel >= 0) {
+                PacketDistributor.sendToServer(new SetGatewayChannelPacket(
+                        core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode));
+                PacketDistributor.sendToServer(new OpenGatewayFilterPacket(core.getBlockPos(), channel));
+                sent = true;
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private int channelAt(double mouseX, double mouseY) {
+        for (int channel = 0; channel < CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT; channel++) {
+            int bx = gridLeft + (channel % COLS) * (BUTTON_SIZE + GAP);
+            int by = gridTop + (channel / COLS) * (BUTTON_SIZE + GAP);
+            if (mouseX >= bx && mouseX < bx + BUTTON_SIZE && mouseY >= by && mouseY < by + BUTTON_SIZE)
+                return channel;
+        }
+        return -1;
+    }
+
     @Override
     public void onClose() {
-        // Closing without picking a channel still commits the name + chunk-load toggle.
+        // Closing without picking a channel still commits the name + chunk-load + route toggles.
         if (!sent && (!nameBox.getValue().equals(core.getGatewayName())
-                || chunkLoading != core.isChunkLoading()))
-            PacketDistributor.sendToServer(
-                    new SetGatewayChannelPacket(core.getBlockPos(), -1, nameBox.getValue(), chunkLoading));
+                || chunkLoading != core.isChunkLoading() || routeMode != core.isRouteMode()))
+            PacketDistributor.sendToServer(new SetGatewayChannelPacket(
+                    core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode));
         super.onClose();
     }
 

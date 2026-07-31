@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "create:brass_ingot"
+    },
+    "D": {
+      "item": "cesg:ender_pearl_dust"
+    },
+    "T": {
+      "item": "create:fluid_tank"
+    }
+  },
+  "pattern": [
+    "BDB",
+    "DTD",
+    "BDB"
+  ],
+  "result": {
+    "count": 2,
+    "id": "cesg:gateway_flux_battery"
+  }
+}

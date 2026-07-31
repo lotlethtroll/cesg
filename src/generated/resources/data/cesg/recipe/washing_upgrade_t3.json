@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cesg:washing_upgrade_t2"
+    },
+    {
+      "item": "create:precision_mechanism"
+    },
+    {
+      "item": "create:brass_ingot"
+    },
+    {
+      "item": "cesg:shulker_shell"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:washing_upgrade_t3"
+  }
+}

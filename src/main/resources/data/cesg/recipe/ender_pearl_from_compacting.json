@@ -1,0 +1,19 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "item": "cesg:ender_pearl_dust"
+    },
+    {
+      "item": "cesg:ender_pearl_dust"
+    },
+    {
+      "item": "cesg:ender_pearl_dust"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:ender_pearl"
+    }
+  ]
+}

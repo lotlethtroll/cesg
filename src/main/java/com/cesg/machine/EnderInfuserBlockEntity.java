@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.cesg.init.CESGBlockEntities;
 import com.cesg.init.CESGRecipes;
+import com.cesg.init.CESGSounds;
 import com.cesg.recipe.EnderInfusingInput;
 import com.cesg.recipe.EnderInfusingRecipe;
 import com.cesg.util.CESGLang;
@@ -12,8 +13,11 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -143,7 +147,13 @@ public class EnderInfuserBlockEntity extends KineticBlockEntity {
         if (++ticksSinceStep < interval)
             return;
         ticksSinceStep = 0;
-        applyRecipe(recipe);
+        if (applyRecipe(recipe) && level instanceof ServerLevel serverLevel) {
+            serverLevel.playSound(null, worldPosition, CESGSounds.MACHINE_PROCESS.value(),
+                    SoundSource.BLOCKS, 0.55f, 0.9f + serverLevel.random.nextFloat() * 0.2f);
+            serverLevel.sendParticles(ParticleTypes.ENCHANT,
+                    worldPosition.getX() + 0.5, worldPosition.getY() + 0.85, worldPosition.getZ() + 0.5,
+                    8, 0.25, 0.2, 0.25, 0.03);
+        }
     }
 
     /** Snapshot of every catalyst slot, in slot order. */
@@ -175,19 +185,19 @@ public class EnderInfuserBlockEntity extends KineticBlockEntity {
     }
 
     /** Consume one recipe's input fluid + catalysts and produce its output fluid, if there's room. */
-    private void applyRecipe(EnderInfusingRecipe recipe) {
+    private boolean applyRecipe(EnderInfusingRecipe recipe) {
         int needFluid = recipe.input().amount();
         if (input.getAmount() < needFluid)
-            return;
+            return false;
         FluidStack result = recipe.result();
         if (!output.isEmpty() && !FluidStack.isSameFluidSameComponents(output, result))
-            return;
+            return false;
         if (TANK_CAPACITY - output.getAmount() < result.getAmount())
-            return;
+            return false;
         if (!recipe.catalystsAvailable(catalystStacks()))
-            return;
+            return false;
         if (!byproductsFit(recipe.resultItems()))
-            return;
+            return false;
         consumeCatalysts(recipe);
         input.shrink(needFluid);
         if (input.getAmount() <= 0)
@@ -199,6 +209,7 @@ public class EnderInfuserBlockEntity extends KineticBlockEntity {
         for (ItemStack item : recipe.resultItems())
             ItemHandlerHelper.insertItem(catalyst, item.copy(), false);
         notifyUpdate();
+        return true;
     }
 
     /** True if every byproduct item would fit into the catalyst inventory (which doubles as item output). */

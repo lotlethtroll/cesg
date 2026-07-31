@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.cesg.gateways.StorageBridgeBlockEntity;
+import com.cesg.gateways.StorageBridgeBlockEntity.RemoteStatus;
 import com.cesg.init.CESGMenus;
 import com.cesg.init.CESGRegistration;
 import com.cesg.network.TerminalContentPacket;
@@ -12,6 +14,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -22,11 +25,14 @@ import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.ResultSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.TransientCraftingContainer;
+import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -67,6 +73,8 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
     private final Player player;
     private int refreshCountdown;
     private List<TerminalContentPacket.Entry> lastSent = List.of();
+    private List<TerminalContentPacket.Entry> lastRemoteSent = List.of();
+    private int lastRemoteStatus = TerminalContentPacket.REMOTE_NONE;
 
     public StorageTerminalMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, buf.readBlockPos());
@@ -206,6 +214,86 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
         requestRefresh();
     }
 
+    /**
+     * Recipe-viewer "+" transfer: return the current grid to the network, then place one of each of the
+     * recipe's ingredients into the 3×3 grid — preferring the player inventory, falling back to the
+     * storage network. Shaped recipes keep their shape (top-left); shapeless fill sequentially. The
+     * player then shift-clicks the result to batch-craft, which restocks from the network.
+     */
+    public void fillFromRecipe(CraftingRecipe recipe) {
+        if (player.level().isClientSide)
+            return;
+        Ingredient[] grid = gridLayout(recipe);
+        clearCraftingGrid(); // return whatever is on the grid to the network first
+        for (int slot = 0; slot < 9; slot++) {
+            Ingredient ingredient = grid[slot];
+            if (ingredient == null || ingredient.isEmpty())
+                continue;
+            ItemStack chosen = takeIngredient(ingredient);
+            if (!chosen.isEmpty())
+                craftSlots.setItem(slot, chosen);
+        }
+        craftSlots.setChanged();
+        updateCraftingResult();
+        requestRefresh();
+    }
+
+    /** Maps a crafting recipe's ingredients onto the 3×3 grid (nulls = empty). */
+    private static Ingredient[] gridLayout(CraftingRecipe recipe) {
+        Ingredient[] grid = new Ingredient[9];
+        if (recipe instanceof ShapedRecipe shaped) {
+            int width = shaped.getWidth();
+            int height = shaped.getHeight();
+            NonNullList<Ingredient> ingredients = shaped.getIngredients();
+            for (int row = 0; row < height && row < 3; row++)
+                for (int col = 0; col < width && col < 3; col++) {
+                    int index = row * width + col;
+                    if (index < ingredients.size() && !ingredients.get(index).isEmpty())
+                        grid[row * 3 + col] = ingredients.get(index);
+                }
+        } else {
+            int slot = 0;
+            for (Ingredient ingredient : recipe.getIngredients()) {
+                if (slot >= 9)
+                    break;
+                if (!ingredient.isEmpty())
+                    grid[slot++] = ingredient;
+            }
+        }
+        return grid;
+    }
+
+    /** One item accepted by {@code ingredient}, taken from the player inventory or, failing that, the network. */
+    private ItemStack takeIngredient(Ingredient ingredient) {
+        ItemStack[] options = ingredient.getItems();
+        for (ItemStack option : options) {
+            ItemStack fromPlayer = takeFromPlayer(option);
+            if (!fromPlayer.isEmpty())
+                return fromPlayer;
+        }
+        for (ItemStack option : options) {
+            ItemStack pulled = StorageNetwork.extract(player.level(), terminalPos, option, 1);
+            if (!pulled.isEmpty())
+                return pulled;
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private ItemStack takeFromPlayer(ItemStack sample) {
+        if (sample.isEmpty())
+            return ItemStack.EMPTY;
+        NonNullList<ItemStack> items = player.getInventory().items; // 36 main slots only
+        for (int i = 0; i < items.size(); i++) {
+            ItemStack stack = items.get(i);
+            if (!stack.isEmpty() && ItemStack.isSameItemSameComponents(stack, sample)) {
+                ItemStack taken = stack.copyWithCount(1);
+                stack.shrink(1);
+                return taken;
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
@@ -220,9 +308,54 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
         List<TerminalContentPacket.Entry> entries = new ArrayList<>(totals.size());
         for (Object2IntMap.Entry<ItemStack> entry : totals.object2IntEntrySet())
             entries.add(new TerminalContentPacket.Entry(entry.getKey(), entry.getIntValue()));
-        if (TerminalContentPacket.sameEntries(entries, lastSent))
+
+        RemoteSection remote = gatherRemoteSection();
+        if (remote.status() == lastRemoteStatus
+                && TerminalContentPacket.sameEntries(entries, lastSent)
+                && TerminalContentPacket.sameEntries(remote.entries(), lastRemoteSent))
             return;
         lastSent = entries;
-        PacketDistributor.sendToPlayer(serverPlayer, new TerminalContentPacket(containerId, entries));
+        lastRemoteSent = remote.entries();
+        lastRemoteStatus = remote.status();
+        PacketDistributor.sendToPlayer(serverPlayer,
+                new TerminalContentPacket(containerId, entries, remote.entries(), remote.status()));
+    }
+
+    private record RemoteSection(List<TerminalContentPacket.Entry> entries, int status) {}
+
+    /**
+     * The Bridge that drives this terminal's Partner section: the first LIVE one on the network, or
+     * (failing that) the first Bridge at all so its OFFLINE/FAULT status is still surfaced. Multiple
+     * Bridges on one ring share a partner, so a single primary avoids double-counting that partner.
+     */
+    public StorageBridgeBlockEntity primaryBridge() {
+        if (!(player.level() instanceof ServerLevel level))
+            return null;
+        StorageBridgeBlockEntity fallback = null;
+        for (BlockPos pos : StorageNetwork.memberPositions(level, terminalPos)) {
+            if (!(level.getBlockEntity(pos) instanceof StorageBridgeBlockEntity bridge))
+                continue;
+            bridge.remoteSnapshot(); // refresh liveness (TTL-cached)
+            if (bridge.remoteStatus() == RemoteStatus.LIVE)
+                return bridge;
+            if (fallback == null)
+                fallback = bridge;
+        }
+        return fallback;
+    }
+
+    private RemoteSection gatherRemoteSection() {
+        StorageBridgeBlockEntity bridge = primaryBridge();
+        if (bridge == null)
+            return new RemoteSection(List.of(), TerminalContentPacket.REMOTE_NONE);
+        return new RemoteSection(bridge.remoteSnapshot(), statusCode(bridge.remoteStatus()));
+    }
+
+    private static int statusCode(RemoteStatus status) {
+        return switch (status) {
+            case LIVE -> TerminalContentPacket.REMOTE_LIVE;
+            case FAULT -> TerminalContentPacket.REMOTE_FAULT;
+            case OFFLINE -> TerminalContentPacket.REMOTE_OFFLINE;
+        };
     }
 }

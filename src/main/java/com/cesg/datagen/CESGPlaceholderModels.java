@@ -287,6 +287,72 @@ public final class CESGPlaceholderModels {
         prov.simpleBlock(ctx.getEntry(), prov.models().cubeAll(ctx.getName(), cesg("block/gateway_port")));
     }
 
+    /**
+     * Cross-Dimensional Storage Bridge (Phase 7H): brass casing with a teal conduit band and a gateway-violet
+     * collar. The band's centre pip is driven by {@link com.cesg.gateways.StorageBridgeBlock#STATUS}, so
+     * OFFLINE / LIVE / FAULT are legible on the placed block. The block attaches to a ring from any of its
+     * six sides, so every side face is identical — no facing property to contradict.
+     *
+     * <p>Geometry comes from the hand-authored {@code block/storage_bridge/body}, which sinks the gauge 1px
+     * into all four sides and the top and closes each recess with a flush pane of glass, so the indicator
+     * reads as a built-in lens rather than a painted-on square. OFFLINE uses that model as-is; LIVE and
+     * FAULT swap to {@code body_lit}, whose gauge faces are full-bright — the same geometry, backlit.
+     */
+    public static void storageBridge(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
+        prov.getVariantBuilder(ctx.getEntry()).forAllStates(state -> {
+            boolean offline = state.getValue(com.cesg.gateways.StorageBridgeBlock.STATUS)
+                    == com.cesg.gateways.StorageBridgeBlockEntity.RemoteStatus.OFFLINE;
+            String suffix = switch (state.getValue(com.cesg.gateways.StorageBridgeBlock.STATUS)) {
+                case OFFLINE -> "";
+                case LIVE -> "_live";
+                case FAULT -> "_fault";
+            };
+            return ConfiguredModel.builder()
+                    .modelFile(prov.models()
+                            .withExistingParent(ctx.getName() + suffix,
+                                    cesg("block/storage_bridge/body" + (offline ? "" : "_lit")))
+                            .renderType("translucent")
+                            .texture("side", cesg("block/storage_bridge" + suffix))
+                            .texture("top", cesg("block/storage_bridge_top" + suffix))
+                            .texture("bottom", cesg("block/storage_bridge_bottom")))
+                    .build();
+        });
+    }
+
+    /**
+     * Gateway Flux Battery (Phase 7E / 7H): Create fluid-tank style TOP/BOTTOM/SHAPE variants pointing at
+     * hand-authored models under {@code models/block/gateway_flux_battery/}.
+     */
+    public static void gatewayFluxBattery(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
+        prov.getVariantBuilder(ctx.getEntry()).forAllStates(state -> {
+            boolean top = state.getValue(com.cesg.gateways.GatewayFluxBatteryBlock.TOP);
+            boolean bottom = state.getValue(com.cesg.gateways.GatewayFluxBatteryBlock.BOTTOM);
+            com.cesg.gateways.GatewayFluxBatteryBlock.Shape shape =
+                    state.getValue(com.cesg.gateways.GatewayFluxBatteryBlock.SHAPE);
+
+            String shapeName = "middle";
+            if (top && bottom)
+                shapeName = "single";
+            else if (top)
+                shapeName = "top";
+            else if (bottom)
+                shapeName = "bottom";
+
+            String modelName = shapeName
+                    + (shape == com.cesg.gateways.GatewayFluxBatteryBlock.Shape.PLAIN
+                            ? ""
+                            : "_" + shape.getSerializedName());
+            ModelFile model = prov.models()
+                    .getExistingFile(cesg("block/gateway_flux_battery/block_" + modelName));
+            return ConfiguredModel.builder().modelFile(model).build();
+        });
+    }
+
+    /** Inventory model parents the windowed single-block tank. */
+    public static void gatewayFluxBatteryItem(DataGenContext<Item, ?> ctx, RegistrateItemModelProvider prov) {
+        prov.withExistingParent(ctx.getName(), cesg("block/gateway_flux_battery/block_single_window"));
+    }
+
     /** Animated ender teal-purple portal plane (custom models referencing cesg:block/gateway_portal). */
     public static void gatewayPortal(DataGenContext<Block, ?> ctx, RegistrateBlockstateProvider prov) {
         ModelFile ns = prov.models().getExistingFile(cesg("block/gateway_portal_ns"));

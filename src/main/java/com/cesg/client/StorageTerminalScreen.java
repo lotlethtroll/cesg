@@ -45,8 +45,24 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int CLEAR_NORMAL = 0xFFAA3333;
     private static final int CLEAR_HOVER = 0xFFFF5555;
 
+    // Local / Partner tab strip (only shown when a Storage Bridge is on the network).
+    // Tabs size to their own label rather than a fixed width, so a longer word — or any translation —
+    // cannot overflow the tab the way "Partner" plus its liveness dot did.
+    private static final int TAB_H = 12;
+    private static final int TAB_PAD = 8;
+    private static final int TAB_DOT_SPACE = 7;
+    private static final int TAB_ACTIVE = 0xFFC6C6C6;
+    private static final int TAB_INACTIVE = 0xFF9A9A9A;
+    private static final int STATUS_LIVE = 0xFF55DD55;
+    private static final int STATUS_OFFLINE = 0xFFAAAAAA;
+    private static final int STATUS_FAULT = 0xFFFF5555;
+
     private List<TerminalContentPacket.Entry> entries = List.of();
     private List<TerminalContentPacket.Entry> filtered = List.of();
+    private List<TerminalContentPacket.Entry> remoteEntries = List.of();
+    private List<TerminalContentPacket.Entry> remoteFiltered = List.of();
+    private int remoteStatus = TerminalContentPacket.REMOTE_NONE;
+    private boolean showingRemote;
     private EditBox searchBox;
     private int scrollRow;
 
@@ -62,7 +78,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     @Override
     protected void init() {
         super.init();
-        searchBox = new EditBox(font, leftPos + GRID_X, topPos + SEARCH_Y, SEARCH_WIDTH, 12,
+        searchBox = new EditBox(font, leftPos + GRID_X, topPos + SEARCH_Y, searchWidth(), 12,
                 Component.translatable("cesg.network.search"));
         searchBox.setBordered(true);
         searchBox.setResponder(text -> refilter());
@@ -72,11 +88,23 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     public static void acceptContent(TerminalContentPacket packet) {
         if (Minecraft.getInstance().screen instanceof StorageTerminalScreen screen
                 && screen.menu.containerId == packet.containerId())
-            screen.updateEntries(packet.entries());
+            screen.updateEntries(packet);
     }
 
-    private void updateEntries(List<TerminalContentPacket.Entry> entries) {
-        List<TerminalContentPacket.Entry> sorted = new ArrayList<>(entries);
+    private void updateEntries(TerminalContentPacket packet) {
+        this.entries = sortedByCount(packet.entries());
+        this.remoteEntries = sortedByCount(packet.remoteEntries());
+        boolean hadTabs = tabsShown();
+        this.remoteStatus = packet.remoteStatus();
+        if (!tabsShown())
+            showingRemote = false; // bridge gone: fall back to the local view
+        if (searchBox != null && hadTabs != tabsShown())
+            searchBox.setWidth(searchWidth()); // reclaim/relinquish the tab strip's space
+        refilter();
+    }
+
+    private static List<TerminalContentPacket.Entry> sortedByCount(List<TerminalContentPacket.Entry> in) {
+        List<TerminalContentPacket.Entry> sorted = new ArrayList<>(in);
         sorted.sort((a, b) -> {
             int byCount = Integer.compare(b.total(), a.total());
             if (byCount != 0)
@@ -84,26 +112,65 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             return a.sample().getHoverName().getString()
                     .compareToIgnoreCase(b.sample().getHoverName().getString());
         });
-        this.entries = sorted;
-        refilter();
+        return sorted;
     }
 
     private void refilter() {
         String query = searchBox == null ? "" : searchBox.getValue().toLowerCase(Locale.ROOT).trim();
-        if (query.isEmpty()) {
-            filtered = entries;
-        } else {
-            List<TerminalContentPacket.Entry> match = new ArrayList<>();
-            for (TerminalContentPacket.Entry entry : entries)
-                if (entry.sample().getHoverName().getString().toLowerCase(Locale.ROOT).contains(query))
-                    match.add(entry);
-            filtered = match;
-        }
+        filtered = filterBy(entries, query);
+        remoteFiltered = filterBy(remoteEntries, query);
         scrollRow = Math.max(0, Math.min(scrollRow, maxScrollRow()));
     }
 
+    private static List<TerminalContentPacket.Entry> filterBy(List<TerminalContentPacket.Entry> in, String query) {
+        if (query.isEmpty())
+            return in;
+        List<TerminalContentPacket.Entry> match = new ArrayList<>();
+        for (TerminalContentPacket.Entry entry : in)
+            if (entry.sample().getHoverName().getString().toLowerCase(Locale.ROOT).contains(query))
+                match.add(entry);
+        return match;
+    }
+
+    /** The list currently displayed in the grid — local network or partner section. */
+    private List<TerminalContentPacket.Entry> activeFiltered() {
+        return showingRemote ? remoteFiltered : filtered;
+    }
+
+    private boolean tabsShown() {
+        return remoteStatus != TerminalContentPacket.REMOTE_NONE;
+    }
+
+    private static Component localTabLabel() {
+        return Component.translatable("cesg.network.tab.local");
+    }
+
+    private static Component partnerTabLabel() {
+        return Component.translatable("cesg.network.tab.partner");
+    }
+
+    private int localTabW() {
+        return font.width(localTabLabel()) + TAB_PAD;
+    }
+
+    private int partnerTabW() {
+        return font.width(partnerTabLabel()) + TAB_DOT_SPACE + TAB_PAD;
+    }
+
+    private int searchWidth() {
+        return tabsShown() ? SEARCH_WIDTH - (localTabW() + partnerTabW() + 6) : SEARCH_WIDTH;
+    }
+
+    private int localTabX() {
+        return GRID_X + searchWidth() + 2;
+    }
+
+    private int partnerTabX() {
+        return localTabX() + localTabW() + 2;
+    }
+
     private int maxScrollRow() {
-        int totalRows = (filtered.size() + COLS - 1) / COLS;
+        int totalRows = (activeFiltered().size() + COLS - 1) / COLS;
         return Math.max(0, totalRows - ROWS);
     }
 
@@ -176,7 +243,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
         int hovered = hoveredEntry(mouseX, mouseY);
         if (hovered >= 0 && menu.getCarried().isEmpty()) {
-            TerminalContentPacket.Entry entry = filtered.get(hovered);
+            TerminalContentPacket.Entry entry = activeFiltered().get(hovered);
             List<Component> tooltip = new ArrayList<>(getTooltipFromItem(Minecraft.getInstance(), entry.sample()));
             tooltip.add(Component.translatable("cesg.network.count", entry.total())
                     .withStyle(ChatFormatting.GRAY));
@@ -198,23 +265,98 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         int clearColor = isClearCraftHovered(mouseX, mouseY) ? CLEAR_HOVER : CLEAR_NORMAL;
         drawThickClearX(graphics, StorageTerminalMenu.CLEAR_CRAFT_X, StorageTerminalMenu.CLEAR_CRAFT_Y, clearColor);
 
+        if (tabsShown())
+            drawTabs(graphics, mouseX, mouseY);
+
+        List<TerminalContentPacket.Entry> active = activeFiltered();
         for (int cell = 0; cell < ROWS * COLS; cell++) {
             int index = (scrollRow + cell / COLS) * COLS + cell % COLS;
-            if (index >= filtered.size())
+            if (index >= active.size())
                 break;
-            TerminalContentPacket.Entry entry = filtered.get(index);
+            TerminalContentPacket.Entry entry = active.get(index);
             int x = GRID_X + (cell % COLS) * CELL + 1;
             int y = GRID_Y + (cell / COLS) * CELL + 1;
             graphics.renderItem(entry.sample(), x, y);
             drawCount(graphics, x, y, entry.total());
         }
+        String placeholder = active.isEmpty() ? placeholderKey() : null;
+        if (placeholder != null)
+            drawGridPlaceholder(graphics, placeholder);
 
-        if (isInGrid(mouseX, mouseY)) {
+        // No cell hover while a placeholder plate is up: there is nothing to hover, and the overlay
+        // would otherwise paint over the message.
+        if (placeholder == null && isInGrid(mouseX, mouseY)) {
             int gx = GRID_X + ((mouseX - leftPos - GRID_X) / CELL) * CELL + 1;
             int gy = GRID_Y + ((mouseY - topPos - GRID_Y) / CELL) * CELL + 1;
             graphics.fillGradient(net.minecraft.client.renderer.RenderType.guiOverlay(),
                     gx, gy, gx + 16, gy + 16, 0x80FFFFFF, 0x80FFFFFF, 0);
         }
+    }
+
+    /** Local / Partner tab strip on the search row, with a liveness dot on the Partner tab. */
+    private void drawTabs(GuiGraphics graphics, int mouseX, int mouseY) {
+        drawTab(graphics, localTabX(), localTabW(), localTabLabel(),
+                !showingRemote, isTabHovered(mouseX, mouseY, localTabX(), localTabW()), 0);
+        drawTab(graphics, partnerTabX(), partnerTabW(), partnerTabLabel(),
+                showingRemote, isTabHovered(mouseX, mouseY, partnerTabX(), partnerTabW()), statusColor());
+    }
+
+    private void drawTab(GuiGraphics graphics, int x, int w, Component label, boolean active, boolean hovered,
+            int dot) {
+        int y = SEARCH_Y;
+        int base = active ? TAB_ACTIVE : (hovered ? HIGHLIGHT_COLOR : TAB_INACTIVE);
+        graphics.fill(x, y, x + w, y + TAB_H, base);
+        graphics.fill(x, y, x + w, y + 1, active ? HIGHLIGHT_COLOR : SLOT_HIGHLIGHT);
+        graphics.fill(x, y, x + 1, y + TAB_H, active ? HIGHLIGHT_COLOR : SLOT_HIGHLIGHT);
+        graphics.fill(x + w - 1, y, x + w, y + TAB_H, SHADOW_COLOR);
+        if (!active)
+            graphics.fill(x, y + TAB_H - 1, x + w, y + TAB_H, SHADOW_COLOR);
+        int textLeft = dot != 0 ? TAB_DOT_SPACE : 0;
+        int tx = x + textLeft + Math.max(1, (w - textLeft - font.width(label)) / 2);
+        graphics.drawString(font, label, tx, y + 2, LABEL_COLOR, false);
+        if (dot != 0)
+            graphics.fill(x + 3, y + 4, x + 7, y + 8, dot);
+    }
+
+    private int statusColor() {
+        return switch (remoteStatus) {
+            case TerminalContentPacket.REMOTE_LIVE -> STATUS_LIVE;
+            case TerminalContentPacket.REMOTE_FAULT -> STATUS_FAULT;
+            default -> STATUS_OFFLINE;
+        };
+    }
+
+    /**
+     * Centered status line for an empty grid, on either tab. Real partner status wins over everything —
+     * an offline or faulted partner is worth saying even mid-search. Otherwise an active query that
+     * matched nothing reports "No results" rather than claiming the network is empty, which would be a
+     * lie whenever the network simply has no match.
+     */
+    private String placeholderKey() {
+        if (showingRemote) {
+            if (remoteStatus == TerminalContentPacket.REMOTE_OFFLINE)
+                return "cesg.network.remote.offline";
+            if (remoteStatus == TerminalContentPacket.REMOTE_FAULT)
+                return "cesg.network.remote.fault";
+        }
+        if (searchBox != null && !searchBox.getValue().trim().isEmpty())
+            return "cesg.network.no_results";
+        return showingRemote && remoteEntries.isEmpty() ? "cesg.network.remote.empty" : null;
+    }
+
+    private void drawGridPlaceholder(GuiGraphics graphics, String key) {
+        Component msg = Component.translatable(key);
+        int w = font.width(msg);
+        int x = GRID_X + (COLS * CELL) / 2 - w / 2;
+        int y = GRID_Y + (ROWS * CELL) / 2 - 4;
+        // Sit the text on a panel plate; bare text over the slot grid is unreadable.
+        int x0 = x - 4, y0 = y - 3, x1 = x + w + 4, y1 = y + 11;
+        graphics.fill(x0, y0, x1, y1, PANEL_COLOR);
+        graphics.fill(x0, y0, x1, y0 + 1, SLOT_HIGHLIGHT);
+        graphics.fill(x0, y0, x0 + 1, y1, SLOT_HIGHLIGHT);
+        graphics.fill(x1 - 1, y0, x1, y1, SHADOW_COLOR);
+        graphics.fill(x0, y1 - 1, x1, y1, SHADOW_COLOR);
+        graphics.drawString(font, msg, x, y, LABEL_COLOR, false);
     }
 
     /** Symmetric 2px-thick × above the left edge of the crafting grid. */
@@ -259,7 +401,13 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         if (gx < 0 || gy < 0 || gx >= COLS * CELL || gy >= ROWS * CELL)
             return -1;
         int index = (scrollRow + gy / CELL) * COLS + gx / CELL;
-        return index < filtered.size() ? index : -1;
+        return index < activeFiltered().size() ? index : -1;
+    }
+
+    private boolean isTabHovered(double mouseX, double mouseY, int tabX, int tabW) {
+        double x = mouseX - leftPos - tabX;
+        double y = mouseY - topPos - SEARCH_Y;
+        return x >= 0 && y >= 0 && x < tabW && y < TAB_H;
     }
 
     private boolean isInGrid(double mouseX, double mouseY) {
@@ -282,28 +430,59 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
                     TerminalActionPacket.CLEAR_CRAFT, ItemStack.EMPTY, 0));
             return true;
         }
+        if (tabsShown() && button == 0) {
+            if (isTabHovered(mouseX, mouseY, localTabX(), localTabW())) {
+                setShowingRemote(false);
+                return true;
+            }
+            if (isTabHovered(mouseX, mouseY, partnerTabX(), partnerTabW())) {
+                setShowingRemote(true);
+                return true;
+            }
+        }
         if (isInGrid(mouseX, mouseY)) {
             ItemStack carried = menu.getCarried();
             if (!carried.isEmpty()) {
                 int amount = button == 1 ? 1 : carried.getCount();
                 PacketDistributor.sendToServer(new TerminalActionPacket(menu.containerId,
-                        TerminalActionPacket.DEPOSIT, ItemStack.EMPTY, amount));
+                        showingRemote ? TerminalActionPacket.REMOTE_DEPOSIT : TerminalActionPacket.DEPOSIT,
+                        ItemStack.EMPTY, amount));
                 return true;
             }
             int hovered = hoveredEntry(mouseX, mouseY);
             if (hovered >= 0) {
-                TerminalContentPacket.Entry entry = filtered.get(hovered);
+                TerminalContentPacket.Entry entry = activeFiltered().get(hovered);
                 ItemStack sample = entry.sample().copyWithCount(1);
-                int mode = hasShiftDown() && button == 0
-                        ? TerminalActionPacket.WITHDRAW_TO_INVENTORY
-                        : TerminalActionPacket.WITHDRAW_TO_CURSOR;
-                int count = button == 1 ? 1 : Math.min(entry.total(), entry.sample().getMaxStackSize());
+                boolean toInventory = hasShiftDown() && button == 0;
+                int mode = withdrawMode(toInventory);
+                // Vanilla slot muscle memory: left-click takes as much as the cursor can hold, right-click
+                // takes half of that — rounded up, as vanilla does. Halving what a left-click would give
+                // (rather than the raw entry total, which can run to thousands, or a fixed half stack)
+                // means a pile of 10 yields 5 while a pile of 5000 yields half a stack. The deposit side
+                // above stays at 1, because vanilla right-click *places* a single item.
+                int full = Math.min(entry.total(), entry.sample().getMaxStackSize());
+                int count = button == 1 ? Math.max(1, (full + 1) / 2) : full;
                 PacketDistributor.sendToServer(
                         new TerminalActionPacket(menu.containerId, mode, sample, count));
             }
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private int withdrawMode(boolean toInventory) {
+        if (showingRemote)
+            return toInventory ? TerminalActionPacket.REMOTE_WITHDRAW_TO_INVENTORY
+                    : TerminalActionPacket.REMOTE_WITHDRAW_TO_CURSOR;
+        return toInventory ? TerminalActionPacket.WITHDRAW_TO_INVENTORY
+                : TerminalActionPacket.WITHDRAW_TO_CURSOR;
+    }
+
+    private void setShowingRemote(boolean remote) {
+        if (showingRemote == remote)
+            return;
+        showingRemote = remote;
+        scrollRow = 0;
     }
 
     @Override

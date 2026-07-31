@@ -25,6 +25,22 @@ public record GatewayPartner(ResourceKey<Level> dimension, BlockPos position, bo
         return !name.isBlank();
     }
 
+    /**
+     * The partner's name as it is <em>now</em>, not as it was when the binding was made. {@link #name} is
+     * a copy taken at bind time, so renaming a gateway left every binding pointing at it showing the old
+     * label forever. Reads through to the live Core when its chunk is loaded, and falls back to the
+     * stored copy when it is not (an unloaded or cross-dimension partner still needs something to show).
+     */
+    public String displayName(Level level) {
+        if (level != null && level.dimension().equals(dimension) && level.isLoaded(position)
+                && level.getBlockEntity(position) instanceof CrossDimensionalGatewayCoreBlockEntity core) {
+            String live = core.getGatewayName();
+            if (!live.isBlank())
+                return live;
+        }
+        return name;
+    }
+
     public GatewaySideState resolve(MinecraftServer server) {
         ServerLevel partnerLevel = server.getLevel(dimension);
         if (partnerLevel == null)

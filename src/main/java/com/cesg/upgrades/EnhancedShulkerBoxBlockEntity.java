@@ -125,6 +125,7 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
     public static void serverTick(Level level, BlockPos pos, BlockState state, EnhancedShulkerBoxBlockEntity blockEntity) {
         blockEntity.tickAnimation();
         blockEntity.magnetTick(level);
+        blockEntity.processTick(level);
     }
 
     // --- Magnet module: pull in dropped items the box can accept ---
@@ -187,6 +188,44 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
                 drop.hasImpulse = true;
             }
         }
+    }
+
+    // --- Crushing / Washing modules: process box contents in place (7D) ---
+
+    private static final int PROCESS_INTERVAL = 20;
+    private Object processContentsRef;
+    private int crushingTier;
+    private int washingTier;
+    private EnhancedShulkerBlockItemHandler processHandler;
+
+    /** Installed crushing/washing tiers, cached against the contents identity like the magnet tier. */
+    private void refreshProcessTiers() {
+        ItemStack stack = getShulkerStack();
+        Object contents = stack.get(com.cesg.init.CESGDataComponents.ENHANCED_SHULKER.get());
+        if (contents != processContentsRef) {
+            processContentsRef = contents;
+            var upgrades = EnhancedShulkerUpgradeTooltip.getInstalledUpgrades(stack);
+            crushingTier = ShulkerUpgradeItems.highestInstalledCrushingTier(upgrades);
+            washingTier = ShulkerUpgradeItems.highestInstalledWashingTier(upgrades);
+        }
+    }
+
+    private void processTick(Level level) {
+        if (level.isClientSide || level.getGameTime() % PROCESS_INTERVAL != 0)
+            return;
+        refreshProcessTiers();
+        if ((crushingTier <= 0 && washingTier <= 0) || isViewed())
+            return;
+        if (processHandler == null)
+            processHandler = new EnhancedShulkerBlockItemHandler(this);
+        java.util.function.Consumer<ItemStack> overflow = leftover -> net.minecraft.world.Containers.dropItemStack(
+                level, worldPosition.getX() + 0.5, worldPosition.getY() + 1.0, worldPosition.getZ() + 0.5, leftover);
+        if (crushingTier > 0)
+            ShulkerProcessingUpgrades.runCrushing(level, processHandler,
+                    CrushingUpgradeItem.operationsForTier(crushingTier), overflow);
+        if (washingTier > 0)
+            ShulkerProcessingUpgrades.runWashing(level, processHandler,
+                    WashingUpgradeItem.operationsForTier(washingTier), overflow);
     }
 
     public static void clientTick(Level level, BlockPos pos, BlockState state, EnhancedShulkerBoxBlockEntity blockEntity) {

@@ -55,6 +55,7 @@ public class CESGRegistration {
                     })))
             .item()
             .model(CESGPlaceholderModels::shulkerLoaderItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.shulker_loader"))
             .build()
             .register();
 
@@ -71,6 +72,7 @@ public class CESGRegistration {
                     })))
             .item()
             .model(CESGPlaceholderModels::shulkerUnloaderItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.shulker_unloader"))
             .build()
             .register();
 
@@ -87,6 +89,7 @@ public class CESGRegistration {
                     })))
             .item(com.cesg.storage.station.BeltStationBlockItem::new)
             .model(CESGPlaceholderModels::shulkerBeltLoaderItem)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.shulker_belt_loader"))
             .build()
             .register();
 
@@ -103,6 +106,8 @@ public class CESGRegistration {
                     })))
             .item(com.cesg.storage.station.BeltStationBlockItem::new)
             .model(CESGPlaceholderModels::shulkerBeltUnloaderItem)
+            .onRegisterAfter(Registries.ITEM,
+                    item -> ItemDescription.useKey(item, "block.cesg.shulker_belt_unloader"))
             .build()
             .register();
 
@@ -155,6 +160,30 @@ public class CESGRegistration {
                 .register();
     }
 
+    public static final ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> CRUSHING_UPGRADE_T1 = crushingUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> CRUSHING_UPGRADE_T2 = crushingUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> CRUSHING_UPGRADE_T3 = crushingUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.CrushingUpgradeItem> crushingUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("crushing_upgrade_t" + tier, props -> new com.cesg.upgrades.CrushingUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/crushing_upgrade_t" + tier)))
+                .register();
+    }
+
+    public static final ItemEntry<com.cesg.upgrades.WashingUpgradeItem> WASHING_UPGRADE_T1 = washingUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.WashingUpgradeItem> WASHING_UPGRADE_T2 = washingUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.WashingUpgradeItem> WASHING_UPGRADE_T3 = washingUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.WashingUpgradeItem> washingUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("washing_upgrade_t" + tier, props -> new com.cesg.upgrades.WashingUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/washing_upgrade_t" + tier)))
+                .register();
+    }
+
     public static final ItemEntry<ShulkerShellItem> SHULKER_SHELL = CESG.REGISTRATE.item("shulker_shell", ShulkerShellItem::new)
             .model(CESGPlaceholderModels::shulkerShell)
             .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.shulker_shell"))
@@ -164,6 +193,7 @@ public class CESGRegistration {
     public static final ItemEntry<net.minecraft.world.item.Item> ENDER_PEARL_DUST = CESG.REGISTRATE
             .item("ender_pearl_dust", net.minecraft.world.item.Item::new)
             .model(CESGPlaceholderModels::enderPearlDust)
+            .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.ender_pearl_dust"))
             .register();
 
     public static final BlockEntry<ShulkerCageBlock> SHULKER_CAGE =
@@ -220,6 +250,34 @@ public class CESGRegistration {
                     .blockstate(CESGPlaceholderModels::gatewayPort)
                     .item()
                     .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_port"))
+                    .build()
+                    .register();
+
+    public static final BlockEntry<com.cesg.gateways.StorageBridgeBlock> STORAGE_BRIDGE =
+            CESG.REGISTRATE.block("storage_bridge", com.cesg.gateways.StorageBridgeBlock::new)
+                    .initialProperties(() -> Blocks.END_STONE_BRICKS)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE)
+                            .lightLevel(com.cesg.gateways.StorageBridgeBlock::lightLevel))
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    .blockstate(CESGPlaceholderModels::storageBridge)
+                    .item()
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.storage_bridge"))
+                    .build()
+                    .register();
+
+    public static final BlockEntry<com.cesg.gateways.GatewayFluxBatteryBlock> GATEWAY_FLUX_BATTERY =
+            CESG.REGISTRATE.block("gateway_flux_battery", com.cesg.gateways.GatewayFluxBatteryBlock::new)
+                    .initialProperties(SharedProperties::stone)
+                    .properties(p -> p.mapColor(MapColor.COLOR_PURPLE).noOcclusion())
+                    .tag(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE)
+                    .blockstate(CESGPlaceholderModels::gatewayFluxBattery)
+                    .onRegister(CreateRegistrate.blockModel(
+                            () -> com.cesg.client.GatewayFluxBatteryModel::standard))
+                    // Render layer comes from "render_type" in the hand-authored block models
+                    // (BlockBuilder#addLayer is deprecated for removal).
+                    .item(com.cesg.gateways.GatewayFluxBatteryItem::new)
+                    .model(CESGPlaceholderModels::gatewayFluxBatteryItem)
+                    .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "block.cesg.gateway_flux_battery"))
                     .build()
                     .register();
 

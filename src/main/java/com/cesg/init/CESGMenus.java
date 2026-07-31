@@ -22,6 +22,14 @@ public class CESGMenus {
             MENUS.register("storage_terminal",
                     () -> IMenuTypeExtension.create(com.cesg.storage.network.StorageTerminalMenu::new));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.cesg.gateways.StorageBridgeMenu>> STORAGE_BRIDGE =
+            MENUS.register("storage_bridge",
+                    () -> IMenuTypeExtension.create(com.cesg.gateways.StorageBridgeMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<com.cesg.gateways.GatewayFilterMenu>> GATEWAY_FILTER =
+            MENUS.register("gateway_filter",
+                    () -> IMenuTypeExtension.create(com.cesg.gateways.GatewayFilterMenu::new));
+
     static void register(IEventBus modEventBus) {
         MENUS.register(modEventBus);
     }
