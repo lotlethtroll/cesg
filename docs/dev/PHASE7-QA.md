@@ -617,16 +617,41 @@ runs the whole static check suite; `show.py` dumps a schematic.
 `.nbt` files they produce are. That makes the committed schematics unreproducible — worth either
 un-ignoring `tools/ponder/` or moving the scripts somewhere tracked.
 
+### Ponder pass — verified in-game 2026-07-29
+Everything below was found by actually W-keying the scenes; none of it was
+reachable by static checks.
+- **Belts had stale controllers** pointing at the world coordinates they were
+  captured in, so no belt run ever ticked and items placed on them sat frozen.
+  Two schematics also shipped real items baked into a belt inventory (3 in the
+  belt loader, 2 in the loader) — the mystery cobblestone.
+- **Every belt was fed from the wrong side.** `createItemOnBelt`'s Direction is
+  the side an item arrives FROM, and insertion is allowed only when it does *not*
+  equal the belt's movement facing. Passing the travel direction inserted nothing.
+  This was invisible until the controllers were fixed.
+- **Item Drains reject shulker boxes** — `tryInsertingFromSide` gates on
+  `GenericItemEmptying.canItemBeEmptied`, so the box now drops as an item entity.
+- **Loader filters showed cobblestone** while the scenes demonstrate iron, and
+  `StationName` was leftover capture text (the belt *loader* was labelled
+  "Unload"). Also a stray cobblestone block in the belt unloader.
+- **The Ender Infuser scene was registered against the Shulker Loader's
+  schematic.** Rebuilt from a purpose-made capture, rotated to face the camera,
+  and its narration corrected to the real recipe flow.
+- **Flux Battery arrays never rendered connected.** `ConnectivityHandler
+  .isConnected` compares block entities' controllers, and hand-written ones are
+  not in place when the section mesh bakes. The scene now uses real captured
+  2×2×2 and 3×3×3 multiblocks, whose cells already agree.
+
 ### Still open — ship
-- [ ] **W-key verify** all 11 ponder scenes in a dev client. Static checks pass
+- [x] **W-key verify** all 11 ponder scenes in a dev client _(2026-07-29 — see the
+  fixes below; scenes confirmed good after them)_. Static checks pass
   (every position in-bounds, every belt/funnel API target is the right block
   type, no missing lang keys) but nothing has been seen rendering yet. Confirm
   in particular the belt travel *sign* per scene and that the hose BER updates
   after `modifyBlockEntity`
-- [ ] Confirm the Ponder level does not re-run `GatewayFluxBatteryBlockEntity.serverTick` →
+- [x] Confirm the Ponder level does not re-run `GatewayFluxBatteryBlockEntity.serverTick` →
   `updateConnectivity()`. If it does, `ConnectivityHandler` may overwrite the width/height the
   array scene sets by hand and the arrays will render as separate 1×1×1 tanks
-- [ ] The station schematics still carry stale `Controller`/`Source` world positions in their belt
+- [x] **FIXED 2026-07-29.** The station schematics carried stale `Controller`/`Source` world positions in their belt
   block entity NBT (e.g. `Controller: [7,64,16]` in `shulker_loader`). Create normally re-resolves
   these on placement; confirm the belts render as one run and not as separate segments
 - [ ] In-game: JEI **and** EMI "+" fill the terminal grid from network stock
