@@ -39,8 +39,14 @@ bin/
 temp/
 cx/
 
-### Tools (do not commit) ###
-tools/
+### Tools (do not commit, except the ponder generators) ###
+# Excludes tools/ CONTENTS rather than tools/ itself: git will not re-include anything inside an
+# excluded directory, so `tools/` + `!tools/ponder/` silently does nothing.
+tools/*
+# The .nbt schematics under assets/cesg/ponder are committed but hand-authored by these scripts, so
+# without them a fresh clone cannot regenerate or repair a scene.
+!tools/ponder/
+tools/ponder/__pycache__/
 
 ### Mac OS ###
 .DS_Store

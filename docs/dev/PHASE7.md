@@ -576,7 +576,9 @@ Partial as of 2026-07-26. Feature tracks exist; this is the finishing pass.
   exists) / crushing / washing / 7G recipes show in JEI+EMI; confirm terminal "+".
 - ⬜ **README / LISTING / CHANGELOG** — still 1.0-era; Unreleased only has 7G.
   Need 1.1 blurbs (Bridge, routing, battery, modules, polish).
-- ⬜ **`docs/dev/TESTING.md` Section 5** — Phase 7 in-game checklist not added yet.
+- ❌ **`docs/dev/TESTING.md` Section 5 — dropped.** That file was superseded and
+  archived during the phase; [PHASE7-QA.md](PHASE7-QA.md) is the verification
+  record instead, keeping each track's steps and results together.
 
 ### Deferred / accepted as-is (not ship blockers)
 - ❌ **Phase 6 cosmetics — WONTFIX** (2026-07-26): enhanced-shulker item icon,
@@ -739,22 +741,12 @@ defers), and no placeholder cubes remain in the creative tab for 1.1 content.
 
 ---
 
-## Testing checklist (extend docs/dev/TESTING.md)
+## Testing checklist
 
-Add a **Section 5 (Phase 7)** to `docs/dev/TESTING.md` (not present yet) with
-per-track in-game checks:
-- 5E Battery: fill/draw, burst-smoothing, goggle, config.
-- 5C Crafting Terminal: craft/shift-craft/JEI-fill, remainder return, viewed-box
-  skip.
-- 5A Storage Bridge: remote section visible, pull across, partner-unload hold (no
-  dupe/loss), fuel-gated upkeep, both-side viewed-box skip.
-- 5B Routing: per-channel filters, fan-out determinism, 1.0-world load.
-- 5D Modules: crushing/washing chains, tier throughput, module interaction, no
-  dupe.
-- 5F Polish: all ponders render, sounds/particles fire, JEI+EMI complete, lang
-  complete.
-
----
+**This lives in [PHASE7-QA.md](PHASE7-QA.md).** The old plan was to add a
+Section 5 to `docs/dev/TESTING.md`, but that file was superseded during the phase
+and archived — PHASE7-QA.md is the verification record, with each track's steps
+and its in-game results together rather than split across two documents.
 
 ## Release checklist (per release-1-0-0 workflow)
 

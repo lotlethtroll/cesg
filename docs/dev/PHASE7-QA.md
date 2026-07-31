@@ -667,7 +667,6 @@ reachable by static checks.
 - [ ] `docs/publishing/LISTING.md` updated for 1.1 (still cites `1.0.0` jar)
 - [ ] `CHANGELOG.md` — move Unreleased + add Bridge / routing / battery /
   Crushing+Washing / polish into `[1.1.0]` when releasing
-- [ ] `docs/dev/TESTING.md` Section 5 (Phase 7) added
 
 ### Deferred / accepted as-is (not blocking)
 - ❌ Phase 6 cosmetics (enhanced-shulker item icon, station side faces) — WONTFIX
