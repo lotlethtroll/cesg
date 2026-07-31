@@ -181,10 +181,17 @@ Art: Create fluid-tank visual stack (brass/portal CT + teal windows + fill BER).
 
 ### Config
 
-- [ ] `battery.capacityMbPerBlock` scales per-block capacity (goggle max reflects it)
-- [ ] `battery.maxDrainMbPerTick` throttles how fast the Core is topped up
-- [ ] `gateway.portTransferCostMb` sets the per-flush Port fuel cost (0 = free)
-- [ ] `battery.reserveFloorMb` sets the protected travel reserve
+- [x] `battery.capacityMbPerBlock` scales per-block capacity (goggle max reflects it)
+- [x] `battery.maxDrainMbPerTick` throttles how fast the Core is topped up
+- [x] `gateway.portTransferCostMb` sets the per-flush Port fuel cost (0 = free)
+- [x] `battery.reserveFloorMb` sets the protected travel reserve
+- **All four verified together 2026-07-29** on one restart, each set to a distinct
+  non-default value so no result was ambiguous: capacity 8000→2000 (goggle max
+  scaled 1×1×1=2000 / 2×2×1=8000), drain 500→50 (top-up visibly ~10× slower),
+  floor 1000→2000, port cost 0→400. The gate settling at exactly 2000 confirms the
+  floor and the cost at once, since it refuses once `(core+battery) - 400 < 2000`.
+- **Config restored to shipping defaults afterwards** (verified byte-identical to
+  the pre-QA backup), so nothing non-default ships.
 
 ### Art pass — DONE (Create-tank stack)
 
