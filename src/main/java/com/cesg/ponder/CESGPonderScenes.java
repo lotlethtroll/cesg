@@ -322,15 +322,17 @@ public final class CESGPonderScenes {
     // is (speedNegative XOR axisIsX) ? NEGATIVE : POSITIVE. On an X belt that means a NEGATIVE speed
     // carries items east, the opposite of the Z-axis station scenes.
     private static final BlockPos INFUSER_BLOCK = new BlockPos(3, 2, 3);
-    private static final BlockPos INFUSER_SOURCE_TANK = new BlockPos(6, 2, 3);
-    private static final BlockPos INFUSER_PUMP = new BlockPos(5, 2, 3);
-    private static final BlockPos INFUSER_PIPE = new BlockPos(4, 2, 3);
-    /** Far end of the catalyst belt; items ride east toward the Infuser's funnel. */
+    /** Teleport Essence is fed from ABOVE, through the downward pump into the Infuser. */
+    private static final BlockPos INFUSER_SOURCE_TANK = new BlockPos(3, 4, 3);
+    private static final BlockPos INFUSER_SOURCE_PUMP = new BlockPos(3, 3, 3);
+    /** Blaze powder rides in along the belt and the funnel feeds it in from the side. */
     private static final BlockPos INFUSER_BELT_IN = new BlockPos(1, 1, 3);
     private static final BlockPos INFUSER_BELT_HEAD = new BlockPos(2, 1, 3);
     private static final BlockPos INFUSER_FUNNEL = new BlockPos(2, 2, 3);
-    private static final BlockPos INFUSER_OUT_PUMP = new BlockPos(3, 3, 3);
-    private static final BlockPos INFUSER_OUT_TANK = new BlockPos(3, 4, 3);
+    /** The finished Liquid Eye of Ender leaves through the pipe and pump on the opposite side. */
+    private static final BlockPos INFUSER_PIPE = new BlockPos(4, 2, 3);
+    private static final BlockPos INFUSER_OUT_PUMP = new BlockPos(5, 2, 3);
+    private static final BlockPos INFUSER_OUT_TANK = new BlockPos(6, 2, 3);
 
     public static void enderInfuser(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
@@ -346,26 +348,26 @@ public final class CESGPonderScenes {
         scene.idle(10);
 
         scene.overlay().showText(80)
-                .text("Supply rotational force and pipe a recipe fluid into the Infuser")
-                .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_PUMP));
-        fillTank(scene, INFUSER_SOURCE_TANK, CESGFluids.LIQUID_ENDER_PEARL.get(), 1f);
+                .text("Teleport Essence is piped into the Infuser from the tank above")
+                .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_SOURCE_PUMP));
+        fillTank(scene, INFUSER_SOURCE_TANK, CESGFluids.TELEPORT_ESSENCE.get(), 1f);
         scene.idle(90);
 
         scene.overlay().showText(90)
-                .text("Catalysts ride in on a belt and the funnel feeds them to the Infuser")
+                .text("Blaze powder is fed in from the side as the catalyst")
                 .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_FUNNEL));
         // Items travel east, so they must be fed from the WEST (insertFrom must not equal the movement).
         for (int i = 0; i < 2; i++)
             beltItemConsumedAt(scene, INFUSER_BELT_IN, Direction.WEST, INFUSER_BELT_HEAD,
-                    INFUSER_FUNNEL, new ItemStack(Items.CHORUS_FRUIT), 1);
+                    INFUSER_FUNNEL, new ItemStack(Items.BLAZE_POWDER), 1);
         scene.idle(20);
 
         scene.overlay().showText(90)
-                .text("The infused fluid is pumped out into the tank above")
+                .text("The finished Liquid Eye of Ender is pumped out the opposite side")
                 .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_OUT_TANK));
-        scene.world().setKineticSpeed(util.select().position(INFUSER_OUT_PUMP), -BELT_SPEED);
         for (int step = 1; step <= 4; step++) {
-            fillTank(scene, INFUSER_OUT_TANK, CESGFluids.TELEPORT_ESSENCE.get(), step / 4f);
+            fillTank(scene, INFUSER_SOURCE_TANK, CESGFluids.TELEPORT_ESSENCE.get(), 1f - step / 4f);
+            fillTank(scene, INFUSER_OUT_TANK, CESGFluids.LIQUID_EYE_OF_ENDER.get(), step / 4f);
             scene.idle(18);
         }
         scene.idle(50);

@@ -406,9 +406,9 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.ponder.shulker_unloader.text_2", "Its contents are pushed out through the funnel onto a belt");
         add("cesg.ponder.shulker_unloader.text_3", "The empty shulker then drops down into storage below");
         add("cesg.ponder.ender_infuser.header", "Ender Infuser");
-        add("cesg.ponder.ender_infuser.text_1", "Supply rotational force and pipe a recipe fluid into the Infuser");
-        add("cesg.ponder.ender_infuser.text_2", "Catalysts ride in on a belt and the funnel feeds them to the Infuser");
-        add("cesg.ponder.ender_infuser.text_3", "The infused fluid is pumped out into the tank above");
+        add("cesg.ponder.ender_infuser.text_1", "Teleport Essence is piped into the Infuser from the tank above");
+        add("cesg.ponder.ender_infuser.text_2", "Blaze powder is fed in from the side as the catalyst");
+        add("cesg.ponder.ender_infuser.text_3", "The finished Liquid Eye of Ender is pumped out the opposite side");
         add("cesg.ponder.storage_bridge.header", "Cross-Dimensional Storage Bridge");
         add("cesg.ponder.storage_bridge.text_1",
                 "Attach a Storage Bridge to a powered, bound Gateway ring");
