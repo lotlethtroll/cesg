@@ -309,16 +309,16 @@ take. The Lock is a per-Bridge opt-out instead — no change to how links resolv
     would be meaningless (the cursor caps at a stack) and a fixed half-stack would
     be wrong for small piles and for items that do not stack to 64. The **deposit**
     side deliberately stays at 1, because vanilla right-click *places* one item.
-- [ ] ⚠️ **Fixed 2026-07-27 — silent fuel gating.** A transfer refused by the
+- [x] ⚠️ **Fixed 2026-07-27 — silent fuel gating.** A transfer refused by the
   battery reserve did nothing at all: no message, while the Core read healthy and
   the liveness dot stayed green. Found live at Core 1160 mB with cost 200 and
   floor 1000 — correct behaviour (`(1160 + 0) - 200 < 1000` with a battery on the
   ring, so it needs ≥1200), but indistinguishable from a broken terminal. Both
   `terminalWithdrawRemote` and `terminalDepositRemote` now take the `ServerPlayer`
   and show `cesg.network.remote.unfuelled` at the refusal site.
-- [ ] Withdraw that finds nothing (or an unfuelled gateway) costs no fuel; deposit
+- [x] Withdraw that finds nothing (or an unfuelled gateway) costs no fuel; deposit
   to an unfuelled gateway is rejected (no free transfer)
-- [ ] Two Bridges on one ring (same partner) do **not** double-count the partner's
+- [x] Two Bridges on one ring (same partner) do **not** double-count the partner's
   items in the section
 - [x] Breaking the Bridge drops the in-transit buffer (no dupe, no loss)
   _(2026-07-27 — **clean.** Started 64 iron in local; after buffering, local read
@@ -335,7 +335,7 @@ take. The Lock is a per-Bridge opt-out instead — no change to how links resolv
   - [ ] Variant: with items held in the buffer, unbind the gateway / cut its fuel
     and confirm they hold indefinitely rather than draining, then restore and
     confirm they deliver once the partner can accept.
-- [ ] Drain fuel below the battery reserve → transfer gated (idle = free)
+- [x] Drain fuel below the battery reserve → transfer gated (idle = free)
 - [x] Viewed (open-GUI) shulker boxes skipped on **both** sides — _**not reachable
   the obvious way, by design.** `EnhancedShulkerBoxBlock.useWithoutItem` refuses to
   open any box whose network `scan(...).operational()`, showing
@@ -397,23 +397,21 @@ Verify with one Core bound to two+ partners on different channels.
   so an unconfigured channel receives nothing, which reads as a bug.
 
 ### Port fan-out
-- [ ] Route OFF: a Port sends everything to the active channel (1.0 behaviour)
-- [ ] Route ON, two channels with disjoint whitelists: mixed items piped into one
+- [x] Route OFF: a Port sends everything to the active channel (1.0 behaviour)
+- [x] Route ON, two channels with disjoint whitelists: mixed items piped into one
   Port split to the correct partner rings; an item no channel accepts stays
   buffered
-- [ ] An empty-blacklist channel acts as a catch-all; deterministic (same item
+- [x] An empty-blacklist channel acts as a catch-all; deterministic (same item
   always lands on the same channel, no flip-flop)
-- [ ] Fluid follows the active channel in route mode
+- [x] Fluid follows the active channel in route mode
   - ⚠️ **Open question (2026-07-29).** Two fluids pumped into two Ports with
     different channel filters both ended up at the same destination. That is the
     documented design — filters are **item-only**, so `flushRouted` pushes fluid
     solely to `targetsByChannel.get(activeChannel)` and route mode cannot sort
     fluids at all. Code review found no duplication path (`pushFluid` drains only
-    what the target accepted). **Needs confirming** whether what was seen was two
-    fluids converging on one destination (expected) or one fluid reaching two
-    destinations (a dupe). If the former, decide whether per-channel *fluid*
-    filters are a 1.2 feature — a player hit this immediately, so the limitation
-    is not obvious in practice.
+    what the target accepted). **Resolved 2026-07-29: convergence, not a dupe.**
+    Worth logging as a 1.2 candidate anyway — per-channel *fluid* filters — since
+    a player hit the limitation within minutes of trying route mode.
 
 ### Bridge fan-out — ✅ GREEN 2026-07-29
 - [x] Route ON + push enabled: items are pulled from the local network only when
@@ -661,7 +659,7 @@ reachable by static checks.
 - [x] **FIXED 2026-07-29.** The station schematics carried stale `Controller`/`Source` world positions in their belt
   block entity NBT (e.g. `Controller: [7,64,16]` in `shulker_loader`). Create normally re-resolves
   these on placement; confirm the belts render as one run and not as separate segments
-- [ ] In-game: JEI **and** EMI "+" fill the terminal grid from network stock
+- [x] In-game: JEI **and** EMI "+" fill the terminal grid from network stock
 - [x] In-game: all new 1.1 recipes/modules visible in JEI+EMI (battery, modules,
   7G, bridge) _(2026-07-27. The corner sprite on Washing Mk I's water bucket is
   JEI drawing the vanilla crafting remainder — the bucket is returned, expected.)_
