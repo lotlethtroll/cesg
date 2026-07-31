@@ -429,7 +429,7 @@ Verify with one Core bound to two+ partners on different channels.
     The copy is **one-way**: once loaded in 1.1 it writes `RouteMode` /
     `ChannelFilters` / the Bridge `Locked` key and will not go back to 1.0.
 
-## 7D — Create-synergy Modules (Crushing + Washing)
+## 7D — Create-synergy Modules (Crushing + Washing) — ✅ GREEN 2026-07-29
 
 Built 2026-07-24 (`1.1.0-dev`); compiles + full build clean, datagen regenerated.
 Recipes signed off. Verify with a **placed** Enhanced Shulker (processing is
@@ -439,29 +439,35 @@ or piping out, not by watching the open GUI).
 ### Craft & install
 - [x] All 6 items appear in the CESG creative tab with names + tooltips
   _(2026-07-27 — names + dedicated icons confirmed, no placeholders)_
-- [ ] Crushing Mk I crafts (millstone + iron sheets + shell); Washing Mk I crafts
+- [x] Crushing Mk I crafts (millstone + iron sheets + shell); Washing Mk I crafts
   (encased fan + water bucket + iron sheets + shell), bucket returned
-- [ ] Mk II/III craft as shapeless upgrades of the prior tier
-- [ ] Modules install in the upgrade sidebar; only the highest tier of each applies
+- [x] Mk II/III craft as shapeless upgrades of the prior tier
+- [x] Modules install in the upgrade sidebar; only the highest tier of each applies
 
 ### Processing
-- [ ] A placed box with **Crushing** turns cobblestone → gravel → sand (chains to
+- [x] A placed box with **Crushing** turns cobblestone → gravel → sand (chains to
   terminal); crushed-ore/dust outputs appear from ores
-- [ ] A placed box with **Washing** runs splashing (gravel → flint/nugget, etc.)
-- [ ] Chance/multi-output rolls look right over a large sample (not always max)
-- [ ] Throughput scales Mk I=1/s, Mk II=2/s, Mk III=4/s
-- [ ] Crushing + Washing in one box both run; stacking with **Smelting** chains
+- [x] A placed box with **Washing** runs splashing (gravel → flint/nugget, etc.)
+- [x] Chance/multi-output rolls look right over a large sample (not always max)
+- [x] Throughput scales Mk I=1/s, Mk II=2/s, Mk III=4/s
+- [x] Crushing + Washing in one box both run; stacking with **Smelting** chains
   (e.g. crushed ore → ingot)
 
 ### Safety / no-dupe
-- [ ] A **full** box holds the input (no processing, no loss) until space frees
-- [ ] No item dupe across chained conversions or on chunk reload mid-process
-- [ ] Overflow (rare) drops at the box rather than vanishing
-- [ ] No lag with a box full of cobble (throttle holds); no infinite oscillation
+- [x] A **full** box holds the input (no processing, no loss) until space frees
+- [x] No item dupe across chained conversions or on chunk reload mid-process
+- [x] Overflow (rare) drops at the box rather than vanishing
+- [x] No lag with a box full of cobble (throttle holds); no infinite oscillation
 
 ### Art pass
-- [ ] Six Crushing/Washing item icons look final in-game (textures present;
+- [x] Six Crushing/Washing item icons look final in-game (textures present;
   distinct from magnet as of 2026-07-26 — user sign-off)
+
+**Signed off 2026-07-29** after an in-game pass — recorded as a group on the
+user's overall assessment rather than itemised box by box. The one item not
+separately reported is **no dupe on a chunk reload mid-process**; if anything in
+this track is worth a second look before release, it is that one, since it is the
+only path where a half-committed conversion could survive a save.
 
 ## 7F — Polish & UX
 
