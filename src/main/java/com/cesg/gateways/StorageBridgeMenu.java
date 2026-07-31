@@ -132,7 +132,12 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
         switch (id) {
             case BTN_PUSH -> bridge.togglePushEnabled();
             case BTN_PULL -> bridge.togglePullEnabled();
-            case BTN_SEND_BLACKLIST -> bridge.toggleSendBlacklist();
+            // Route mode ignores the send filter, so its whitelist/blacklist mode is inert too.
+            case BTN_SEND_BLACKLIST -> {
+                if (isRouteMode())
+                    return false;
+                bridge.toggleSendBlacklist();
+            }
             case BTN_PULL_BLACKLIST -> bridge.togglePullBlacklist();
             case BTN_LOCK -> bridge.toggleLocked();
             default -> {

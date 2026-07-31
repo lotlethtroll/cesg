@@ -231,18 +231,26 @@ already reciprocal (`GatewayBindingItem` binds both Cores), so the check passed 
 exactly the case that prompted it, and its error state had no action a player could
 take. The Lock is a per-Bridge opt-out instead — no change to how links resolve, so
 **3A–3D remain valid.**
-- [ ] Bridge config GUI shows a **Locked / Open** button on the title row, with a
+- [x] Bridge config GUI shows a **Locked / Open** button on the title row, with a
   tooltip explaining it; state persists across close/reopen and a world reload
-- [ ] **Locked** blocks a remote gateway's **passive pull** from that network
-- [ ] **Locked** blocks a remote **terminal withdrawal** too, with the
+- [x] **Locked** blocks a remote gateway's **passive pull** from that network
+- [x] **Locked** blocks a remote **terminal withdrawal** too, with the
   "That network is locked" message rather than a silent no-op
-- [ ] Locked still allows: this Bridge **pushing out**, the far side **depositing
+- [x] Locked still allows: this Bridge **pushing out**, the far side **depositing
   in**, and the partner terminal **seeing** the contents
-- [ ] A second, unlocked Bridge elsewhere still pulls normally (per-node, not global)
-- [ ] Goggles on a locked Bridge show the locked line
-- [ ] Renaming a gateway updates the name shown on bound partners' channel picker,
+- [x] A second, unlocked Bridge elsewhere still pulls normally (per-node, not global)
+- [x] Goggles on a locked Bridge show the locked line
+- [x] Renaming a gateway updates the name shown on bound partners' channel picker,
   Core goggle and Bridge GUI without re-binding _(stale-name fix, kept from the
   reverted commit)_
+- **All green 2026-07-29.** Also confirmed the same session: the Bridge GUI names
+  its destination (`Push → Home` / `Pull ← Portal 1`), and route mode greys the
+  send row and refuses edits.
+  - ⚠️ Fixed 2026-07-29: `Push → routed by channel` overflowed under the toggle
+    buttons — the header has only ~80px before `EN_X`. Shortened to
+    `Push → routed`, with the full explanation left on the hover tooltip, and the
+    now-meaningless WL/BL button for that row is greyed and refuses clicks too.
+    **Re-confirm the header fits on the next restart.**
 
 ### Placement & structure
 - [x] Bridge placed beside a Gateway Frame/Core that is adjacent to a Storage
@@ -278,10 +286,10 @@ take. The Lock is a per-Bridge opt-out instead — no change to how links resolv
   _(2026-07-27)_
 - [x] Search box filters the active tab; switching tabs keeps the query
   _(2026-07-27)_
-- [ ] Partner chunk unloaded → Partner tab greys, grid shows "Partner network
+- [x] Partner chunk unloaded → Partner tab greys, grid shows "Partner network
   offline" (silent, not an error); FAULT shows "No partner network found"
-  — _FAULT text confirmed 2026-07-27; **the unloaded-chunk OFFLINE case belongs
-  to the cross-dimension pass (3E) and is still untested**_
+  _(FAULT 2026-07-27; unloaded-chunk OFFLINE confirmed grey and silent in the
+  cross-dimension pass 2026-07-29)_
 
 ### Transfer via terminal
 - [x] On the Partner tab: click withdraws remote→cursor, shift-click→inventory,
@@ -347,6 +355,14 @@ take. The Lock is a per-Bridge opt-out instead — no change to how links resolv
   _(confirmed literally: empty WL moved nothing, empty BL moved everything)_
 - [x] Idle (both disabled) costs no fuel; enabled flush is fuel-gated by the
   battery reserve
+
+### Cross-dimension (3E) — ✅ GREEN 2026-07-29
+- [x] Partner chunk unloaded → Partner tab greys and reads "Partner network
+  offline", **silently** (grey, not red — unloaded is normal, FAULT is a fault)
+- [x] **Buffer holds across a real chunk unload with no dupe and no loss.** Items
+  sent, partner chunk unloaded mid-flow, then reloaded: everything accounted for
+  and delivered to the correct side. This is the cross-dimension rollback path a
+  same-dimension setup cannot reach, and the highest-risk item in the phase.
 
 ### Recipe & art
 - [x] Crafting recipe visible in JEI/EMI and craftable at a bench (authored after

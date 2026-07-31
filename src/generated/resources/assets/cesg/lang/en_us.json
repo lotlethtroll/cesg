@@ -107,7 +107,7 @@
   "cesg.bridge.on": "On",
   "cesg.bridge.partner": "Partner",
   "cesg.bridge.pull.from": "Pull ← %s",
-  "cesg.bridge.push.routed": "Push → routed by channel",
+  "cesg.bridge.push.routed": "Push → routed",
   "cesg.bridge.push.routed.tip": "Route mode is on for this gateway, so this filter is ignored — the Core's per-channel filters decide where each item goes. Turn Route off on the Core to use this row.",
   "cesg.bridge.push.to": "Push → %s",
   "cesg.bridge.whitelist.tip": "Whitelist: only the filtered items move (empty = nothing).",

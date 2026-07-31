@@ -94,7 +94,9 @@ public class CESGLangProvider extends LanguageProvider {
                         + "contents. Only Bridges here are affected — other networks keep working as before.");
         add("cesg.bridge.push.to", "Push → %s");
         add("cesg.bridge.pull.from", "Pull ← %s");
-        add("cesg.bridge.push.routed", "Push → routed by channel");
+        // Kept short on purpose: the header has ~80px before the toggles, and the full explanation
+        // lives in cesg.bridge.push.routed.tip on hover.
+        add("cesg.bridge.push.routed", "Push → routed");
         add("cesg.bridge.push.routed.tip",
                 "Route mode is on for this gateway, so this filter is ignored — the Core's per-channel "
                         + "filters decide where each item goes. Turn Route off on the Core to use this row.");

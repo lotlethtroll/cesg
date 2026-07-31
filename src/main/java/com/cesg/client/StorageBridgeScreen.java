@@ -87,8 +87,12 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
 
         drawToggle(graphics, EN_X, PUSH_HEADER_Y, menu.isPushEnabled() ? ON_FILL : OFF_FILL,
                 enableLabel(menu.isPushEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PUSH_HEADER_Y));
-        drawToggle(graphics, MODE_X, PUSH_HEADER_Y, menu.isSendBlacklist() ? BL_FILL : WL_FILL,
-                modeLabel(menu.isSendBlacklist()), isBtnHovered(mouseX, mouseY, MODE_X, PUSH_HEADER_Y));
+        // The send filter's whitelist/blacklist mode is as dead as the filter itself in route mode.
+        boolean routed = menu.isRouteMode();
+        drawToggle(graphics, MODE_X, PUSH_HEADER_Y,
+                routed ? OFF_FILL : (menu.isSendBlacklist() ? BL_FILL : WL_FILL),
+                modeLabel(menu.isSendBlacklist()),
+                !routed && isBtnHovered(mouseX, mouseY, MODE_X, PUSH_HEADER_Y));
         drawToggle(graphics, EN_X, PULL_HEADER_Y, menu.isPullEnabled() ? ON_FILL : OFF_FILL,
                 enableLabel(menu.isPullEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PULL_HEADER_Y));
         drawToggle(graphics, MODE_X, PULL_HEADER_Y, menu.isPullBlacklist() ? BL_FILL : WL_FILL,
