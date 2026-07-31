@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
-## [Unreleased]
+## [1.1.0] — 2026-07-31
 
 ### Added
 - **Cross-Dimensional Storage Bridge** — the headline. Links two Storage Networks
