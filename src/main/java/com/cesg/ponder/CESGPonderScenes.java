@@ -312,40 +312,58 @@ public final class CESGPonderScenes {
     // --- Ender Infuser: reuses the loader workshop as a compact powered-machine demonstration. ---
     private static final BlockPos INFUSER = LOADER;
 
+    // --- Ender Infuser (ender_infuser.nbt, 7x5x7 with a 7x7 base plate) ---
+    // Purpose-built for this scene rather than borrowed from the Loader: a source tank on the west feeds
+    // a mechanical pump and smart pipe east into the Infuser, catalysts arrive along a west-running belt
+    // through a funnel, and the product is pumped up into the tank above. The belt runs along X here, so
+    // a POSITIVE speed carries items west (-X) -- the mirror of the Z-axis station belts.
+    private static final BlockPos INFUSER_BLOCK = new BlockPos(3, 2, 3);
+    private static final BlockPos INFUSER_SOURCE_TANK = new BlockPos(0, 2, 3);
+    private static final BlockPos INFUSER_PUMP = new BlockPos(1, 2, 3);
+    private static final BlockPos INFUSER_PIPE = new BlockPos(2, 2, 3);
+    /** Far end of the catalyst belt; items ride west toward the Infuser's funnel. */
+    private static final BlockPos INFUSER_BELT_IN = new BlockPos(5, 1, 3);
+    private static final BlockPos INFUSER_BELT_HEAD = new BlockPos(4, 1, 3);
+    private static final BlockPos INFUSER_FUNNEL = new BlockPos(4, 2, 3);
+    private static final BlockPos INFUSER_OUT_PUMP = new BlockPos(3, 3, 3);
+    private static final BlockPos INFUSER_OUT_TANK = new BlockPos(3, 4, 3);
+
     public static void enderInfuser(SceneBuilder builder, SceneBuildingUtil util) {
         CreateSceneBuilder scene = new CreateSceneBuilder(builder);
         scene.title("ender_infuser", "Ender Infuser");
-        scene.configureBasePlate(0, 0, 8);
-        scene.world().setBlocks(util.select().position(INFUSER),
-                CESGRegistration.ENDER_INFUSER.get().defaultBlockState(), false);
+        scene.configureBasePlate(0, 0, 7);
         scene.showBasePlate();
         scene.idle(10);
         scene.world().showSection(util.select().layersFrom(1), Direction.DOWN);
         scene.idle(20);
         scene.world().setKineticSpeed(util.select().everywhere(), BELT_SPEED);
+        scene.world().propagatePipeChange(INFUSER_PIPE);
         scene.idle(10);
 
         scene.overlay().showText(80)
-                .text("Supply rotational force and pipe a recipe fluid into the input")
-                .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER));
-        itemHop(scene, util.vector().centerOf(INFUSER).add(1.4, 0.6, 0),
-                util.vector().centerOf(INFUSER).add(0.3, 0.6, 0),
-                new ItemStack(CESGFluids.LIQUID_ENDER_PEARL.get().getBucket()));
+                .text("Supply rotational force and pipe a recipe fluid into the Infuser")
+                .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_PUMP));
+        fillTank(scene, INFUSER_SOURCE_TANK, CESGFluids.LIQUID_ENDER_PEARL.get(), 1f);
         scene.idle(90);
 
-        scene.overlay().showText(80)
-                .text("Insert the required catalysts into the Infuser")
-                .placeNearTarget().pointAt(util.vector().topOf(INFUSER));
-        scene.world().createItemOnBeltLike(LOADER_DOCK_CHUTE, Direction.DOWN, new ItemStack(Items.CHORUS_FRUIT));
-        scene.idle(90);
+        scene.overlay().showText(90)
+                .text("Catalysts ride in on a belt and the funnel feeds them to the Infuser")
+                .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_FUNNEL));
+        // Positive speed on an X-axis belt carries items west, so the run is fed from the EAST.
+        for (int i = 0; i < 2; i++)
+            beltItemConsumedAt(scene, INFUSER_BELT_IN, Direction.EAST, INFUSER_BELT_HEAD,
+                    INFUSER_FUNNEL, new ItemStack(Items.CHORUS_FRUIT), 1);
+        scene.idle(20);
 
-        scene.overlay().showText(80)
-                .text("Completed fluid leaves through the output connection")
-                .placeNearTarget().pointAt(util.vector().centerOf(INFUSER).add(-0.4, 0.3, 0));
-        itemHop(scene, util.vector().centerOf(INFUSER).add(-0.2, 0.6, 0),
-                util.vector().centerOf(INFUSER).add(-1.5, 0.6, 0),
-                new ItemStack(CESGFluids.TELEPORT_ESSENCE.get().getBucket()));
-        scene.idle(80);
+        scene.overlay().showText(90)
+                .text("The infused fluid is pumped out into the tank above")
+                .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(INFUSER_OUT_TANK));
+        scene.world().setKineticSpeed(util.select().position(INFUSER_OUT_PUMP), BELT_SPEED);
+        for (int step = 1; step <= 4; step++) {
+            fillTank(scene, INFUSER_OUT_TANK, CESGFluids.TELEPORT_ESSENCE.get(), step / 4f);
+            scene.idle(18);
+        }
+        scene.idle(50);
     }
 
     // --- Storage network: the ring plane is x=1, so the blocks that bolt onto it stack in the x=2 column,
@@ -617,6 +635,19 @@ public final class CESGPonderScenes {
         fillBattery(scene, origin, fill, 0);
         scene.world().modifyBlocks(util.select().fromTo(origin, origin.offset(width - 1, height - 1, width - 1)),
                 state -> state, false);
+    }
+
+    /**
+     * Fill a Create Fluid Tank to a fraction of its capacity. Ponder never runs the pump, so the fluid has
+     * to be written straight onto the tank's block entity for the level to render.
+     */
+    private static void fillTank(CreateSceneBuilder scene, BlockPos tankPos, Fluid fluid, float fraction) {
+        scene.world().modifyBlockEntity(tankPos,
+                com.simibubi.create.content.fluids.tank.FluidTankBlockEntity.class, be -> {
+                    var tank = be.getTankInventory();
+                    int amount = Math.round(tank.getCapacity() * Math.max(0f, Math.min(1f, fraction)));
+                    tank.setFluid(amount <= 0 ? FluidStack.EMPTY : new FluidStack(fluid, amount));
+                });
     }
 
     /** Set the array's stored fuel to a fraction of its capacity, reading the real configured capacity. */

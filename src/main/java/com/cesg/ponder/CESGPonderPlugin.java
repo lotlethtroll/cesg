@@ -31,7 +31,7 @@ public class CESGPonderPlugin implements PonderPlugin {
                 CESGPonderScenes::shulkerBeltUnloader);
         helper.addStoryBoard(CESG.id("cross_dimensional_gateway_core"), CESG.id("cross_dimensional_gateway_core"),
                 CESGPonderScenes::gatewayCore);
-        helper.addStoryBoard(CESG.id("ender_infuser"), CESG.id("shulker_loader"),
+        helper.addStoryBoard(CESG.id("ender_infuser"), CESG.id("ender_infuser"),
                 CESGPonderScenes::enderInfuser);
         helper.addStoryBoard(CESG.id("gateway_flux_battery"), CESG.id("cross_dimensional_gateway_core"),
                 CESGPonderScenes::gatewayFluxBattery);
