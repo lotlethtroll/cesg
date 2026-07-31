@@ -677,6 +677,35 @@ reachable by static checks.
 - ◯ No CESG JEI/EMI category for in-box Crushing/Washing
 - ◯ No terminal R/U "show uses"
 
+## Known gap at 1.1.0 release — dedicated server untested
+
+**All QA in this phase ran on the integrated server in a single-player client.**
+A dedicated-server pass was attempted on 2026-07-31 and abandoned; the release
+shipped without it, as a deliberate call to get the build out and patch anything
+that surfaces.
+
+What that leaves unverified, worst first:
+- **Client/server packet sync.** `StorageBridgeMenu` resolves route mode and the
+  destination name by reading the Core *live on both sides*. In single player
+  those are one process. On a dedicated server the client only has what has been
+  synced — the Core does write `RouteMode` and its bindings into its update tag,
+  so it should hold, but that is reasoning rather than evidence. Symptom to watch
+  for in reports: a Bridge GUI reading `Push → Partner` instead of the gateway's
+  name, or the route greying not applying.
+- **Multiplayer concurrency.** Two players on one terminal, or one holding a
+  shulker GUI while another drives the Bridge. The L4 viewed-box invariant exists
+  for exactly this and could not be exercised, since networked boxes are
+  terminal-only.
+- **Goggle overlays** on Core / Bridge / Battery, which read block-entity state
+  that now has to cross the wire.
+- **Scale and duration** — networks near the 256-member scan limit, arrays left
+  running for hours.
+
+To close it: `gradlew runServer` (EULA already accepted in `run/`), connect, and
+walk the list above. Note the server shares the `run/` directory and config with
+the client, and `--nogui` means no window — watch the log, and do not pipe it
+through `tail`, which buffers until exit.
+
 ## 7H — Art Pass (collects deferred models/textures)
 
 The home for every placeholder deferred by a feature track. **1.1.0 does not ship
