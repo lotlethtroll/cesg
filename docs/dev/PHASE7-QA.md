@@ -377,13 +377,17 @@ take. The Lock is a per-Bridge opt-out instead — no change to how links resolv
 Built 2026-07-24 (`1.1.0-dev`); compiles + full build clean, datagen regenerated.
 Verify with one Core bound to two+ partners on different channels.
 
-### Picker + filter editor
-- [ ] Channel picker shows a **Route: ON/OFF** toggle (hidden when
+### Picker + filter editor — ✅ GREEN 2026-07-29
+- [x] Channel picker shows a **Route: ON/OFF** toggle (hidden when
   `gateway.allowFanOut = false`)
-- [ ] Right-clicking a channel opens its filter editor (9 ghost slots + WL/BL);
+- [x] Right-clicking a channel opens its filter editor (9 ghost slots + WL/BL);
   clicking a slot with an item sets a ghost copy (not consumed), empty/shift
   clears; the WL/BL toggle flips
-- [ ] Route flag + per-channel filters persist across close/reopen and reload
+- [x] Route flag + per-channel filters persist across close/reopen and reload
+- **Gotcha worth knowing** (`CrossDimensionalGatewayCoreBlockEntity:184`): a bound
+  channel with **no filter ever configured** is `null` and is *skipped* in route
+  mode — even if it is the active channel. Items walk past it to a later channel,
+  so an unconfigured channel receives nothing, which reads as a bug.
 
 ### Port fan-out
 - [ ] Route OFF: a Port sends everything to the active channel (1.0 behaviour)
@@ -393,17 +397,37 @@ Verify with one Core bound to two+ partners on different channels.
 - [ ] An empty-blacklist channel acts as a catch-all; deterministic (same item
   always lands on the same channel, no flip-flop)
 - [ ] Fluid follows the active channel in route mode
+  - ⚠️ **Open question (2026-07-29).** Two fluids pumped into two Ports with
+    different channel filters both ended up at the same destination. That is the
+    documented design — filters are **item-only**, so `flushRouted` pushes fluid
+    solely to `targetsByChannel.get(activeChannel)` and route mode cannot sort
+    fluids at all. Code review found no duplication path (`pushFluid` drains only
+    what the target accepted). **Needs confirming** whether what was seen was two
+    fluids converging on one destination (expected) or one fluid reaching two
+    destinations (a dupe). If the former, decide whether per-channel *fluid*
+    filters are a 1.2 feature — a player hit this immediately, so the limitation
+    is not obvious in practice.
 
-### Bridge fan-out
-- [ ] Route ON + push enabled: items are pulled from the local network only when
+### Bridge fan-out — ✅ GREEN 2026-07-29
+- [x] Route ON + push enabled: items are pulled from the local network only when
   some channel accepts them, and delivered to that channel's partner network
-- [ ] Pull still draws from the active channel only
-- [ ] A channel whose partner chunk is unloaded holds its items (no dupe/loss);
+- [x] Pull still draws from the active channel only
+- [x] A channel whose partner chunk is unloaded holds its items (no dupe/loss);
   other channels keep flowing
 
-### Back-compat
-- [ ] A 1.0 world's gateways load with no filters and route OFF, behaving exactly
+### Back-compat — ✅ GREEN 2026-07-29
+- [x] A 1.0 world's gateways load with no filters and route OFF, behaving exactly
   as before
+  - Tested for real rather than argued from code: a `git worktree` at tag
+    **v1.0.0** built the 1.0 jar, a world was created in it with bound + named
+    gateways on multiple channels, Ports moving items/fluid, and a storage network
+    + terminal. That world then loaded clean under 1.1.0-dev — route OFF, no
+    channel filters, bindings/names/active channel intact, Port behaviour
+    unchanged, and no Local/Partner tab strip on a Bridge-less terminal.
+  - The pristine 1.0 world is kept in the worktree at `C:/tmp/cesg-1.0.0` so this
+    can be re-run after further changes; a copy lives at `run/saves/1.0 compat`.
+    The copy is **one-way**: once loaded in 1.1 it writes `RouteMode` /
+    `ChannelFilters` / the Bridge `Locked` key and will not go back to 1.0.
 
 ## 7D — Create-synergy Modules (Crushing + Washing)
 
