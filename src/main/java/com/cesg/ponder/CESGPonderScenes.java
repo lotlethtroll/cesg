@@ -233,7 +233,11 @@ public final class CESGPonderScenes {
                 .placeNearTarget().pointAt(util.vector().centerOf(BELT_LOADER_DRAIN));
         scene.world().flapFunnel(BELT_LOADER_FUNNEL, true);
         scene.idle(10);
-        scene.world().createItemOnBeltLike(BELT_LOADER_DRAIN, Direction.DOWN, new ItemStack(Items.SHULKER_BOX));
+        // Not createItemOnBeltLike: an Item Drain only accepts items that hold a fluid
+        // (its tryInsertingFromSide gates on GenericItemEmptying.canItemBeEmptied), so a shulker box is
+        // refused and nothing appears. Drop it as a real item entity instead.
+        scene.world().createItemEntity(util.vector().centerOf(BELT_LOADER_DRAIN).add(0, 0.9, 0),
+                util.vector().of(0, -0.05, 0), new ItemStack(Items.SHULKER_BOX));
         scene.idle(70);
     }
 
