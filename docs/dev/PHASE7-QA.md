@@ -663,8 +663,10 @@ reachable by static checks.
 - [x] In-game: all new 1.1 recipes/modules visible in JEI+EMI (battery, modules,
   7G, bridge) _(2026-07-27. The corner sprite on Washing Mk I's water bucket is
   JEI drawing the vanilla crafting remainder — the bucket is returned, expected.)_
-- [ ] README feature blurbs updated for 1.1
-- [ ] `docs/publishing/LISTING.md` updated for 1.1 (still cites `1.0.0` jar)
+- [x] README feature blurbs updated for 1.1 _(2026-07-29 — folded into the
+  existing sections; deliberately not an exhaustive list)_
+- [x] `docs/publishing/LISTING.md` updated for 1.1 _(2026-07-29 — jar refs now
+  1.1.0, description and screenshot list refreshed)_
 - [ ] `CHANGELOG.md` — move Unreleased + add Bridge / routing / battery /
   Crushing+Washing / polish into `[1.1.0]` when releasing
 
