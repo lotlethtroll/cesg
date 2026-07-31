@@ -35,8 +35,12 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     private static final int BL_FILL = 0xFFC05050;
     private static final int BTN_TEXT = 0xFFFFFFFF;
 
+    // Each section gets its label on its own full-width line with the toggles beneath, so a long
+    // destination name ("Push → Overworld Base") can never run under the buttons.
     private static final int PUSH_HEADER_Y = 20;
-    private static final int PULL_HEADER_Y = 62;
+    private static final int PUSH_BTN_Y = 32;
+    private static final int PULL_HEADER_Y = 74;
+    private static final int PULL_BTN_Y = 86;
     private static final int EN_X = 90;
     private static final int MODE_X = 130;
     private static final int BTN_W = 38;
@@ -85,18 +89,18 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
             drawSlotBox(graphics, x0 + StorageBridgeMenu.SEND_X + col * StorageBridgeMenu.SLOT,
                     y0 + StorageBridgeMenu.HOTBAR_Y - 1);
 
-        drawToggle(graphics, EN_X, PUSH_HEADER_Y, menu.isPushEnabled() ? ON_FILL : OFF_FILL,
-                enableLabel(menu.isPushEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PUSH_HEADER_Y));
+        drawToggle(graphics, EN_X, PUSH_BTN_Y, menu.isPushEnabled() ? ON_FILL : OFF_FILL,
+                enableLabel(menu.isPushEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y));
         // The send filter's whitelist/blacklist mode is as dead as the filter itself in route mode.
         boolean routed = menu.isRouteMode();
-        drawToggle(graphics, MODE_X, PUSH_HEADER_Y,
+        drawToggle(graphics, MODE_X, PUSH_BTN_Y,
                 routed ? OFF_FILL : (menu.isSendBlacklist() ? BL_FILL : WL_FILL),
                 modeLabel(menu.isSendBlacklist()),
-                !routed && isBtnHovered(mouseX, mouseY, MODE_X, PUSH_HEADER_Y));
-        drawToggle(graphics, EN_X, PULL_HEADER_Y, menu.isPullEnabled() ? ON_FILL : OFF_FILL,
-                enableLabel(menu.isPullEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PULL_HEADER_Y));
-        drawToggle(graphics, MODE_X, PULL_HEADER_Y, menu.isPullBlacklist() ? BL_FILL : WL_FILL,
-                modeLabel(menu.isPullBlacklist()), isBtnHovered(mouseX, mouseY, MODE_X, PULL_HEADER_Y));
+                !routed && isBtnHovered(mouseX, mouseY, MODE_X, PUSH_BTN_Y));
+        drawToggle(graphics, EN_X, PULL_BTN_Y, menu.isPullEnabled() ? ON_FILL : OFF_FILL,
+                enableLabel(menu.isPullEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PULL_BTN_Y));
+        drawToggle(graphics, MODE_X, PULL_BTN_Y, menu.isPullBlacklist() ? BL_FILL : WL_FILL,
+                modeLabel(menu.isPullBlacklist()), isBtnHovered(mouseX, mouseY, MODE_X, PULL_BTN_Y));
         drawButton(graphics, LOCK_X, LOCK_Y, LOCK_W, menu.isLocked() ? LOCK_FILL : OFF_FILL,
                 lockLabel(menu.isLocked()), isLockHovered(mouseX, mouseY));
     }
@@ -169,11 +173,11 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
 
     private void renderButtonTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         Component tip = null;
-        if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_HEADER_Y) || isBtnHovered(mouseX, mouseY, EN_X, PULL_HEADER_Y))
+        if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y) || isBtnHovered(mouseX, mouseY, EN_X, PULL_BTN_Y))
             tip = Component.translatable("cesg.bridge.enable.tip");
-        else if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_HEADER_Y))
+        else if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_BTN_Y))
             tip = Component.translatable(menu.isSendBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
-        else if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_HEADER_Y))
+        else if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_BTN_Y))
             tip = Component.translatable(menu.isPullBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
         else if (isLockHovered(mouseX, mouseY))
             tip = Component.translatable("cesg.bridge.lock.tip");
@@ -212,13 +216,13 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     private int clickedButton(double mouseX, double mouseY) {
         if (isLockHovered(mouseX, mouseY))
             return StorageBridgeMenu.BTN_LOCK;
-        if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_HEADER_Y))
+        if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y))
             return StorageBridgeMenu.BTN_PUSH;
-        if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_HEADER_Y))
+        if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_BTN_Y))
             return StorageBridgeMenu.BTN_SEND_BLACKLIST;
-        if (isBtnHovered(mouseX, mouseY, EN_X, PULL_HEADER_Y))
+        if (isBtnHovered(mouseX, mouseY, EN_X, PULL_BTN_Y))
             return StorageBridgeMenu.BTN_PULL;
-        if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_HEADER_Y))
+        if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_BTN_Y))
             return StorageBridgeMenu.BTN_PULL_BLACKLIST;
         return -1;
     }

@@ -32,12 +32,12 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
     public static final int SLOT = 18;
     public static final int FILTER_COLS = 9;
     public static final int SEND_X = 8;
-    public static final int SEND_Y = 34;
+    public static final int SEND_Y = 48;
     public static final int PULL_X = 8;
-    public static final int PULL_Y = 76;
-    public static final int PLAYER_INV_Y = 112;
-    public static final int HOTBAR_Y = 170;
-    public static final int IMAGE_H = 194;
+    public static final int PULL_Y = 102;
+    public static final int PLAYER_INV_Y = 138;
+    public static final int HOTBAR_Y = 196;
+    public static final int IMAGE_H = 220;
 
     private static final int SEND_SLOT_START = 0;
     private static final int PULL_SLOT_START = FILTER_COLS;
