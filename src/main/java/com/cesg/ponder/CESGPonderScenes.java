@@ -103,14 +103,14 @@ public final class CESGPonderScenes {
                 .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(LOADER_IN_FUNNEL));
         // One item at a time: it rides the real belt to the funnel, pauses there, then is taken in.
         for (int i = 0; i < 3; i++)
-            beltItemConsumedAt(scene, LOADER_IN_BELT, Direction.NORTH, LOADER_IN_BELT_HEAD,
+            beltItemConsumedAt(scene, LOADER_IN_BELT, Direction.SOUTH, LOADER_IN_BELT_HEAD,
                     LOADER_IN_FUNNEL, new ItemStack(Items.IRON_INGOT), 1);
         scene.idle(20);
 
         scene.overlay().showText(80)
                 .text("When full, the loaded shulker ejects onto the output belt")
                 .attachKeyFrame().placeNearTarget().pointAt(util.vector().centerOf(LOADER_BELT_OUT));
-        scene.world().createItemOnBelt(LOADER_BELT_HEAD, Direction.NORTH, new ItemStack(Items.SHULKER_BOX));
+        scene.world().createItemOnBelt(LOADER_BELT_HEAD, Direction.SOUTH, new ItemStack(Items.SHULKER_BOX));
         scene.idle(70);
     }
 
@@ -124,11 +124,20 @@ public final class CESGPonderScenes {
      * entities in a shown section do tick. So the item moves for real and only the hand-off is scripted:
      * lock it where it arrives, flap the funnel, then clear the run.
      *
+     * <p><b>{@code insertFrom} is the side the item arrives FROM, not the way it travels.</b>
+     * {@code createItemOnBelt} passes it through {@code getOpposite()} into
+     * {@code DirectBeltInputBehaviour.handleInsertion}, and a belt's {@code canInsertFrom} accepts only
+     * when {@code getMovementFacing() != side.getOpposite()} — which reduces to "the argument must not
+     * equal the belt's movement direction". Passing the travel direction silently inserts nothing, so a
+     * scene renders moving belts with no cargo. On a Z-axis belt a negative speed moves items NORTH
+     * (movement facing is derived from the speed sign, never from {@code facing}), so a north-running
+     * belt is fed with {@code SOUTH}.
+     *
      * @param blocks how many blocks of belt lie between the insertion point and {@code arriveAt}
      */
-    private static void beltItemConsumedAt(CreateSceneBuilder scene, BlockPos insertAt, Direction travel,
+    private static void beltItemConsumedAt(CreateSceneBuilder scene, BlockPos insertAt, Direction insertFrom,
             BlockPos arriveAt, BlockPos funnel, ItemStack stack, int blocks) {
-        ElementLink<BeltItemElement> item = scene.world().createItemOnBelt(insertAt, travel, stack);
+        ElementLink<BeltItemElement> item = scene.world().createItemOnBelt(insertAt, insertFrom, stack);
         scene.idle(blocks * TICKS_PER_BLOCK + 2);
         scene.world().stallBeltItem(item, true);
         if (funnel != null)
@@ -167,7 +176,7 @@ public final class CESGPonderScenes {
                 .text("Its contents are pushed out through the funnel onto a belt")
                 .placeNearTarget().pointAt(util.vector().centerOf(UNLOADER_FUNNEL));
         for (int i = 0; i < 4; i++) {
-            scene.world().createItemOnBelt(UNLOADER_BELT_HEAD, Direction.NORTH, new ItemStack(Items.COBBLESTONE));
+            scene.world().createItemOnBelt(UNLOADER_BELT_HEAD, Direction.SOUTH, new ItemStack(Items.COBBLESTONE));
             scene.idle(18);
         }
         scene.idle(25);
@@ -213,7 +222,7 @@ public final class CESGPonderScenes {
         extendHose(scene, BELT_LOADER, true);
         // Items ride the belt for real from z=1, stop under the hose tip at z=3, then are drawn up.
         for (int i = 0; i < 3; i++)
-            beltItemConsumedAt(scene, BELT_LOADER_BELT_IN, Direction.SOUTH, BELT_LOADER_BELT_UNDER_HOSE,
+            beltItemConsumedAt(scene, BELT_LOADER_BELT_IN, Direction.NORTH, BELT_LOADER_BELT_UNDER_HOSE,
                     null, new ItemStack(Items.IRON_INGOT), 2);
         scene.idle(15);
         extendHose(scene, BELT_LOADER, false);
@@ -278,7 +287,7 @@ public final class CESGPonderScenes {
                 .text("It drops the shulker's contents onto the belt to be carried away")
                 .placeNearTarget().pointAt(util.vector().centerOf(BELT_UNLOADER_BELT_HEAD));
         for (int i = 0; i < 4; i++) {
-            scene.world().createItemOnBelt(BELT_UNLOADER_BELT_HEAD, Direction.NORTH, new ItemStack(Items.COBBLESTONE));
+            scene.world().createItemOnBelt(BELT_UNLOADER_BELT_HEAD, Direction.SOUTH, new ItemStack(Items.COBBLESTONE));
             scene.idle(16);
         }
         scene.idle(20);
