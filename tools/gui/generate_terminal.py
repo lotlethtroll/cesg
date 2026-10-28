@@ -48,13 +48,8 @@ for x in (0, 172):
     for y in (24, 88, 145, 202):
         d.rectangle((x, y, x+3, y+5), fill='#686c5c')
         rivet(d, x, y+1)
-# Full-height joining rail with flush end caps; no floating hinge boxes.
-d.rectangle((172, 0, 179, 91), fill='#424b45')
-d.rectangle((173, 1, 178, 90), fill='#8c805e')
-d.line((174, 2, 174, 89), fill='#e0c78d')
-d.line((177, 2, 177, 89), fill='#555e54')
-for y in (5, 83):
-    rivet(d, 175, y)
+# Clear the former wide joining bar; the common 4px rail is drawn below.
+d.rectangle((172, 0, 179, 91), fill='#c9c3ad')
 # Reinforced cross-member above the inventory; label remains on a quiet plate.
 d.line((7, 138, 168, 138), fill='#424b45')
 d.line((7, 139, 168, 139), fill='#b39759')
@@ -76,7 +71,7 @@ horizontal_rail(0, 175, 230)
 d.rectangle((180, 84, 267, 91), fill='#c9c3ad')
 horizontal_rail(176, 267, 88)
 vertical_rail(0, 0, 233)
-vertical_rail(172, 92, 233)
+vertical_rail(172, 0, 233)
 vertical_rail(264, 0, 91)
 for x,y in ((0,0),(172,0),(264,0),(0,230),(172,230),(264,88)):
     d.rectangle((x,y,x+3,y+3), fill='#686c5c')
