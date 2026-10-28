@@ -93,7 +93,40 @@ JEI separately, full-inventory close overflow, and multiplayer remain unverified
 Multiplayer cannot be exercised with the current one-player setup and remains
 an explicit testing limitation, not a passed check.
 
-## Remaining release gates — not covered by headless tests
+### Additional single-player checks (2026-10-28)
+
+Tested in a separate copy, `QA legacy 1.1 upgrade`, of the July QA world
+`New World (2)`. The original was left untouched. Its saved mod metadata says
+`1.1.0-dev`; this is legacy development-world coverage, not an exact released
+1.1.0 upgrade test.
+
+- [x] Existing End gateway machinery loads and renders. All 1,093 original CESG
+  block entities retain their type and position after loading and saving.
+- [x] Bridge goggles and indicator agree: linked/green, missing remote controller
+  fault/red, unbound offline/gray, then restored linked/green.
+- [x] Fully exit and restart the client/integrated server with nonempty buffers.
+  Bridge retains 17 diamonds outgoing and 11 emeralds incoming. Port retains
+  23 iron outgoing, 13 gold incoming, 500 mB water outgoing, and 700 mB lava
+  incoming. Core retains 4,000 of each fuel and the battery retains 2,000 mB.
+- [x] Teleport away, confirm both source and partner chunks are actually unloaded
+  using `execute unless loaded`, then return. The same counts survive; Bridge
+  renders linked/green again and Port goggles display the expected totals.
+  Saved NBT checks after unloading and after the final save confirm these values.
+- [x] Short load test: 252 enhanced shulkers plus controller and terminal
+  (254 network members), with three formed 3×3×3 battery arrays nearby.
+  Run at 100 TPS for approximately four minutes, keeping the terminal open for
+  over three minutes. Final tick query: 2.2 ms average, P95 2.9 ms, P99 3.7 ms
+  across 100 sampled ticks. Terminal remains responsive, with no runtime errors
+  or can't-keep-up warnings during this interval. Restore normal 20 TPS afterward.
+
+These persistence fixtures deliberately hold cargo without active transfers;
+they do not exercise cross-dimension transactions in flight or paid travel.
+Fuel values persist, but live travel-reserve behavior remains covered by GameTests.
+The load test uses idle storage and empty arrays, not sustained production traffic
+or a multi-hour soak. Retained block-entity identities do not prove every legacy
+machine's behavior. The world saves cleanly after the checks.
+
+## Remaining release gates — not covered by completed checks
 
 - [ ] Connect two real clients to a dedicated server. Verify route controls,
   destination labels, locks, and Core/Bridge/Battery goggles on both clients.
@@ -101,13 +134,15 @@ an explicit testing limitation, not a passed check.
   withdraw, and run passive Bridge traffic. Count items before and afterward.
 - [ ] Exercise viewed enhanced-shulker exclusion while another player operates
   the network; close/reopen menus and reconnect both clients.
-- [ ] Unload/reload partner chunks and restart the server with nonempty send,
-  receive, and Bridge buffers. Check item totals and travel reserves.
+- [x] Single-player restart and chunk unload/reload with nonempty Port and Bridge
+  buffers; retained item, fluid, and fuel totals checked above. Dedicated-server
+  and active-transfer variants remain unverified.
 - [ ] Run a near-limit network and several battery arrays for an extended session;
   inspect tick times and logs. Automated limit tests are not a performance soak.
-- [ ] Visually confirm Bridge goggles agree with LIVE/OFFLINE/FAULT block visuals,
-  including reconnects and loss of the remote controller.
-- [ ] Load a copy of an existing 1.1.0 world and check established builds.
+- [x] Visually confirm Bridge goggles agree with LIVE/OFFLINE/FAULT block visuals,
+  including reconnects and loss of the remote controller (single-player).
+- [ ] Exact released 1.1.0 world upgrade. A copied `1.1.0-dev` world passes the
+  legacy loading checks above.
 
 Do not mark multiplayer or rendered UI QA complete based on the headless pass.
 The legacy 256-member network limit remains; a clear limit diagnostic is queued

@@ -31,8 +31,16 @@ Build, 2 unit tests, 17 headless server GameTests, and Ponder checks pass.
 Live single-player terminal/EMI checks passed, including Andrew's shift-crafting
 and cake-refill tests. The client subsequently exited cleanly.
 
-Multiplayer, full restart/chunk-reload scenarios, an existing 1.1.0 world upgrade,
-Bridge goggle rendering, and an extended performance soak remain unverified.
+Single-player full client restart and confirmed chunk unload/reload preserve
+Port/Bridge item and fluid buffers and stored fuel. Bridge goggles correctly
+render linked, offline, and fault states. A copied `1.1.0-dev` world loads and
+retains all 1,093 legacy CESG block entities by type and position. A short idle
+load test with 254 network members and three battery arrays passes at 100 TPS;
+the final 100-tick sample averages 2.2 ms per tick.
+
+Multiplayer, an exact released 1.1.0 upgrade, full-inventory close overflow,
+JEI separately, and an extended production-load soak remain unverified. The
+single-player persistence test holds cargo rather than transferring it in flight.
 See [the complete QA record](../dev/RELEASE-1.1.1.md).
 
 ## Final publication steps
