@@ -76,11 +76,22 @@ fail, while still allowing the terminal menu to open.
 - [x] Click clear-grid with no storage capacity: the log remains in the grid.
   Closing the menu returns it, restoring the inventory total to two logs.
 
-No item loss, duplication, or crash was observed in these checks. The world was
-left paused beside the test rig. This does not verify JEI separately, Shift-click
-batch crafting, cake refill, full-inventory overflow, or multiplayer behavior.
-The current computer-use API cannot hold Shift across a mouse click, so the
-batch-crafting UI cases remain manual checks despite passing server GameTests.
+### Andrew's manual checks (2026-10-28)
+
+Andrew reported both of the following live-client tests passed:
+
+- [x] Shift-craft four oak planks with only one plank of inventory capacity:
+  no partial output moves and the log remains. After freeing an inventory slot,
+  crafting succeeds with 67 planks total and consumes the grid's log.
+- [x] Shift-craft one cake with spare milk in network storage: receive one cake,
+  retain all three empty buckets in the grid, and leave the spare milk bucket in
+  storage. Closing the terminal returns all three empty buckets to inventory.
+
+No item loss, duplication, or crash was observed in the computer-use spot checks.
+The subsequent shift-crafting and cake-refill passes were reported by Andrew.
+JEI separately, full-inventory close overflow, and multiplayer remain unverified.
+Multiplayer cannot be exercised with the current one-player setup and remains
+an explicit testing limitation, not a passed check.
 
 ## Remaining release gates — not covered by headless tests
 
