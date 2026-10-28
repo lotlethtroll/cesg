@@ -341,14 +341,15 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         if (total <= 1)
             return;
         String text = shorten(total);
+        // Keep the glyphs AND their shadow inside the slot's 16px interior.
+        // Fit unusually wide counts rather than letting them cross the frame.
+        int textWidth = font.width(text);
+        float scale = Math.min(0.5f, 14f / (textWidth + 1));
         var pose = graphics.pose();
         pose.pushPose();
-        pose.translate(0, 0, 200);
-        pose.pushPose();
-        pose.scale(0.5f, 0.5f, 1);
-        graphics.drawString(font, text,
-                (x + 17) * 2 - font.width(text), (y + 13) * 2, 0xFFFFFF, true);
-        pose.popPose();
+        pose.translate(x + 15, y + 15, 200);
+        pose.scale(scale, scale, 1);
+        graphics.drawString(font, text, -textWidth - 1, -font.lineHeight - 1, 0xFFFFFF, true);
         pose.popPose();
     }
 
