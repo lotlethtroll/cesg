@@ -105,7 +105,11 @@ final class TerminalBatchCrafting {
                 continue;
 
             ItemStack current = craftSlots.getItem(i);
-            if (current.isEmpty() || !ItemStack.isSameItemSameComponents(current, template)) {
+            // A crafting remainder (for example an empty bucket) belongs to the player.
+            // Leave it in place rather than replacing it with another network ingredient.
+            if (!current.isEmpty() && !ItemStack.isSameItemSameComponents(current, template))
+                continue;
+            if (current.isEmpty()) {
                 ItemStack pulled = StorageNetwork.extract(level, menu.getTerminalPos(), template,
                         template.getMaxStackSize());
                 if (!pulled.isEmpty())

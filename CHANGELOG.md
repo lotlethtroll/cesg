@@ -16,6 +16,8 @@ Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 ## [1.1.1] — Unreleased
 
 ### Fixed
+- Terminal batch refill leaves crafting remainders such as cake buckets in
+  place rather than replacing them with ingredients pulled from the network.
 - JEI/EMI terminal recipe transfer preserves crafting-grid leftovers when the
   network cannot accept them, instead of overwriting them with new ingredients.
 - Terminal shift-crafting checks room for the entire output before moving it,
