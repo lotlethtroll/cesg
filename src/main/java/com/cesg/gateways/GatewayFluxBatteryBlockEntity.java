@@ -57,7 +57,7 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
     private static final int MEMBER_SCAN_LIMIT = 32;
 
     /** Per-block fuel capacity; a W×W×H array holds W*W*H times this. */
-    private static int capacityPerBlock() {
+    static int capacityPerBlock() {
         return CESGConfig.batteryCapacity();
     }
 

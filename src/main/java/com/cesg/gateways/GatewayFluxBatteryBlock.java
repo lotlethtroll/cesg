@@ -137,6 +137,32 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
      * Bucket pour/drain against any member block — always targets the controller tank
      * (same single-fuel lock as pipes). Essence and Eye buckets only.
      */
+    /** Only isolated singles have unambiguous fuel ownership. Array relocation stays deferred. */
+    @Override
+    public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
+        Level level = context.getLevel();
+        Player player = context.getPlayer();
+        if (player == null || player.isSpectator() || com.simibubi.create.foundation.utility.AdventureUtil.isAdventure(player))
+            return InteractionResult.FAIL;
+        if (level.isClientSide) return InteractionResult.SUCCESS;
+        BlockPos pos = context.getClickedPos();
+        if (!(level.getBlockEntity(pos) instanceof GatewayFluxBatteryBlockEntity battery)
+                || !battery.isController() || battery.getWidth() != 1 || battery.getHeight() != 1
+                || !GatewayFluxBatteryItem.isolatedPosition(level, pos)) {
+            player.displayClientMessage(Component.translatable("cesg.battery.pickup.array"), true);
+            return InteractionResult.FAIL;
+        }
+        ItemStack pickup = GatewayFluxBatteryItem.pickupStack(battery);
+        FluidStack fuel = battery.getTankInventory().getFluid().copy();
+        battery.getTankInventory().setFluid(FluidStack.EMPTY);
+        if (!level.removeBlock(pos, false)) {
+            battery.getTankInventory().setFluid(fuel);
+            return InteractionResult.FAIL;
+        }
+        if (!player.getInventory().add(pickup)) player.drop(pickup, false);
+        return InteractionResult.SUCCESS;
+    }
+
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {
