@@ -11,15 +11,12 @@ import com.cesg.storage.station.StationRetentionMode;
 import com.cesg.storage.beltloader.ShulkerBeltLoaderBlockEntity;
 import com.cesg.storage.beltunloader.ShulkerBeltUnloaderBlockEntity;
 import com.cesg.storage.unloader.ShulkerUnloaderBlockEntity;
-import com.simibubi.create.foundation.gui.AllIcons;
-import com.simibubi.create.foundation.gui.widget.IconButton;
 
 import net.createmod.catnip.gui.AbstractSimiScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ShulkerStationConfigScreen extends AbstractSimiScreen {
@@ -28,7 +25,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     private final boolean beltLoader;
     private final boolean beltUnloader;
 
-    // ---- Panel geometry (flat-drawn, brown/brass) ----
+    // ---- Panel geometry ----
     private static final int PANEL_W = 224;
     private static final int TITLE_H = 24;
     private static final int FOOTER_H = 28;
@@ -40,25 +37,14 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     private static final int BAR_W = 144;         // gray bar width
     private static final int BAR_H = 18;          // row/bar height
     private static final int ROW_SPACING = 24;    // distance between row tops
-    private static final int ARROW_SIZE = 18;     // IconButton visual size (Create arrows ~18px)
+    private static final int ARROW_SIZE = 18;     // Directional button size
     private static final int ARROW_GAP = 3;
 
-    // ---- Brown/brass palette ----
-    private static final int BORDER_DARK = 0xFF3A2A1C;
-    private static final int BORDER_MID  = 0xFF5A4632;
-    private static final int PANEL_FILL  = 0xFF6B5440;
-    private static final int TITLE_FILL  = 0xFFCAA85A;
-    private static final int FOOTER_FILL = 0xFF4A3826;
-    private static final int BAR_FILL    = 0xFF8A8A8A;
-    private static final int BAR_BORDER  = 0xFF5A5A5A;
-    private static final int TITLE_TEXT  = 0x592424;
-    private static final int LABEL_TEXT  = 0xFFFFFFFF;
+    private static final int BAR_FILL = 0xFF756180;
+    private static final int BAR_BORDER = 0xFF555B50;
+    private static final int TITLE_TEXT = 0x34392F;
+    private static final int LABEL_TEXT = 0xFFE7D9B5;
 
-    // ---- Arrow icons: swap if these don't resolve / aren't real arrows ----
-    private static final AllIcons ICON_LEFT = AllIcons.I_MOVE_GAUGE;
-    private static final AllIcons ICON_RIGHT = AllIcons.I_MOVE_GAUGE;
-
-    private IconButton confirmButton;
     private ThresholdSlider thresholdSlider;
     private EditBox nameField;
 
@@ -154,10 +140,9 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
             row++;
         }
 
-        confirmButton = new IconButton(
-                x + PANEL_W - 30, guiTop + panelH - FOOTER_H + 4, AllIcons.I_CONFIRM);
-        confirmButton.withCallback(this::onClose);
-        addRenderableWidget(confirmButton);
+        addRenderableWidget(new MechanicalButton(x + PANEL_W - 56,
+                guiTop + panelH - FOOTER_H + 4, 48, 18, Component.translatable("gui.done"),
+                b -> onClose(), () -> false));
     }
 
     /** Places left/right arrows vertically centered on the bar midline. */
@@ -166,13 +151,10 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         int barTop = rowTop(row);
         int arrowY = barTop + (BAR_H - ARROW_SIZE) / 2;
 
-        IconButton left = new IconButton(x + BAR_X - ARROW_SIZE - ARROW_GAP, arrowY, ICON_LEFT);
-        left.withCallback(onLeft);
-        addRenderableWidget(left);
-
-        IconButton right = new IconButton(x + BAR_X + BAR_W + ARROW_GAP, arrowY, ICON_RIGHT);
-        right.withCallback(onRight);
-        addRenderableWidget(right);
+        addRenderableWidget(new MechanicalButton(x + BAR_X - ARROW_SIZE - ARROW_GAP,
+                arrowY, ARROW_SIZE, ARROW_SIZE, Component.literal("<"), b -> onLeft.run(), () -> false));
+        addRenderableWidget(new MechanicalButton(x + BAR_X + BAR_W + ARROW_GAP,
+                arrowY, ARROW_SIZE, ARROW_SIZE, Component.literal(">"), b -> onRight.run(), () -> false));
     }
 
     private void changeRetention(int delta) {
@@ -226,7 +208,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
                 : unloader ? "cesg.station.config.title.unloader"
                 : beltLoader ? "cesg.station.config.title.belt_loader"
                 : "cesg.station.config.title.loader";
-        MutableComponent header = Component.translatable(titleKey);
+        String header = font.plainSubstrByWidth(Component.translatable(titleKey).getString(), PANEL_W - 16);
         int stripTop = y + 8;
         int stripBottom = y + TITLE_H;
         int titleY = stripTop + (stripBottom - stripTop - font.lineHeight) / 2 + 1;
@@ -246,20 +228,18 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
     /** Right-aligned caption in the left gutter (used for rows whose body is a custom widget). */
     private void drawRowLabel(GuiGraphics g, int row, Component label) {
         int barY = rowTop(row);
-        int textX = guiLeft + BAR_X - ARROW_GAP - font.width(label);
+        String text = font.plainSubstrByWidth(label.getString(), BAR_X - ARROW_GAP - 5);
+        int textX = guiLeft + BAR_X - ARROW_GAP - font.width(text);
         int textY = barY + (BAR_H - font.lineHeight) / 2 + 1;
-        g.drawString(font, label, textX, textY, LABEL_TEXT, true);
+        g.drawString(font, text, textX, textY, TITLE_TEXT, false);
     }
 
-    /** Flat brown/brass panel: nested border layers, brass title, footer strip. */
+    /** Tiled mechanical panel with matching brass title and steel footer. */
     private void drawPanel(GuiGraphics g, int x, int y) {
-        g.fill(x, y, x + PANEL_W, y + panelH, BORDER_DARK);
-        g.fill(x + 3, y + 3, x + PANEL_W - 3, y + panelH - 3, BORDER_MID);
-        g.fill(x + 6, y + 6, x + PANEL_W - 6, y + panelH - 6, PANEL_FILL);
-        // title strip
-        g.fill(x + 8, y + 8, x + PANEL_W - 8, y + TITLE_H, TITLE_FILL);
-        // footer strip
-        g.fill(x + 6, y + panelH - FOOTER_H, x + PANEL_W - 6, y + panelH - 6, FOOTER_FILL);
+        MechanicalPanel.panel(g, x, y, PANEL_W, panelH);
+        g.fill(x + 4, y + 4, x + PANEL_W - 4, y + TITLE_H, 0xFFA89B79);
+        g.fill(x + 4, y + TITLE_H - 1, x + PANEL_W - 4, y + TITLE_H, 0xFF756B51);
+        g.fill(x + 4, y + panelH - FOOTER_H, x + PANEL_W - 4, y + panelH - 4, 0xFF929582);
     }
 
     /** Identical bar for non-slider rows, centered label. */
@@ -268,12 +248,13 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         int barY = rowTop(row);
         g.fill(barX - 1, barY - 1, barX + BAR_W + 1, barY + BAR_H + 1, BAR_BORDER);
         g.fill(barX, barY, barX + BAR_W, barY + BAR_H, BAR_FILL);
-        int textX = barX + (BAR_W - font.width(label)) / 2;
+        String text = font.plainSubstrByWidth(label.getString(), BAR_W - 6);
+        int textX = barX + (BAR_W - font.width(text)) / 2;
         int textY = barY + (BAR_H - font.lineHeight) / 2 + 1;
-        g.drawString(font, label, textX, textY, LABEL_TEXT, true);
+        g.drawString(font, text, textX, textY, LABEL_TEXT, false);
     }
 
-    /** Vanilla slider mapped to 1..MAX_THRESHOLD, draws its own bar + handle. */
+    /** Native keyboard/mouse slider with a matching metal track and brass handle. */
     private class ThresholdSlider extends AbstractSliderButton {
         ThresholdSlider(int x, int y, int w, int h) {
             super(x, y, w, h, Component.empty(), 0.0);
@@ -286,6 +267,18 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         }
 
         @Override
+        public void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+            int x = getX(), y = getY(), w = getWidth(), h = getHeight();
+            g.fill(x-1, y-1, x+w+1, y+h+1, isHoveredOrFocused() ? 0xFFE0C78D : BAR_BORDER);
+            g.fill(x, y, x+w, y+h, BAR_FILL);
+            int handle = x + (int) Math.round(value * (w-6));
+            g.fill(handle, y, handle+6, y+h, 0xFFB39759);
+            g.fill(handle+1, y+1, handle+5, y+2, 0xFFE0C78D);
+            String text = font.plainSubstrByWidth(getMessage().getString(), w-6);
+            g.drawString(font, text, x+(w-font.width(text))/2, y+(h-font.lineHeight)/2, LABEL_TEXT, true);
+        }
+
+        @Override
         protected void updateMessage() {
             setMessage(thresholdLabel(threshold));
         }
@@ -294,6 +287,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         protected void applyValue() {
             int max = AbstractShulkerStationBlockEntity.MAX_THRESHOLD;
             setThreshold(1 + (int) Math.round(value * (max - 1)));
+            updateMessage();
         }
     }
 }
