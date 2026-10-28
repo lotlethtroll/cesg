@@ -60,6 +60,28 @@ GameTest coverage:
 - Branching network scans process 256 members; removed controllers immediately
   disable cached-network transfers; unloaded anchors are not force-loaded.
 
+## Live client spot checks (2026-10-28)
+
+Tested through the Minecraft UI in Andrew's new creative single-player world.
+A terminal at (-140, 68, 420) touches a controller at (-139, 68, 420), with no
+storage inventories attached. This intentionally makes grid returns to storage
+fail, while still allowing the terminal menu to open.
+
+- [x] Put 17 diamonds in the crafting grid, close, and reopen: all 17 returned
+  to inventory and the grid was empty.
+- [x] With those 17 diamonds in the grid and two oak logs in inventory, use EMI
+  recipe transfer for oak planks: diamonds stay in the grid and both logs remain.
+- [x] Move diamonds back into inventory and repeat EMI transfer: one log enters
+  the grid, one stays in inventory, and the result shows four oak planks.
+- [x] Click clear-grid with no storage capacity: the log remains in the grid.
+  Closing the menu returns it, restoring the inventory total to two logs.
+
+No item loss, duplication, or crash was observed in these checks. The world was
+left paused beside the test rig. This does not verify JEI separately, Shift-click
+batch crafting, cake refill, full-inventory overflow, or multiplayer behavior.
+The current computer-use API cannot hold Shift across a mouse click, so the
+batch-crafting UI cases remain manual checks despite passing server GameTests.
+
 ## Remaining release gates — not covered by headless tests
 
 - [ ] Connect two real clients to a dedicated server. Verify route controls,
