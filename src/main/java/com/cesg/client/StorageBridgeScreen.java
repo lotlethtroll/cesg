@@ -7,6 +7,7 @@ import com.cesg.gateways.StorageBridgeMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -14,26 +15,26 @@ import net.neoforged.api.distmarker.OnlyIn;
 /**
  * Config screen for the Storage Bridge's passive auto-transfer (Phase 7A/D3). Two ghost-filter rows
  * (push local→partner, pull partner→local), each with an enable toggle and a whitelist/blacklist mode
- * toggle. Slot items and their tooltips render through the container screen; this class draws the flat
- * panel, slot boxes, section headers, and the four toggle buttons.
+ * toggle. Slot items and their tooltips render through the container screen; this class draws the textured
+ * panel, recessed slots, section headers, and the four toggle buttons.
  */
 @OnlyIn(Dist.CLIENT)
 public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMenu> {
-    private static final int PANEL_COLOR = 0xFFC6C6C6;
-    private static final int HIGHLIGHT_COLOR = 0xFFFFFFFF;
-    private static final int SHADOW_COLOR = 0xFF555555;
-    private static final int SLOT_BG = 0xFF8B8B8B;
-    private static final int SLOT_SHADOW = 0xFF373737;
-    private static final int SLOT_HIGHLIGHT = 0xFFFFFFFF;
-    private static final int LABEL_COLOR = 0x404040;
-    private static final int DISABLED_LABEL = 0x808080;
-    private static final int DISABLED_VEIL = 0xA0C6C6C6;
+    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/bridge.png");
+    private static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/slot.png");
+    private static final int HIGHLIGHT_COLOR = 0xFFE7D9B5;
+    private static final int SHADOW_COLOR = 0xFF555B50;
+    private static final int LABEL_COLOR = 0x34392F;
+    private static final int DISABLED_LABEL = 0x66695D;
+    private static final int DISABLED_VEIL = 0xB0C9C3AD;
 
-    private static final int ON_FILL = 0xFF4C9A4C;
-    private static final int OFF_FILL = 0xFF8B8B8B;
-    private static final int WL_FILL = 0xFF4C7AC0;
-    private static final int BL_FILL = 0xFFC05050;
-    private static final int BTN_TEXT = 0xFFFFFFFF;
+    private static final int ON_FILL = 0xFF526F48;
+    private static final int OFF_FILL = 0xFF747B6E;
+    private static final int WL_FILL = 0xFF756180;
+    private static final int BL_FILL = 0xFF925A4C;
+    private static final int BTN_TEXT = 0xFFE7D9B5;
 
     // Each section gets its label on its own full-width line with the toggles beneath, so a long
     // destination name ("Push → Overworld Base") can never run under the buttons.
@@ -51,6 +52,7 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     private static final int LOCK_Y = 4;
     private static final int LOCK_W = 44;
     private static final int LOCK_FILL = 0xFFC08030;
+    private int hotbarOffset;
 
     public StorageBridgeScreen(StorageBridgeMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -63,13 +65,22 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     }
 
     @Override
+    protected void init() {
+        hotbarOffset = height < StorageBridgeMenu.IMAGE_H + 48 ? -4 : 0;
+        imageHeight = StorageBridgeMenu.IMAGE_H + hotbarOffset;
+        menu.positionHotbar(hotbarOffset);
+        super.init();
+        topPos = Math.max(0, (height - 24 - imageHeight) / 2);
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x0 = leftPos;
         int y0 = topPos;
-        graphics.fill(x0 - 1, y0 - 1, x0 + imageWidth + 1, y0 + imageHeight + 1, SHADOW_COLOR);
-        graphics.fill(x0, y0, x0 + imageWidth, y0 + imageHeight, PANEL_COLOR);
-        graphics.fill(x0, y0, x0 + imageWidth, y0 + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x0, y0, x0 + 1, y0 + imageHeight, HIGHLIGHT_COLOR);
+        int seam = StorageBridgeMenu.HOTBAR_Y - 1 + hotbarOffset;
+        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, seam, 176, 220);
+        graphics.blit(BACKGROUND, x0, y0 + seam, 0, StorageBridgeMenu.HOTBAR_Y - 1,
+                imageWidth, StorageBridgeMenu.IMAGE_H - StorageBridgeMenu.HOTBAR_Y + 1, 176, 220);
 
         drawFilterRow(graphics, x0 + StorageBridgeMenu.SEND_X, y0 + StorageBridgeMenu.SEND_Y);
         drawFilterRow(graphics, x0 + StorageBridgeMenu.PULL_X, y0 + StorageBridgeMenu.PULL_Y);
@@ -87,7 +98,7 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
                         y0 + StorageBridgeMenu.PLAYER_INV_Y - 1 + row * StorageBridgeMenu.SLOT);
         for (int col = 0; col < 9; col++)
             drawSlotBox(graphics, x0 + StorageBridgeMenu.SEND_X + col * StorageBridgeMenu.SLOT,
-                    y0 + StorageBridgeMenu.HOTBAR_Y - 1);
+                    y0 + StorageBridgeMenu.HOTBAR_Y + hotbarOffset - 1);
 
         drawToggle(graphics, EN_X, PUSH_BTN_Y, menu.isPushEnabled() ? ON_FILL : OFF_FILL,
                 enableLabel(menu.isPushEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y));
@@ -112,9 +123,7 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
 
     private static void drawSlotBox(GuiGraphics graphics, int x, int y) {
         int cell = StorageBridgeMenu.SLOT;
-        graphics.fill(x, y, x + cell, y + cell, SLOT_SHADOW);
-        graphics.fill(x + 1, y + 1, x + cell, y + cell, SLOT_HIGHLIGHT);
-        graphics.fill(x + 1, y + 1, x + cell - 1, y + cell - 1, SLOT_BG);
+        graphics.blit(SLOT_TEXTURE, x, y, 0, 0, cell, cell, cell, cell);
     }
 
     private void drawToggle(GuiGraphics graphics, int x, int y, int fill, Component label, boolean hovered) {
@@ -127,8 +136,11 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
         int py = topPos + y;
         graphics.fill(px - 1, py - 1, px + w + 1, py + BTN_H + 1, hovered ? HIGHLIGHT_COLOR : SHADOW_COLOR);
         graphics.fill(px, py, px + w, py + BTN_H, fill);
-        int tx = px + (w - font.width(label)) / 2;
-        graphics.drawString(font, label, tx, py + 2, BTN_TEXT, true);
+        graphics.fill(px, py, px + w, py + 1, HIGHLIGHT_COLOR);
+        graphics.fill(px, py + BTN_H - 1, px + w, py + BTN_H, SHADOW_COLOR);
+        String text = font.plainSubstrByWidth(label.getString(), w - 4);
+        int tx = px + (w - font.width(text)) / 2;
+        graphics.drawString(font, text, tx, py + 2, BTN_TEXT, true);
     }
 
     private static Component lockLabel(boolean locked) {
@@ -151,16 +163,27 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, titleLabelX, titleLabelY, LABEL_COLOR, false);
+        graphics.drawString(font, font.plainSubstrByWidth(title.getString(), LOCK_X - titleLabelX - 6),
+                titleLabelX, titleLabelY, LABEL_COLOR, false);
         // Name where items actually go. "Push → Partner" never said which partner, and in route mode
         // the answer is "whichever channel filter accepts it" — not this row's filter at all.
         boolean routed = menu.isRouteMode();
         Component push = routed
                 ? Component.translatable("cesg.bridge.push.routed")
                 : Component.translatable("cesg.bridge.push.to", menu.destinationLabel());
-        graphics.drawString(font, push, 8, PUSH_HEADER_Y + 2, routed ? DISABLED_LABEL : LABEL_COLOR, false);
-        graphics.drawString(font, Component.translatable("cesg.bridge.pull.from", menu.destinationLabel()),
+        graphics.drawString(font, font.plainSubstrByWidth(push.getString(), imageWidth - 26), 8, PUSH_HEADER_Y + 2, routed ? DISABLED_LABEL : LABEL_COLOR, false);
+        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("cesg.bridge.pull.from", menu.destinationLabel()).getString(), imageWidth - 26),
                 8, PULL_HEADER_Y + 2, LABEL_COLOR, false);
+        for (boolean pushDirection : new boolean[] {true, false}) {
+            var status = menu.diagnostic(pushDirection);
+            int color = switch (status) {
+                case READY -> 0xFF69A45B;
+                case IDLE, DISABLED -> 0xFF747B6E;
+                default -> 0xFFD49B45;
+            };
+            int y = (pushDirection ? PUSH_HEADER_Y : PULL_HEADER_Y) + 4;
+            graphics.fill(imageWidth - 14, y, imageWidth - 10, y + 4, color);
+        }
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);
     }
 
@@ -176,13 +199,29 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
         if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y) || isBtnHovered(mouseX, mouseY, EN_X, PULL_BTN_Y))
             tip = Component.translatable("cesg.bridge.enable.tip");
         else if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_BTN_Y))
-            tip = Component.translatable(menu.isSendBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
+            tip = Component.translatable(menu.isRouteMode() ? "cesg.bridge.push.routed.tip"
+                    : (menu.isSendBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip"));
         else if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_BTN_Y))
             tip = Component.translatable(menu.isPullBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
         else if (isLockHovered(mouseX, mouseY))
             tip = Component.translatable("cesg.bridge.lock.tip");
-        if (tip != null)
-            graphics.renderComponentTooltip(font, List.of(tip), mouseX, mouseY);
+        else if (mouseX >= leftPos + 8 && mouseX < leftPos + LOCK_X - 6
+                && mouseY >= topPos + 4 && mouseY < topPos + 17)
+            tip = title;
+        else if (mouseX >= leftPos + 8 && mouseX < leftPos + imageWidth - 8) {
+            if (mouseY >= topPos + PUSH_HEADER_Y && mouseY < topPos + PUSH_HEADER_Y + 12)
+                tip = menu.isRouteMode() ? Component.translatable("cesg.bridge.push.routed.tip")
+                        : Component.translatable("cesg.bridge.push.to", menu.destinationLabel());
+            else if (mouseY >= topPos + PULL_HEADER_Y && mouseY < topPos + PULL_HEADER_Y + 12)
+                tip = Component.translatable("cesg.bridge.pull.from", menu.destinationLabel());
+        }
+        if (tip != null) {
+            boolean directionRow = mouseY >= topPos + PUSH_HEADER_Y && mouseY < topPos + PULL_BTN_Y + BTN_H
+                    && !isLockHovered(mouseX, mouseY);
+            List<Component> lines = directionRow ? List.of(tip,
+                    Component.translatable(menu.diagnostic(mouseY < topPos + PULL_HEADER_Y).translationKey())) : List.of(tip);
+            graphics.renderComponentTooltip(font, lines, mouseX, mouseY);
+        }
     }
 
     /** Empty ghost slots have no item tooltip of their own — hint how to configure them. */

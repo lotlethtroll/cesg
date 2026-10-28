@@ -59,6 +59,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
     private final java.util.Map<Integer, ChannelFilter> channelFilters = new java.util.HashMap<>();
     /** Fan-out routing: distribute items to the channel whose filter accepts them, not just the active one. */
     private boolean routeMode;
+    private boolean fluidRouteMode;
     private int activeChannel;
     /** Player-given label for THIS gateway; carried into crystals and partner bindings (Phase 6A UX). */
     private String gatewayName = "";
@@ -144,6 +145,33 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             return;
         routeMode = value;
         notifyUpdate();
+    }
+
+    public boolean isFluidRouteMode() {
+        return fluidRouteMode && com.cesg.CESGConfig.gatewayFanOutAllowed();
+    }
+
+    public void setFluidRouteMode(boolean value) {
+        if (fluidRouteMode == value) return;
+        fluidRouteMode = value;
+        notifyUpdate();
+    }
+
+    public void toggleChannelFluidBlacklist(int channel) {
+        ChannelFilter filter = getOrCreateChannelFilter(channel);
+        filter.setFluidBlacklist(!filter.isFluidBlacklist());
+        onChannelFilterChanged();
+    }
+
+    /** First matching bound channel; a blocked destination never changes filter precedence. */
+    public int routeFluidChannel(net.neoforged.neoforge.fluids.FluidStack sample) {
+        if (sample.isEmpty()) return -1;
+        if (!isFluidRouteMode()) return getPartner().isBound() ? activeChannel : -1;
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++) {
+            ChannelFilter filter = channelFilters.get(channel);
+            if (getBinding(channel).isBound() && filter != null && filter.acceptsFluid(sample)) return channel;
+        }
+        return -1;
     }
 
     /** The editable filter for {@code channel}, created on first edit (used by the filter GUI). */
@@ -379,21 +407,8 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             return true;
         int coreFuel = crossDim ? eyeMb : essenceMb;
 
-        long batteryFuel = 0;
-        boolean batteryPresent = false;
-        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
-            net.neoforged.neoforge.fluids.FluidStack fluid = battery.storedFluid();
-            if (fluid.isEmpty()) {
-                batteryPresent = true; // a dry battery still gates — that is the safety the reserve provides
-            } else if (crossDim ? GatewayFluxBatteryBlockEntity.isEye(fluid)
-                    : GatewayFluxBatteryBlockEntity.isEssence(fluid)) {
-                batteryPresent = true;
-                batteryFuel += fluid.getAmount();
-            }
-        }
-
-        if (batteryPresent && (coreFuel + batteryFuel) - cost < com.cesg.CESGConfig.batteryReserveFloor())
-            return false; // protect the reserve for travel
+        if (protectsAutomationReserve(cost, crossDim))
+            return false;
         if (coreFuel < cost)
             return false; // Core not yet topped up this tick — the battery refills it, retry next flush
 
@@ -406,6 +421,22 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         notifyUpdate();
         updateCoreFuelVisual();
         return true;
+    }
+
+    /** Same reserve rule as the spending gate, without changing fuel or loading chunks. */
+    boolean protectsAutomationReserve(int cost, boolean crossDim) {
+        long total = crossDim ? eyeMb : essenceMb;
+        boolean present = false;
+        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
+            var fluid = battery.storedFluid();
+            if (fluid.isEmpty()) present = true;
+            else if (crossDim ? GatewayFluxBatteryBlockEntity.isEye(fluid)
+                    : GatewayFluxBatteryBlockEntity.isEssence(fluid)) {
+                present = true;
+                total += fluid.getAmount();
+            }
+        }
+        return cost > 0 && present && total - cost < com.cesg.CESGConfig.batteryReserveFloor();
     }
 
     /** Destination-aware accounting shared by Ports and Bridges. No charge for a blocked move. */
@@ -785,6 +816,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         });
         tag.put("ChannelFilters", filterList);
         tag.putBoolean("RouteMode", routeMode);
+        tag.putBoolean("FluidRouteMode", fluidRouteMode);
         tag.putInt("ActiveChannel", activeChannel);
         tag.putInt("PartnerStatus", partnerStatus);
         tag.putString("GatewayName", gatewayName);
@@ -837,6 +869,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             channelFilters.put(Math.floorMod(entry.getInt("Channel"), CHANNEL_COUNT), filter);
         }
         routeMode = tag.getBoolean("RouteMode");
+        fluidRouteMode = tag.getBoolean("FluidRouteMode");
         activeChannel = Math.floorMod(tag.getInt("ActiveChannel"), CHANNEL_COUNT);
         partnerStatus = Math.floorMod(tag.getInt("PartnerStatus"), 3);
         gatewayName = tag.getString("GatewayName");

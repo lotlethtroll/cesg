@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -28,6 +29,9 @@ public class GatewayChannelScreen extends Screen {
     private static final int BUTTON_SIZE = 28;
     private static final int GAP = 4;
 
+    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/gateway_channels.png");
+    private int panelLeft, panelTop, panelHeight;
     private final CrossDimensionalGatewayCoreBlockEntity core;
     private EditBox nameBox;
     private int gridTop;
@@ -35,64 +39,79 @@ public class GatewayChannelScreen extends Screen {
     private boolean sent;
     private boolean chunkLoading;
     private boolean routeMode;
+    private boolean fluidRouteMode;
 
     public GatewayChannelScreen(CrossDimensionalGatewayCoreBlockEntity core) {
         super(Component.translatable("cesg.gateway.channel_screen"));
         this.core = core;
         this.chunkLoading = core.isChunkLoading();
         this.routeMode = core.isRouteMode();
+        this.fluidRouteMode = core.isFluidRouteMode();
     }
 
     @Override
     protected void init() {
         super.init();
-        int rows = CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT / COLS;
         int gridWidth = COLS * BUTTON_SIZE + (COLS - 1) * GAP;
-        int gridHeight = rows * BUTTON_SIZE + (rows - 1) * GAP;
-        int x0 = (width - gridWidth) / 2;
-        int y0 = (height - gridHeight) / 2 + 22; // header: title, name box, active-channel line
+        int footerRows = (CESGConfig.gatewayChunkLoadingAllowed() ? 1 : 0)
+                + (CESGConfig.gatewayFanOutAllowed() ? 1 : 0);
+        panelHeight = 190 + footerRows * 20;
+        panelLeft = (width - 176) / 2;
+        panelTop = Math.max(0, (height - panelHeight) / 2);
+        int x0 = panelLeft + (176 - gridWidth) / 2;
+        int y0 = panelTop + 58;
         gridTop = y0;
         gridLeft = x0;
 
-        nameBox = new EditBox(font, x0, y0 - 32, gridWidth, 14,
+        String pendingName = nameBox == null ? core.getGatewayName() : nameBox.getValue();
+        nameBox = new EditBox(font, panelLeft + 8, panelTop + 22, 160, 14,
                 Component.translatable("cesg.gateway.name_hint"));
         nameBox.setMaxLength(32);
         nameBox.setHint(Component.translatable("cesg.gateway.name_hint")
                 .withStyle(ChatFormatting.DARK_GRAY));
-        nameBox.setValue(core.getGatewayName());
+        nameBox.setValue(pendingName);
         addRenderableWidget(nameBox);
 
         if (com.cesg.CESGConfig.gatewayChunkLoadingAllowed()) {
             int rowsTotal = CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT / COLS;
             int gridBottom = y0 + rowsTotal * BUTTON_SIZE + (rowsTotal - 1) * GAP;
-            addRenderableWidget(Button.builder(chunkLoadLabel(), b -> {
-                chunkLoading = !chunkLoading;
-                b.setMessage(chunkLoadLabel());
-            }).bounds(x0, gridBottom + 6, gridWidth, 16)
-                    .tooltip(Tooltip.create(Component.translatable("cesg.gateway.chunkload_tooltip")))
-                    .build());
+            Button loadButton = new MechanicalButton(panelLeft + 8, gridBottom + 6, 160, 16,
+                    chunkLoadLabel(), b -> {
+                        chunkLoading = !chunkLoading;
+                        b.setMessage(chunkLoadLabel());
+                    }, () -> chunkLoading);
+            loadButton.setTooltip(Tooltip.create(Component.translatable("cesg.gateway.chunkload_tooltip")));
+            addRenderableWidget(loadButton);
         }
 
         if (CESGConfig.gatewayFanOutAllowed()) {
             int rowsTotal = CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT / COLS;
             int gridBottom = y0 + rowsTotal * BUTTON_SIZE + (rowsTotal - 1) * GAP;
             int extra = com.cesg.CESGConfig.gatewayChunkLoadingAllowed() ? 20 : 0;
-            addRenderableWidget(Button.builder(routeLabel(), b -> {
-                routeMode = !routeMode;
-                b.setMessage(routeLabel());
-            }).bounds(x0, gridBottom + 6 + extra, gridWidth, 16)
-                    .tooltip(Tooltip.create(Component.translatable("cesg.gateway.route_tooltip")))
-                    .build());
+            Button routeButton = new MechanicalButton(panelLeft + 8, gridBottom + 6 + extra, 78, 16,
+                    routeLabel(), b -> {
+                        routeMode = !routeMode;
+                        b.setMessage(routeLabel());
+                    }, () -> routeMode);
+            routeButton.setTooltip(Tooltip.create(Component.translatable("cesg.gateway.route_tooltip")));
+            addRenderableWidget(routeButton);
+            Button fluidButton = new MechanicalButton(panelLeft + 90, gridBottom + 6 + extra, 78, 16,
+                    fluidRouteLabel(), b -> {
+                        fluidRouteMode = !fluidRouteMode;
+                        b.setMessage(fluidRouteLabel());
+                    }, () -> fluidRouteMode);
+            fluidButton.setTooltip(Tooltip.create(Component.translatable("cesg.gateway.fluid_route_tooltip")));
+            addRenderableWidget(fluidButton);
         }
 
         for (int channel = 0; channel < CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT; channel++) {
             int col = channel % COLS;
             int row = channel / COLS;
             final int picked = channel;
-            Button button = Button.builder(label(channel), b -> select(picked))
-                    .bounds(x0 + col * (BUTTON_SIZE + GAP), y0 + row * (BUTTON_SIZE + GAP), BUTTON_SIZE, BUTTON_SIZE)
-                    .tooltip(Tooltip.create(describe(channel)))
-                    .build();
+            Button button = new MechanicalButton(x0 + col * (BUTTON_SIZE + GAP),
+                    y0 + row * (BUTTON_SIZE + GAP), BUTTON_SIZE, BUTTON_SIZE,
+                    label(channel), b -> select(picked), () -> picked == core.getActiveChannel());
+            button.setTooltip(Tooltip.create(describe(channel)));
             button.active = channel != core.getActiveChannel();
             addRenderableWidget(button);
         }
@@ -130,9 +149,13 @@ public class GatewayChannelScreen extends Screen {
         return Component.translatable(routeMode ? "cesg.gateway.route_on" : "cesg.gateway.route_off");
     }
 
+    private Component fluidRouteLabel() {
+        return Component.translatable(fluidRouteMode ? "cesg.gateway.fluid_route_on" : "cesg.gateway.fluid_route_off");
+    }
+
     private void select(int channel) {
         PacketDistributor.sendToServer(new SetGatewayChannelPacket(
-                core.getBlockPos(), channel, nameBox.getValue(), chunkLoading, routeMode));
+                core.getBlockPos(), channel, nameBox.getValue(), chunkLoading, routeMode, fluidRouteMode));
         sent = true;
         onClose();
     }
@@ -144,7 +167,7 @@ public class GatewayChannelScreen extends Screen {
             int channel = channelAt(mouseX, mouseY);
             if (channel >= 0) {
                 PacketDistributor.sendToServer(new SetGatewayChannelPacket(
-                        core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode));
+                        core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode, fluidRouteMode));
                 PacketDistributor.sendToServer(new OpenGatewayFilterPacket(core.getBlockPos(), channel));
                 sent = true;
                 return true;
@@ -167,25 +190,34 @@ public class GatewayChannelScreen extends Screen {
     public void onClose() {
         // Closing without picking a channel still commits the name + chunk-load + route toggles.
         if (!sent && (!nameBox.getValue().equals(core.getGatewayName())
-                || chunkLoading != core.isChunkLoading() || routeMode != core.isRouteMode()))
+                || chunkLoading != core.isChunkLoading() || routeMode != core.isRouteMode()
+                || fluidRouteMode != core.isFluidRouteMode()))
             PacketDistributor.sendToServer(new SetGatewayChannelPacket(
-                    core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode));
+                    core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode, fluidRouteMode));
         super.onClose();
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(graphics, mouseX, mouseY, partialTick);
+        graphics.blit(BACKGROUND, panelLeft, panelTop, 0, 0, 176, panelHeight - 4, 176, 230);
+        graphics.blit(BACKGROUND, panelLeft, panelTop + panelHeight - 4, 0, 226, 176, 4, 176, 230);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(font, title, width / 2, gridTop - 46, 0xFFFFFF);
-        graphics.drawCenteredString(font,
-                Component.translatable("cesg.gateway.channel_current", core.getActiveChannel() + 1),
-                width / 2, gridTop - 13, 0xAAAAAA);
+        graphics.drawString(font, font.plainSubstrByWidth(title.getString(), 160),
+                panelLeft + 8, panelTop + 6, 0x34392F, false);
+        Component current = Component.translatable("cesg.gateway.channel_current", core.getActiveChannel() + 1);
+        String text = font.plainSubstrByWidth(current.getString(), 156);
+        graphics.drawString(font, text, (width - font.width(text)) / 2, panelTop + 42, 0x34392F, false);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Typing a name must not trigger the inventory-close key.
-        if (nameBox.isFocused() && keyCode != 256 /* ESC */)
+        if (nameBox.isFocused() && keyCode != 256 /* ESC */ && keyCode != 258 /* TAB */)
             return nameBox.keyPressed(keyCode, scanCode, modifiers) || nameBox.canConsumeInput()
                     || super.keyPressed(keyCode, scanCode, modifiers);
         return super.keyPressed(keyCode, scanCode, modifiers);

@@ -339,6 +339,87 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         remoteExpiresAt = 0;
     }
 
+    /** On-demand server diagnostics. Simulated insertion never reserves fuel or extracts items. */
+    public TransferDiagnostic transferDiagnostic(boolean push) {
+        if (!(level instanceof ServerLevel server)) return TransferDiagnostic.IDLE;
+        ItemStackHandler buffer = push ? outBuffer : inBuffer;
+        boolean enabled = push ? pushEnabled : pullEnabled;
+        if (!enabled && isEmpty(buffer)) return TransferDiagnostic.DISABLED;
+        var local = StorageNetwork.scan(level, worldPosition);
+        if (!local.operational()) return TransferDiagnostic.NETWORK_UNAVAILABLE;
+        if (local.limited()) return TransferDiagnostic.SCAN_LIMIT;
+        // Incoming items already paid for the crossing; report their local delivery first.
+        if (!push && !isEmpty(inBuffer)) {
+            for (int i = 0; i < inBuffer.getSlots(); i++)
+                if (canInsert(local, inBuffer.getStackInSlot(i))) return TransferDiagnostic.READY;
+            return TransferDiagnostic.DESTINATION_FULL;
+        }
+        var core = GatewayFuelHandler.findCore(level, worldPosition);
+        if (core == null || core.getSpeed() == 0) return TransferDiagnostic.GATEWAY_INACTIVE;
+        boolean routed = push && core.isRouteMode();
+        RemoteEndpoint active = routed ? null : resolvePartner(server, core.getPartner());
+        if (!routed && active == null) return TransferDiagnostic.PARTNER_OFFLINE;
+        var source = push ? local : StorageNetwork.scan(active.level, active.anchor);
+        if (!source.operational()) return TransferDiagnostic.NETWORK_UNAVAILABLE;
+        if (source.limited()) return TransferDiagnostic.SCAN_LIMIT;
+        if (!push && partnerLocked(active)) return TransferDiagnostic.PARTNER_LOCKED;
+        List<ItemStack> candidates = new ArrayList<>();
+        if (push) for (int i = 0; i < outBuffer.getSlots(); i++) {
+            ItemStack held = outBuffer.getStackInSlot(i);
+            if (!held.isEmpty()) candidates.add(held);
+        }
+        if (enabled) for (ItemStack sample : extractableSamples(source)) {
+            if (push && !net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(
+                    outBuffer, sample.copyWithCount(1), true).isEmpty()) continue;
+            if (routed || passesFilter(sample, push ? sendFilter : pullFilter,
+                    push ? sendBlacklist : pullBlacklist)) candidates.add(sample);
+        }
+        if (candidates.isEmpty()) return TransferDiagnostic.IDLE;
+        TransferDiagnostic failure = null;
+        for (ItemStack sample : candidates) {
+            int channel = routed ? core.routeChannel(sample) : core.getActiveChannel();
+            TransferDiagnostic result;
+            if (channel < 0) result = TransferDiagnostic.NO_ROUTE;
+            else {
+                var binding = core.getBinding(channel);
+                var remote = routed ? resolvePartner(server, binding) : active;
+                if (remote == null) result = TransferDiagnostic.PARTNER_OFFLINE;
+                else {
+                    var destination = push ? StorageNetwork.scan(remote.level, remote.anchor) : local;
+                    if (!destination.operational()) result = TransferDiagnostic.NETWORK_UNAVAILABLE;
+                    else if (destination.limited()) result = TransferDiagnostic.SCAN_LIMIT;
+                    else if (core.protectsAutomationReserve(CESGConfig.bridgeTransferCost(), core.isCrossDimension(binding)))
+                        result = TransferDiagnostic.PROTECTED_RESERVE;
+                    else if (!core.canAutomateTo(binding, CESGConfig.bridgeTransferCost()))
+                        result = TransferDiagnostic.INSUFFICIENT_FUEL;
+                    else result = canInsert(destination, sample) ? TransferDiagnostic.READY : TransferDiagnostic.DESTINATION_FULL;
+                }
+            }
+            // Any usable route wins. Otherwise enum order defines deterministic precedence.
+            if (result == TransferDiagnostic.READY) return result;
+            if (failure == null || result.ordinal() < failure.ordinal()) failure = result;
+        }
+        return failure;
+    }
+
+    private static List<ItemStack> extractableSamples(StorageNetwork.Scan source) {
+        var samples = new it.unimi.dsi.fastutil.objects.ObjectLinkedOpenCustomHashSet<ItemStack>(
+                net.minecraft.world.item.ItemStackLinkedSet.TYPE_AND_TAG);
+        for (var handler : source.handlers()) for (int slot = 0; slot < handler.getSlots(); slot++) {
+            ItemStack sample = handler.extractItem(slot, 1, true);
+            if (!sample.isEmpty()) samples.add(sample);
+        }
+        return new ArrayList<>(samples);
+    }
+
+    private static boolean canInsert(StorageNetwork.Scan destination, ItemStack sample) {
+        if (sample.isEmpty()) return false;
+        for (var handler : destination.handlers())
+            if (net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(handler,
+                    sample.copyWithCount(1), true).isEmpty()) return true;
+        return false;
+    }
+
     // ---- Passive bidirectional transfer (D3) -----------------------------------------------------
 
     /** One passive-transfer attempt; returns the delay (ticks) until the next attempt. */

@@ -33,6 +33,52 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("cesg")
 @PrefixGameTestTemplate(false)
 public class GatewayRegressionTest {
+    @GameTest(template = "empty")
+    public void shulkerCompactLayoutPreservesSlots(GameTestHelper helper) {
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        for (int tier = 1; tier <= 4; tier++) {
+            ItemStack item = new ItemStack(EnhancedShulkerBoxes.DEFAULT.get());
+            item.set(CESGDataComponents.ENHANCED_SHULKER.get(), EnhancedShulkerContents.forTier(tier));
+            var menu = new com.cesg.upgrades.EnhancedShulkerMenu(1, player.getInventory(), item);
+            var original = List.copyOf(menu.slots);
+            int hotbarStart = original.size() - 9;
+            for (int offset : new int[] {-4, 0, -4, 0}) {
+                menu.positionHotbar(offset);
+                for (int i = 0; i < original.size(); i++) {
+                    var slot = menu.getSlot(i);
+                    var before = original.get(i);
+                    helper.assertTrue(slot.index == i && slot.container == before.container
+                            && slot.getContainerSlot() == before.getContainerSlot(), "Shulker slot mapping changed");
+                    helper.assertTrue(slot.x == before.x && slot.y == before.y + (i >= hotbarStart ? offset : 0),
+                            "Shulker layout moved storage/upgrades or accumulated offsets");
+                    if (i < hotbarStart) helper.assertTrue(slot == before, "Shulker layout replaced a storage/upgrade slot");
+                }
+            }
+            menu.removed(player);
+        }
+        helper.succeed();
+    }
+
+    @net.minecraft.gametest.framework.GameTest(template = "empty")
+    public void bridgeCompactLayoutPreservesSlots(net.minecraft.gametest.framework.GameTestHelper helper) {
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        var menu = new StorageBridgeMenu(1, player.getInventory(), helper.absolutePos(new BlockPos(1, 1, 1)));
+        var original = java.util.stream.IntStream.range(0, 54).mapToObj(menu::getSlot).toList();
+        for (int offset : new int[] {-4, 0, -4, 0}) {
+            menu.positionHotbar(offset);
+            for (int i = 0; i < 54; i++) {
+                var slot = menu.getSlot(i);
+                var before = original.get(i);
+                helper.assertTrue(slot.index == i && slot.container == before.container
+                        && slot.getContainerSlot() == before.getContainerSlot(), "Bridge layout changed slot mapping");
+                helper.assertTrue(slot.x == before.x && slot.y == before.y + (i >= 45 ? offset : 0),
+                        "Bridge layout moved filters/inventory or accumulated offsets");
+                if (i < 45) helper.assertTrue(slot == before, "Bridge layout replaced a filter or inventory slot");
+            }
+        }
+        helper.succeed();
+    }
+
     private BlockPos local;
     private BlockPos remote;
 
@@ -296,6 +342,276 @@ public class GatewayRegressionTest {
         assertTrue(!level.isLoaded(unloaded));
         assertEquals(0, StorageNetwork.scan(level, unloaded).memberCount());
         assertTrue(!level.isLoaded(unloaded));
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void diagnosticsExplainFailuresAndClearOnRecovery(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        StorageBridgeBlockEntity bridge = linkedBridges(level);
+        var core = coreAt(level, local);
+        box(level, local.east(3), List.of(new StoredSlot(0, new ItemStack(Items.DIAMOND, 20))), false);
+        List<StoredSlot> full = new ArrayList<>();
+        for (int i = 0; i < 54; i++) full.add(new StoredSlot(i, new ItemStack(Items.GOLD_INGOT, 64)));
+        box(level, remote.east(3), full, false);
+        assertDiagnostic(bridge, true, TransferDiagnostic.DISABLED);
+        bridge.setPushEnabled(true);
+        core.fillEssence(4000, false);
+        assertDiagnostic(bridge, true, TransferDiagnostic.IDLE);
+        bridge.getSendFilter().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+        withCost("bridge", "transferCostMb", 100, () -> {
+            assertDiagnostic(bridge, true, TransferDiagnostic.DESTINATION_FULL);
+            box(level, remote.east(3), List.of(), false);
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            core.setRouteMode(true);
+            assertDiagnostic(bridge, true, TransferDiagnostic.NO_ROUTE);
+            core.getOrCreateChannelFilter(0).items().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            core.setBinding(0, new GatewayPartner(level.dimension(), local.offset(4096, 0, 4096), true));
+            assertDiagnostic(bridge, true, TransferDiagnostic.PARTNER_OFFLINE);
+            assertTrue(!level.isLoaded(local.offset(4096, 0, 4096)));
+            core.setBinding(0, new GatewayPartner(level.dimension(), remote, true));
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            core.setSpeed(0);
+            assertDiagnostic(bridge, true, TransferDiagnostic.GATEWAY_INACTIVE);
+            core.setSpeed(16);
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            assertEquals(4000, core.getEssenceMb());
+            assertEquals(20, StorageNetwork.aggregate(StorageNetwork.scan(level, local.east())).values().intStream().sum());
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void pullDiagnosticsRespectLockReserveAndFuel(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var bridge = linkedBridges(level);
+        var core = coreAt(level, local);
+        box(level, remote.east(3), List.of(new StoredSlot(0, new ItemStack(Items.DIAMOND, 20))), false);
+        box(level, local.east(3), List.of(), false);
+        bridge.setPullEnabled(true);
+        bridge.getPullFilter().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+        var partner = (StorageBridgeBlockEntity) level.getBlockEntity(remote.east());
+        partner.toggleLocked();
+        assertDiagnostic(bridge, false, TransferDiagnostic.PARTNER_LOCKED);
+        partner.toggleLocked();
+        assertDiagnostic(bridge, false, TransferDiagnostic.INSUFFICIENT_FUEL);
+        core.fillEssence(4000, false);
+        assertDiagnostic(bridge, false, TransferDiagnostic.READY);
+        place(level, local.north(), CESGRegistration.GATEWAY_FLUX_BATTERY.get());
+        withCost("bridge", "transferCostMb", 100, () -> {
+            withCost("battery", "reserveFloorMb", 4000, () -> {
+                assertDiagnostic(bridge, false, TransferDiagnostic.PROTECTED_RESERVE);
+                assertTrue(!core.tryConsumeAutomationFuel(100));
+                assertEquals(4000, core.getEssenceMb());
+            });
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void scanDiagnosticDistinguishesExactLimitFromTruncation(GameTestHelper helper) {
+        BlockPos start = helper.absolutePos(new BlockPos(1000, 3, 1000));
+        ServerLevel level = helper.getLevel();
+        place(level, start.east(StorageNetwork.SCAN_LIMIT), net.minecraft.world.level.block.Blocks.AIR);
+        for (int i = 0; i < StorageNetwork.SCAN_LIMIT; i++)
+            place(level, start.east(i), CESGRegistration.STORAGE_NETWORK_CONTROLLER.get());
+        assertTrue(!StorageNetwork.scan(level, start).limited());
+        place(level, start.east(StorageNetwork.SCAN_LIMIT), CESGRegistration.STORAGE_NETWORK_CONTROLLER.get());
+        // Use uncached anchors to inspect each topology immediately, before distant fixture chunks unload.
+        assertTrue(StorageNetwork.scan(level, start.east()).limited());
+        level.removeBlock(start.east(StorageNetwork.SCAN_LIMIT), false);
+        assertTrue(!StorageNetwork.scan(level, start.east(2)).limited());
+        helper.succeed();
+    }
+
+    private static void assertDiagnostic(StorageBridgeBlockEntity bridge, boolean push, TransferDiagnostic expected) {
+        TransferDiagnostic actual = bridge.transferDiagnostic(push);
+        if (actual != expected) throw new AssertionError("Expected " + expected + " but got " + actual);
+    }
+
+    @GameTest(template = "empty")
+    public void fluidRoutingIsOptInOrderedAndSurvivesReload(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var core = core(level, local);
+        core.setBinding(0, new GatewayPartner(level.dimension(), remote, true));
+        core.setBinding(1, new GatewayPartner(level.dimension(), remote.north(3), true));
+        core.setActiveChannel(1);
+        core.setRouteMode(true);
+        var water = new FluidStack(Fluids.WATER, 250);
+        core.getOrCreateChannelFilter(0).fluidItems().setStackInSlot(0, new ItemStack(Items.WATER_BUCKET));
+        assertEquals(1, core.routeFluidChannel(water)); // old item routing must not reroute fluids
+        core.setFluidRouteMode(true);
+        assertEquals(0, core.routeFluidChannel(water));
+        assertEquals(-1, core.routeFluidChannel(new FluidStack(Fluids.LAVA, 1000)));
+        core.getOrCreateChannelFilter(1).setFluidBlacklist(true);
+        assertEquals(1, core.routeFluidChannel(new FluidStack(Fluids.LAVA, 1000)));
+        assertEquals(0, core.routeFluidChannel(water)); // catch-all later must not steal a specific route
+        var saved = core.getUpdateTag(level.registryAccess());
+        var restored = new CrossDimensionalGatewayCoreBlockEntity(local, core.getBlockState());
+        restored.loadWithComponents(saved, level.registryAccess());
+        assertTrue(restored.isFluidRouteMode());
+        assertEquals(0, restored.routeFluidChannel(water));
+        assertEquals(1, restored.routeFluidChannel(new FluidStack(Fluids.LAVA, 1)));
+        saved.remove("FluidRouteMode");
+        for (var raw : saved.getList("ChannelFilters", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            ((net.minecraft.nbt.CompoundTag) raw).remove("FluidItems");
+            ((net.minecraft.nbt.CompoundTag) raw).remove("FluidBlacklist");
+        }
+        restored.loadWithComponents(saved, level.registryAccess());
+        assertTrue(!restored.isFluidRouteMode());
+        assertEquals(1, restored.routeFluidChannel(water));
+        assertEquals(9, restored.getOrCreateChannelFilter(0).fluidItems().getSlots());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void fluidFilterMenuKeepsGhostSelectionsSeparateAndDoesNotConsumeContainers(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var core = core(level, local);
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(level);
+        var menu = new GatewayFilterMenu(1, player.getInventory(), local, 0);
+        menu.setCarried(new ItemStack(Items.DIAMOND, 4));
+        menu.clicked(0, 0, net.minecraft.world.inventory.ClickType.PICKUP, player);
+        menu.clickMenuButton(player, GatewayFilterMenu.BTN_FLUIDS);
+        menu.setCarried(new ItemStack(Items.WATER_BUCKET));
+        menu.clicked(9, 0, net.minecraft.world.inventory.ClickType.PICKUP, player);
+        assertTrue(menu.getCarried().is(Items.WATER_BUCKET));
+        assertEquals(1, menu.getCarried().getCount());
+        var filter = core.getOrCreateChannelFilter(0);
+        assertTrue(filter.items().getStackInSlot(0).is(Items.DIAMOND));
+        assertTrue(filter.acceptsFluid(new FluidStack(Fluids.WATER, 1)));
+        assertTrue(!filter.acceptsFluid(new FluidStack(Fluids.LAVA, 1000)));
+        var componentWater = new FluidStack(Fluids.WATER, 1000);
+        var fluidData = new net.minecraft.nbt.CompoundTag();
+        fluidData.putString("variant", "test");
+        componentWater.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(fluidData));
+        assertTrue(!filter.acceptsFluid(componentWater));
+        menu.setCarried(new ItemStack(Items.BUCKET));
+        menu.clicked(9, 0, net.minecraft.world.inventory.ClickType.PICKUP, player);
+        assertTrue(filter.fluidItems().getStackInSlot(0).is(Items.WATER_BUCKET));
+        menu.clickMenuButton(player, GatewayFilterMenu.BTN_BLACKLIST);
+        assertTrue(filter.isFluidBlacklist() && !filter.isBlacklist());
+        assertTrue(!filter.acceptsFluid(new FluidStack(Fluids.WATER, 1000)));
+        menu.setCarried(ItemStack.EMPTY);
+        menu.clicked(9, 0, net.minecraft.world.inventory.ClickType.PICKUP, player);
+        assertTrue(filter.acceptsFluid(new FluidStack(Fluids.WATER, 1000)));
+        menu.clickMenuButton(player, GatewayFilterMenu.BTN_FLUIDS);
+        assertTrue(!menu.isBlacklist());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void routedFluidAndItemsShareOneDestinationFuelCharge(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        ServerLevel nether = level.getServer().getLevel(Level.NETHER);
+        var core = core(level, local);
+        core(level, remote);
+        BlockPos other = new BlockPos(remote.getX(), 80, remote.getZ());
+        core(nether, other);
+        var source = port(level, local.east());
+        var activeTarget = port(level, remote.east());
+        var fluidTarget = port(nether, other.east());
+        core.setBinding(0, new GatewayPartner(level.dimension(), remote, true));
+        core.setBinding(1, new GatewayPartner(Level.NETHER, other, true));
+        core.setFluidRouteMode(true);
+        core.setRouteMode(true);
+        core.getOrCreateChannelFilter(0).items().setStackInSlot(0, new ItemStack(Items.GOLD_INGOT));
+        core.getOrCreateChannelFilter(1).items().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+        core.getOrCreateChannelFilter(1).fluidItems().setStackInSlot(0, new ItemStack(Items.WATER_BUCKET));
+        source.sendItems.setStackInSlot(0, new ItemStack(Items.DIAMOND, 20));
+        source.sendItems.setStackInSlot(1, new ItemStack(Items.GOLD_INGOT, 20));
+        source.sendTank.fill(new FluidStack(Fluids.WATER, 1000), IFluidHandler.FluidAction.EXECUTE);
+        core.fillEye(4000, false);
+        core.fillEssence(4000, false);
+        withCost("gateway", "portTransferCostMb", 100, () -> {
+            invoke(source, "flush");
+            assertEquals(3900, core.getEyeMb());
+            assertEquals(3900, core.getEssenceMb());
+            assertEquals(1000, fluidTarget.receiveTank.getFluidAmount());
+            assertEquals(20, fluidTarget.receiveItems.getStackInSlot(0).getCount());
+            assertEquals(20, activeTarget.receiveItems.getStackInSlot(0).getCount());
+            assertEquals(0, activeTarget.receiveTank.getFluidAmount());
+            assertTrue(source.sendTank.isEmpty());
+            // Item routing alone preserves the legacy active-channel fluid path.
+            core.setFluidRouteMode(false);
+            source.sendTank.fill(new FluidStack(Fluids.WATER, 1000), IFluidHandler.FluidAction.EXECUTE);
+            invoke(source, "flush");
+            assertEquals(1000, activeTarget.receiveTank.getFluidAmount());
+            assertEquals(3800, core.getEssenceMb());
+            assertEquals(3900, core.getEyeMb());
+            // A dry battery protects the destination's fuel type without changing buffered cargo.
+            core.setFluidRouteMode(true);
+            source.sendTank.fill(new FluidStack(Fluids.WATER, 1000), IFluidHandler.FluidAction.EXECUTE);
+            place(level, local.north(), CESGRegistration.GATEWAY_FLUX_BATTERY.get());
+            withCost("battery", "reserveFloorMb", 4000, () -> {
+                invoke(source, "flush");
+                assertEquals(1000, source.sendTank.getFluidAmount());
+                assertEquals(1000, fluidTarget.receiveTank.getFluidAmount());
+                assertEquals(3900, core.getEyeMb());
+            });
+            withCost("battery", "reserveFloorMb", 0, () -> {
+                invoke(source, "flush");
+                assertTrue(source.sendTank.isEmpty());
+                assertEquals(2000, fluidTarget.receiveTank.getFluidAmount());
+                assertEquals(3800, core.getEyeMb());
+            });
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void blockedRoutedFluidsStayBufferedWithoutFuelLossOrFallback(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var core = core(level, local);
+        core(level, remote);
+        core(level, remote.north(3));
+        var source = port(level, local.east());
+        var target = port(level, remote.east());
+        var fallback = port(level, remote.north(3).east());
+        core.setBinding(0, new GatewayPartner(level.dimension(), remote, true));
+        core.setBinding(1, new GatewayPartner(level.dimension(), remote.north(3), true));
+        core.setFluidRouteMode(true);
+        core.getOrCreateChannelFilter(0).fluidItems().setStackInSlot(0, new ItemStack(Items.WATER_BUCKET));
+        core.getOrCreateChannelFilter(1).setFluidBlacklist(true);
+        core.fillEssence(4000, false);
+        source.sendTank.fill(new FluidStack(Fluids.WATER, 1000), IFluidHandler.FluidAction.EXECUTE);
+        target.receiveTank.fill(new FluidStack(Fluids.LAVA, 4000), IFluidHandler.FluidAction.EXECUTE);
+        withCost("gateway", "portTransferCostMb", 100, () -> {
+            invoke(source, "flush");
+            assertEquals(1000, source.sendTank.getFluidAmount());
+            assertEquals(0, fallback.receiveTank.getFluidAmount());
+            assertEquals(4000, core.getEssenceMb());
+            target.receiveTank.drain(4000, IFluidHandler.FluidAction.EXECUTE);
+            target.receiveTank.fill(new FluidStack(Fluids.WATER, 4000), IFluidHandler.FluidAction.EXECUTE);
+            invoke(source, "flush");
+            assertEquals(1000, source.sendTank.getFluidAmount());
+            assertEquals(4000, core.getEssenceMb());
+            BlockPos unloaded = local.offset(4096, 0, 4096);
+            core.setBinding(0, new GatewayPartner(level.dimension(), unloaded, true));
+            invoke(source, "flush");
+            assertTrue(!level.isLoaded(unloaded));
+            assertEquals(1000, source.sendTank.getFluidAmount());
+            assertEquals(0, fallback.receiveTank.getFluidAmount());
+            assertEquals(4000, core.getEssenceMb());
+            var saved = source.getUpdateTag(level.registryAccess());
+            var restored = new GatewayPortBlockEntity(local.east(), source.getBlockState());
+            restored.loadAdditional(saved, level.registryAccess());
+            assertEquals(1000, restored.sendTank.getFluidAmount());
+            core.setBinding(0, new GatewayPartner(level.dimension(), remote, true));
+            target.receiveTank.drain(4000, IFluidHandler.FluidAction.EXECUTE);
+            invoke(source, "flush");
+            assertTrue(source.sendTank.isEmpty());
+            assertEquals(1000, target.receiveTank.getFluidAmount());
+            assertEquals(3900, core.getEssenceMb());
+        });
         helper.succeed();
     }
 

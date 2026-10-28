@@ -16,9 +16,22 @@ public class ChannelFilter {
 
     private final ItemStackHandler items;
     private boolean blacklist;
+    private final ItemStackHandler fluidItems;
+    private boolean fluidBlacklist;
 
     public ChannelFilter(Runnable onChange) {
         this.items = new ItemStackHandler(SLOTS) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                onChange.run();
+            }
+
+            @Override
+            public int getSlotLimit(int slot) {
+                return 1; // filters are type-only
+            }
+        };
+        this.fluidItems = new ItemStackHandler(SLOTS) {
             @Override
             protected void onContentsChanged(int slot) {
                 onChange.run();
@@ -33,6 +46,23 @@ public class ChannelFilter {
 
     public ItemStackHandler items() {
         return items;
+    }
+
+    public ItemStackHandler fluidItems() { return fluidItems; }
+    public boolean isFluidBlacklist() { return fluidBlacklist; }
+    public void setFluidBlacklist(boolean value) { fluidBlacklist = value; }
+
+    public boolean acceptsFluid(net.neoforged.neoforge.fluids.FluidStack sample) {
+        if (sample.isEmpty()) return false;
+        boolean listed = false;
+        for (int slot = 0; slot < fluidItems.getSlots(); slot++) {
+            var selected = net.neoforged.neoforge.fluids.FluidUtil.getFluidContained(fluidItems.getStackInSlot(slot));
+            if (selected.isPresent() && net.neoforged.neoforge.fluids.FluidStack.isSameFluidSameComponents(selected.get(), sample)) {
+                listed = true;
+                break;
+            }
+        }
+        return fluidBlacklist ? !listed : listed;
     }
 
     public boolean isBlacklist() {
@@ -64,10 +94,10 @@ public class ChannelFilter {
 
     /** Whether this filter differs from a fresh default (empty whitelist) and is worth persisting. */
     public boolean hasContent() {
-        if (blacklist)
+        if (blacklist || fluidBlacklist)
             return true;
         for (int slot = 0; slot < items.getSlots(); slot++)
-            if (!items.getStackInSlot(slot).isEmpty())
+            if (!items.getStackInSlot(slot).isEmpty() || !fluidItems.getStackInSlot(slot).isEmpty())
                 return true;
         return false;
     }
@@ -76,11 +106,16 @@ public class ChannelFilter {
         CompoundTag tag = new CompoundTag();
         tag.put("Items", items.serializeNBT(registries));
         tag.putBoolean("Blacklist", blacklist);
+        tag.put("FluidItems", fluidItems.serializeNBT(registries));
+        tag.putBoolean("FluidBlacklist", fluidBlacklist);
         return tag;
     }
 
     public void load(HolderLookup.Provider registries, CompoundTag tag) {
         items.deserializeNBT(registries, tag.getCompound("Items"));
         blacklist = tag.getBoolean("Blacklist");
+        if (tag.contains("FluidItems"))
+            fluidItems.deserializeNBT(registries, tag.getCompound("FluidItems"));
+        fluidBlacklist = tag.getBoolean("FluidBlacklist");
     }
 }

@@ -83,8 +83,6 @@ public class CESGClient {
     }
 
     private static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
-        event.register(ModelResourceLocation.standalone(CESGPartialModels.BELT_LOADER_TUBE.modelLocation()));
-        event.register(ModelResourceLocation.standalone(CESGPartialModels.BELT_UNLOADER_TUBE.modelLocation()));
         event.register(ModelResourceLocation.standalone(CESGPartialModels.EXTRACTOR_NOZZLE.modelLocation()));
         event.register(ModelResourceLocation.standalone(CESGPartialModels.GATEWAY_CORE_COG.modelLocation()));
     }

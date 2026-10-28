@@ -3,12 +3,16 @@ package com.cesg.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+
+import net.minecraft.client.renderer.Rect2i;
 
 import com.cesg.network.TerminalActionPacket;
 import com.cesg.network.TerminalContentPacket;
 import com.cesg.storage.network.StorageTerminalMenu;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -35,13 +39,15 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int SEARCH_WIDTH = StorageTerminalMenu.MAIN_PANEL_WIDTH - GRID_X * 2;
     private static final int CELL = 18;
 
-    private static final int PANEL_COLOR = 0xFFC6C6C6;
-    private static final int HIGHLIGHT_COLOR = 0xFFFFFFFF;
-    private static final int SHADOW_COLOR = 0xFF555555;
-    private static final int SLOT_BG = 0xFF8B8B8B;
-    private static final int SLOT_SHADOW = 0xFF373737;
-    private static final int SLOT_HIGHLIGHT = 0xFFFFFFFF;
-    private static final int LABEL_COLOR = 0x404040;
+    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/terminal.png");
+    private static final ResourceLocation SLOT = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/slot.png");
+    private static final int PANEL_COLOR = 0xFFC9C3AD;
+    private static final int HIGHLIGHT_COLOR = 0xFFE7D9B5;
+    private static final int SHADOW_COLOR = 0xFF555B50;
+    private static final int SLOT_HIGHLIGHT = 0xFFE7D9B5;
+    private static final int LABEL_COLOR = 0x34392F;
     private static final int CLEAR_NORMAL = 0xFFAA3333;
     private static final int CLEAR_HOVER = 0xFFFF5555;
 
@@ -51,8 +57,8 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int TAB_H = 12;
     private static final int TAB_PAD = 8;
     private static final int TAB_DOT_SPACE = 7;
-    private static final int TAB_ACTIVE = 0xFFC6C6C6;
-    private static final int TAB_INACTIVE = 0xFF9A9A9A;
+    private static final int TAB_ACTIVE = 0xFFB5A7BF;
+    private static final int TAB_INACTIVE = 0xFFA39F89;
     private static final int STATUS_LIVE = 0xFF55DD55;
     private static final int STATUS_OFFLINE = 0xFFAAAAAA;
     private static final int STATUS_FAULT = 0xFFFF5555;
@@ -61,10 +67,13 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private List<TerminalContentPacket.Entry> filtered = List.of();
     private List<TerminalContentPacket.Entry> remoteEntries = List.of();
     private List<TerminalContentPacket.Entry> remoteFiltered = List.of();
+    private boolean scanLimited;
     private int remoteStatus = TerminalContentPacket.REMOTE_NONE;
     private boolean showingRemote;
     private EditBox searchBox;
     private int scrollRow;
+    private int visibleRows = ROWS;
+    private int inventoryOffset;
 
     public StorageTerminalScreen(StorageTerminalMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -77,12 +86,20 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     @Override
     protected void init() {
+        // Reserve 24 GUI pixels for recipe viewers' bottom search controls.
+        visibleRows = Math.max(4, Math.min(ROWS, (height - 24 - 126) / CELL));
+        inventoryOffset = (visibleRows - ROWS) * CELL;
+        imageHeight = 234 + inventoryOffset;
+        inventoryLabelY = StorageTerminalMenu.PLAYER_INV_Y + inventoryOffset - 11;
+        menu.positionPlayerInventory(inventoryOffset);
         super.init();
+        topPos = Math.max(0, (height - 24 - imageHeight) / 2);
         searchBox = new EditBox(font, leftPos + GRID_X, topPos + SEARCH_Y, searchWidth(), 12,
                 Component.translatable("cesg.network.search"));
         searchBox.setBordered(true);
         searchBox.setResponder(text -> refilter());
         addRenderableWidget(searchBox);
+        refilter(); // A resize may change how many rows fit and the last valid scroll position.
     }
 
     public static void acceptContent(TerminalContentPacket packet) {
@@ -96,6 +113,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         this.remoteEntries = sortedByCount(packet.remoteEntries());
         boolean hadTabs = tabsShown();
         this.remoteStatus = packet.remoteStatus();
+        this.scanLimited = packet.scanLimited();
         if (!tabsShown())
             showingRemote = false; // bridge gone: fall back to the local view
         if (searchBox != null && hadTabs != tabsShown())
@@ -171,22 +189,20 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     private int maxScrollRow() {
         int totalRows = (activeFiltered().size() + COLS - 1) / COLS;
-        return Math.max(0, totalRows - ROWS);
+        return Math.max(0, totalRows - visibleRows);
     }
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x0 = leftPos;
         int y0 = topPos;
-        int mainW = StorageTerminalMenu.MAIN_PANEL_WIDTH;
-        int notchW = imageWidth - mainW;
-        int notchH = StorageTerminalMenu.CRAFT_NOTCH_HEIGHT;
+        // Cut unused storage rows out of the body without stretching pixel art.
+        int seam = GRID_Y + visibleRows * CELL;
+        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, seam, 268, 234);
+        graphics.blit(BACKGROUND, x0, y0 + seam, 0, GRID_Y + ROWS * CELL,
+                StorageTerminalMenu.MAIN_PANEL_WIDTH, 234 - GRID_Y - ROWS * CELL, 268, 234);
 
-        drawOutline(graphics, x0, y0, mainW, imageHeight, notchW, notchH);
-        drawMainPanel(graphics, x0, y0, mainW, imageHeight, notchH);
-        drawCraftNotch(graphics, x0 + mainW, y0, notchW, notchH);
-
-        for (int row = 0; row < ROWS; row++)
+        for (int row = 0; row < visibleRows; row++)
             for (int col = 0; col < COLS; col++)
                 drawSlotBox(graphics, x0 + GRID_X + col * CELL, y0 + GRID_Y + row * CELL);
         for (int row = 0; row < 3; row++)
@@ -197,50 +213,24 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < COLS; col++)
                 drawSlotBox(graphics, x0 + StorageTerminalMenu.PLAYER_INV_X - 1 + col * CELL,
-                        y0 + StorageTerminalMenu.PLAYER_INV_Y - 1 + row * CELL);
+                        y0 + StorageTerminalMenu.PLAYER_INV_Y + inventoryOffset - 1 + row * CELL);
         for (int col = 0; col < COLS; col++)
             drawSlotBox(graphics, x0 + StorageTerminalMenu.PLAYER_INV_X - 1 + col * CELL,
-                    y0 + StorageTerminalMenu.HOTBAR_Y - 1);
-    }
-
-    /** L-shaped outer border: right edge only as tall as the crafting notch. */
-    private static void drawOutline(GuiGraphics graphics, int x, int y, int mainW, int mainH,
-            int notchW, int notchH) {
-        int totalW = mainW + notchW;
-        graphics.fill(x - 1, y - 1, x + totalW + 1, y, SHADOW_COLOR);
-        graphics.fill(x - 1, y, x, y + mainH + 1, SHADOW_COLOR);
-        graphics.fill(x - 1, y + mainH, x + totalW + 1, y + mainH + 1, SHADOW_COLOR);
-        graphics.fill(x + totalW, y, x + totalW + 1, y + notchH, SHADOW_COLOR);
-    }
-
-    /** Main terminal body — right edge appears only below the crafting notch. */
-    private static void drawMainPanel(GuiGraphics graphics, int x, int y, int width, int height,
-            int notchHeight) {
-        graphics.fill(x, y, x + width, y + height, PANEL_COLOR);
-        graphics.fill(x, y, x + width, y + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x, y, x + 1, y + height, HIGHLIGHT_COLOR);
-        graphics.fill(x + width - 1, y + notchHeight, x + width, y + height, SHADOW_COLOR);
-        graphics.fill(x, y + height - 1, x + width, y + height, SHADOW_COLOR);
-    }
-
-    /** Short crafting extension on the right — open on the left, no full-height column. */
-    private static void drawCraftNotch(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, PANEL_COLOR);
-        graphics.fill(x, y, x + width, y + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x + width - 1, y, x + width, y + height, SHADOW_COLOR);
-        graphics.fill(x, y + height - 1, x + width, y + height, SHADOW_COLOR);
+                    y0 + StorageTerminalMenu.HOTBAR_Y + inventoryOffset - 1);
     }
 
     private static void drawSlotBox(GuiGraphics graphics, int x, int y) {
-        graphics.fill(x, y, x + CELL, y + CELL, SLOT_SHADOW);
-        graphics.fill(x + 1, y + 1, x + CELL, y + CELL, SLOT_HIGHLIGHT);
-        graphics.fill(x + 1, y + 1, x + CELL - 1, y + CELL - 1, SLOT_BG);
+        graphics.blit(SLOT, x, y, 0, 0, CELL, CELL, CELL, CELL);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
 
+        if (scanLimited && mouseY >= topPos && mouseY < topPos + 16
+                && mouseX >= leftPos && mouseX < leftPos + GRID_X + COLS * CELL)
+            graphics.renderTooltip(font, font.split(Component.translatable("cesg.transfer.scan_limit"),
+                    Math.min(width - 16, 220)), mouseX, Math.max(mouseY, topPos + 48));
         int hovered = hoveredEntry(mouseX, mouseY);
         if (hovered >= 0 && menu.getCarried().isEmpty()) {
             TerminalContentPacket.Entry entry = activeFiltered().get(hovered);
@@ -257,9 +247,9 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, titleLabelX, titleLabelY, LABEL_COLOR, false);
+        graphics.drawString(font, scanLimited ? Component.literal("! ").append(title) : title, titleLabelX, titleLabelY, LABEL_COLOR, false);
         graphics.drawString(font, Component.translatable("cesg.network.crafting"),
-                StorageTerminalMenu.CRAFT_GRID_X, 6, LABEL_COLOR, false);
+                StorageTerminalMenu.CRAFT_GRID_X, titleLabelY, LABEL_COLOR, false);
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);
 
         int clearColor = isClearCraftHovered(mouseX, mouseY) ? CLEAR_HOVER : CLEAR_NORMAL;
@@ -269,7 +259,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             drawTabs(graphics, mouseX, mouseY);
 
         List<TerminalContentPacket.Entry> active = activeFiltered();
-        for (int cell = 0; cell < ROWS * COLS; cell++) {
+        for (int cell = 0; cell < visibleRows * COLS; cell++) {
             int index = (scrollRow + cell / COLS) * COLS + cell % COLS;
             if (index >= active.size())
                 break;
@@ -348,7 +338,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         Component msg = Component.translatable(key);
         int w = font.width(msg);
         int x = GRID_X + (COLS * CELL) / 2 - w / 2;
-        int y = GRID_Y + (ROWS * CELL) / 2 - 4;
+        int y = GRID_Y + (visibleRows * CELL) / 2 - 4;
         // Sit the text on a panel plate; bare text over the slot grid is unreadable.
         int x0 = x - 4, y0 = y - 3, x1 = x + w + 4, y1 = y + 11;
         graphics.fill(x0, y0, x1, y1, PANEL_COLOR);
@@ -374,14 +364,15 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         if (total <= 1)
             return;
         String text = shorten(total);
+        // Keep the glyphs AND their shadow inside the slot's 16px interior.
+        // Fit unusually wide counts rather than letting them cross the frame.
+        int textWidth = font.width(text);
+        float scale = Math.min(0.5f, 14f / (textWidth + 1));
         var pose = graphics.pose();
         pose.pushPose();
-        pose.translate(0, 0, 200);
-        pose.pushPose();
-        pose.scale(0.5f, 0.5f, 1);
-        graphics.drawString(font, text,
-                (x + 17) * 2 - font.width(text), (y + 13) * 2, 0xFFFFFF, true);
-        pose.popPose();
+        pose.translate(x + 15, y + 15, 200);
+        pose.scale(scale, scale, 1);
+        graphics.drawString(font, text, -textWidth - 1, -font.lineHeight - 1, 0xFFFFFF, true);
         pose.popPose();
     }
 
@@ -398,10 +389,28 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private int hoveredEntry(double mouseX, double mouseY) {
         int gx = (int) mouseX - leftPos - GRID_X;
         int gy = (int) mouseY - topPos - GRID_Y;
-        if (gx < 0 || gy < 0 || gx >= COLS * CELL || gy >= ROWS * CELL)
+        if (gx < 0 || gy < 0 || gx >= COLS * CELL || gy >= visibleRows * CELL)
             return -1;
         int index = (scrollRow + gy / CELL) * COLS + gx / CELL;
         return index < activeFiltered().size() ? index : -1;
+    }
+
+    /** Viewer-neutral hover data for the aggregated grid (not a vanilla inventory slot). */
+    public record HoveredNetworkItem(ItemStack stack, Rect2i area) {}
+
+    public Optional<HoveredNetworkItem> recipeViewerItemAt(double mouseX, double mouseY) {
+        if (searchBox == null || searchBox.isFocused() || !menu.getCarried().isEmpty())
+            return Optional.empty();
+        int index = hoveredEntry(mouseX, mouseY);
+        if (index < 0)
+            return Optional.empty();
+        ItemStack sample = activeFiltered().get(index).sample();
+        if (sample.isEmpty())
+            return Optional.empty();
+        int visible = index - scrollRow * COLS;
+        return Optional.of(new HoveredNetworkItem(sample.copyWithCount(1),
+                new Rect2i(leftPos + GRID_X + visible % COLS * CELL,
+                        topPos + GRID_Y + visible / COLS * CELL, CELL, CELL)));
     }
 
     private boolean isTabHovered(double mouseX, double mouseY, int tabX, int tabW) {
@@ -413,7 +422,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private boolean isInGrid(double mouseX, double mouseY) {
         double gx = mouseX - leftPos - GRID_X;
         double gy = mouseY - topPos - GRID_Y;
-        return gx >= 0 && gy >= 0 && gx < COLS * CELL && gy < ROWS * CELL;
+        return gx >= 0 && gy >= 0 && gx < COLS * CELL && gy < visibleRows * CELL;
     }
 
     private boolean isClearCraftHovered(double mouseX, double mouseY) {
@@ -441,6 +450,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             }
         }
         if (isInGrid(mouseX, mouseY)) {
+            setFocused(null);
             ItemStack carried = menu.getCarried();
             if (!carried.isEmpty()) {
                 int amount = button == 1 ? 1 : carried.getCount();
@@ -479,6 +489,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     }
 
     private void setShowingRemote(boolean remote) {
+        setFocused(null);
         if (showingRemote == remote)
             return;
         showingRemote = remote;
@@ -498,7 +509,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (searchBox.isFocused() && searchBox.keyPressed(keyCode, scanCode, modifiers))
             return true;
-        if (searchBox.isFocused() && keyCode != 256 /* ESC */)
+        if (searchBox.isFocused() && keyCode != 256 /* ESC */ && keyCode != 258 /* TAB */)
             return searchBox.canConsumeInput() || super.keyPressed(keyCode, scanCode, modifiers);
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

@@ -36,6 +36,8 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
     public static final int IMAGE_H = 156;
 
     public static final int BTN_BLACKLIST = 0;
+    public static final int BTN_FLUIDS = 1;
+    public static final int GHOST_END = 2 * FILTER_COLS;
     private static final int DATA_BLACKLIST = 0;
 
     private final BlockPos pos;
@@ -43,7 +45,7 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
     private final Player player;
     @Nullable
     private final CrossDimensionalGatewayCoreBlockEntity core;
-    private final ContainerData toggle = new SimpleContainerData(1);
+    private final ContainerData toggle = new SimpleContainerData(2);
 
     public GatewayFilterMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, buf.readBlockPos(), buf.readVarInt());
@@ -59,7 +61,11 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
         ItemStackHandler filter = core != null ? core.getOrCreateChannelFilter(channel).items()
                 : new ItemStackHandler(FILTER_COLS);
         for (int col = 0; col < FILTER_COLS; col++)
-            addSlot(new GhostSlot(filter, col, FILTER_X + 1 + col * SLOT, FILTER_Y + 1));
+            addSlot(new GhostSlot(filter, col, FILTER_X + 1 + col * SLOT, FILTER_Y + 1, false));
+        ItemStackHandler fluids = core != null ? core.getOrCreateChannelFilter(channel).fluidItems()
+                : new ItemStackHandler(FILTER_COLS);
+        for (int col = 0; col < FILTER_COLS; col++)
+            addSlot(new GhostSlot(fluids, col, FILTER_X + 1 + col * SLOT, FILTER_Y + 1, true));
 
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < 9; col++)
@@ -80,9 +86,13 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
         return toggle.get(DATA_BLACKLIST) != 0;
     }
 
+    public boolean editingFluids() { return toggle.get(1) != 0; }
+
     private void syncToggle() {
-        if (core != null)
-            toggle.set(DATA_BLACKLIST, core.isChannelBlacklist(channel) ? 1 : 0);
+        if (core != null) {
+            ChannelFilter filter = core.getOrCreateChannelFilter(channel);
+            toggle.set(DATA_BLACKLIST, (editingFluids() ? filter.isFluidBlacklist() : filter.isBlacklist()) ? 1 : 0);
+        }
     }
 
     @Override
@@ -93,16 +103,20 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
 
     @Override
     public boolean clickMenuButton(Player player, int id) {
-        if (core == null || id != BTN_BLACKLIST)
-            return false;
-        core.toggleChannelBlacklist(channel);
+        if (core == null) return false;
+        if (id == BTN_FLUIDS) toggle.set(1, editingFluids() ? 0 : 1);
+        else if (id == BTN_BLACKLIST) {
+            if (editingFluids()) core.toggleChannelFluidBlacklist(channel);
+            else core.toggleChannelBlacklist(channel);
+        } else return false;
+        syncToggle();
         return true;
     }
 
     @Override
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        if (slotId >= 0 && slotId < FILTER_COLS && slots.get(slotId) instanceof GhostSlot ghost) {
-            ghost.setFilter(getCarried());
+        if (slotId >= 0 && slotId < GHOST_END && slots.get(slotId) instanceof GhostSlot ghost) {
+            if (ghost.isActive()) ghost.setFilter(getCarried());
             return;
         }
         super.clicked(slotId, button, clickType, player);
@@ -119,10 +133,15 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
                 && player.canInteractWithBlock(pos, 20);
     }
 
-    private static class GhostSlot extends SlotItemHandler {
-        GhostSlot(IItemHandler handler, int index, int x, int y) {
+    private class GhostSlot extends SlotItemHandler {
+        private final boolean fluid;
+        GhostSlot(IItemHandler handler, int index, int x, int y, boolean fluid) {
             super(handler, index, x, y);
+            this.fluid = fluid;
         }
+
+        @Override
+        public boolean isActive() { return fluid == editingFluids(); }
 
         @Override
         public boolean mayPickup(Player player) {
@@ -136,6 +155,8 @@ public class GatewayFilterMenu extends AbstractContainerMenu {
 
         void setFilter(ItemStack carried) {
             ItemStack filter = carried.isEmpty() ? ItemStack.EMPTY : carried.copyWithCount(1);
+            if (fluid && !filter.isEmpty()
+                    && net.neoforged.neoforge.fluids.FluidUtil.getFluidContained(filter).isEmpty()) return;
             ((IItemHandlerModifiable) getItemHandler()).setStackInSlot(getSlotIndex(), filter);
         }
     }

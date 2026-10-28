@@ -59,7 +59,8 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
     private final Player player;
     @Nullable
     private final StorageBridgeBlockEntity bridge;
-    private final ContainerData toggles = new SimpleContainerData(5);
+    private int diagnosticCountdown;
+    private final ContainerData toggles = new SimpleContainerData(7);
 
     public StorageBridgeMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, buf.readBlockPos());
@@ -97,10 +98,29 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
         toggles.set(DATA_SEND_BLACKLIST, bridge.isSendBlacklist() ? 1 : 0);
         toggles.set(DATA_PULL_BLACKLIST, bridge.isPullBlacklist() ? 1 : 0);
         toggles.set(DATA_LOCK, bridge.isLocked() ? 1 : 0);
+        if (!player.level().isClientSide && diagnosticCountdown-- <= 0) {
+            diagnosticCountdown = 9;
+            toggles.set(5, bridge.transferDiagnostic(true).ordinal());
+            toggles.set(6, bridge.transferDiagnostic(false).ordinal());
+        }
+    }
+
+    public TransferDiagnostic diagnostic(boolean push) {
+        return TransferDiagnostic.fromId(toggles.get(push ? 5 : 6));
     }
 
     public boolean isPushEnabled() {
         return toggles.get(DATA_PUSH) != 0;
+    }
+
+    /** Client presentation only; preserve hotbar slot IDs and inventory indices. */
+    public void positionHotbar(int verticalOffset) {
+        for (int col = 0; col < 9; col++) {
+            int id = GHOST_END + 27 + col;
+            Slot slot = new Slot(player.getInventory(), col, SEND_X + col * SLOT, HOTBAR_Y + verticalOffset);
+            slot.index = id;
+            slots.set(id, slot);
+        }
     }
 
     public boolean isPullEnabled() {
