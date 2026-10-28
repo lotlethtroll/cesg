@@ -537,6 +537,18 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.network.remote.offline", "Partner network offline");
         add("cesg.network.remote.fault", "No partner network found");
         add("cesg.network.remote.empty", "Partner network is empty");
+        add("cesg.transfer.ready", "Transfer available");
+        add("cesg.transfer.disabled", "Automatic transfer disabled");
+        add("cesg.transfer.idle", "No matching items to transfer");
+        add("cesg.transfer.network_unavailable", "Storage network controller unavailable");
+        add("cesg.transfer.scan_limit", "Network scan limit reached; only the first 256 members are visible");
+        add("cesg.transfer.gateway_inactive", "Gateway is not rotating");
+        add("cesg.transfer.no_route", "No channel route matches these items");
+        add("cesg.transfer.partner_offline", "Partner is unbound, unloaded, or has no reachable bridge");
+        add("cesg.transfer.partner_locked", "Partner is locked against extraction");
+        add("cesg.transfer.protected_reserve", "Fuel is protected for player travel");
+        add("cesg.transfer.insufficient_fuel", "Insufficient gateway fuel for this transfer");
+        add("cesg.transfer.destination_full", "Destination cannot accept the matching items");
         add("cesg.network.remote.locked", "That network is locked — its Bridge does not allow items to be taken");
         add("cesg.network.no_results", "No results");
         add("cesg.network.remote.unfuelled", "Not enough gateway fuel — a Flux Battery is holding back the travel reserve");

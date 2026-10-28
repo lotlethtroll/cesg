@@ -171,9 +171,19 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
         Component push = routed
                 ? Component.translatable("cesg.bridge.push.routed")
                 : Component.translatable("cesg.bridge.push.to", menu.destinationLabel());
-        graphics.drawString(font, font.plainSubstrByWidth(push.getString(), imageWidth - 16), 8, PUSH_HEADER_Y + 2, routed ? DISABLED_LABEL : LABEL_COLOR, false);
-        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("cesg.bridge.pull.from", menu.destinationLabel()).getString(), imageWidth - 16),
+        graphics.drawString(font, font.plainSubstrByWidth(push.getString(), imageWidth - 26), 8, PUSH_HEADER_Y + 2, routed ? DISABLED_LABEL : LABEL_COLOR, false);
+        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("cesg.bridge.pull.from", menu.destinationLabel()).getString(), imageWidth - 26),
                 8, PULL_HEADER_Y + 2, LABEL_COLOR, false);
+        for (boolean pushDirection : new boolean[] {true, false}) {
+            var status = menu.diagnostic(pushDirection);
+            int color = switch (status) {
+                case READY -> 0xFF69A45B;
+                case IDLE, DISABLED -> 0xFF747B6E;
+                default -> 0xFFD49B45;
+            };
+            int y = (pushDirection ? PUSH_HEADER_Y : PULL_HEADER_Y) + 4;
+            graphics.fill(imageWidth - 14, y, imageWidth - 10, y + 4, color);
+        }
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);
     }
 
@@ -205,8 +215,13 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
             else if (mouseY >= topPos + PULL_HEADER_Y && mouseY < topPos + PULL_HEADER_Y + 12)
                 tip = Component.translatable("cesg.bridge.pull.from", menu.destinationLabel());
         }
-        if (tip != null)
-            graphics.renderComponentTooltip(font, List.of(tip), mouseX, mouseY);
+        if (tip != null) {
+            boolean directionRow = mouseY >= topPos + PUSH_HEADER_Y && mouseY < topPos + PULL_BTN_Y + BTN_H
+                    && !isLockHovered(mouseX, mouseY);
+            List<Component> lines = directionRow ? List.of(tip,
+                    Component.translatable(menu.diagnostic(mouseY < topPos + PULL_HEADER_Y).translationKey())) : List.of(tip);
+            graphics.renderComponentTooltip(font, lines, mouseX, mouseY);
+        }
     }
 
     /** Empty ghost slots have no item tooltip of their own — hint how to configure them. */
