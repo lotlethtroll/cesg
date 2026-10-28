@@ -1,11 +1,11 @@
 ## Scope
 
-- [ ] Create a coherent CESG panel, slot, tab, and button style with Create-like mechanical materials and restrained End accents.
-- [ ] Prototype only the Storage Terminal first; preserve menu, packet, crafting, and transfer behavior.
-- [ ] Review enabled, disabled, hover, selected, and offline states in-game at supported GUI scales, narrow windows, long labels, and large counts.
-- [ ] Obtain Andrew's visual feedback before rolling the style out.
+- [x] Create a coherent CESG panel, slot, tab, and button style with Create-like mechanical materials and restrained End accents.
+- [x] Prototype only the Storage Terminal first; preserve packet, crafting, and transfer behavior (client slot coordinates adapt to height).
+- [x] Review tab/control states, offline/fault messages, tooltips, supported GUI scales, narrow windows, and large counts in-game.
+- [x] Obtain Andrew's visual feedback before rolling the style out.
 
-Targets `1.2-dev`. First visual prototype implemented; in-game review is pending.
+Targets `1.2-dev`. Visual direction approved by Andrew; terminal merge checks complete.
 
 ## Prototype pass
 
@@ -15,8 +15,7 @@ Targets `1.2-dev`. First visual prototype implemented; in-game review is pending
 - Texture source: `tools/gui/generate_terminal.py` (Python + Pillow); rerun from
   the repo root to regenerate the PNG assets.
 - Validation: Gradle build and unit tests pass. Background texture inspected.
-- Pending: live client review of populated/empty grids, tooltips, search focus,
-  Local/Partner tabs and offline states, GUI scales, and JEI/EMI overlap.
+- Completed live checks are recorded below; initial findings and their fixes are retained.
 - The initial texture pass does not change menu behavior, network packets,
   transfer logic, or crafting. Responsive layout below changes client slot positions only.
 
@@ -38,8 +37,8 @@ client, with both JEI and EMI loaded (EMI provides the visible recipe sidebar).
 - **Original finding (fixed below):** Auto scale leaves too little vertical margin: EMI's centered
   bottom search overlays the hotbar. The frame itself fits, but recipe-viewer
   integration initially failed at this scale.
-- Not yet checked: scale 1 terminal, narrow window, other languages/resource
-  fonts, disconnected/faulted partner states, JEI alone, and EMI alone.
+- At this stage, scale 1, narrow windows, partner failure states, and isolated
+  recipe viewers were pending; these are covered by the final pass below.
 
 Client left at scale 3 for inspection. No production world was modified.
 
@@ -58,6 +57,33 @@ Client left at scale 3 for inspection. No production world was modified.
 - Build, unit tests, and all 18 GameTests pass. New coverage checks slot identities
   and coordinates across repeated compact/normal layout changes.
 - No global scale or EMI preference is changed by the mod. The QA client uses
-  its original Auto scale again. JEI-only and other-language checks remain pending.
+  its original Auto scale again. Isolated-viewer follow-up is recorded below.
+
+## Final merge checks — 2026-10-28
+
+- JEI alone: launched with EMI removed only from the development runtime via a
+  temporary Gradle init script. Startup log confirms seven mods and JEI's runtime.
+  The terminal, hotbar, JEI search, and item sidebar remain separate in the small
+  window (approximately 854×480 client pixels; captured at desktop scaling).
+- Repeatedly maximize/restore the window with the terminal open: five storage
+  rows become six and return to five. Scrolling to the final compact row then
+  expanding clamps the scroll position and restores the beginning of the list.
+- Following those resizes, move 64 yellow wool from the hotbar into crafting,
+  then clear the grid: all 64 return to storage and both source slots are empty.
+- Fault and offline fixtures display the red/gray Partner indicators and centered
+  message plates within the storage panel. Restoring the controller and binding
+  recovers the linked/empty Partner view.
+- EMI alone: launched with JEI removed only from the development runtime. The
+  terminal, item sidebar, search, and six-row layout fit at GUI scale 1. Partner
+  tab selection and empty-network message work. Together with prior scale 2/3
+  and compact Auto checks, the targeted scale/viewer checks pass.
+- Both clients save and exit cleanly. Restore the pre-QA display settings afterward.
+- No terminal code changes were needed in this final pass. Build/unit tests and
+  18 GameTests passed on this implementation in the preceding overlap-fix pass.
+- Separate pre-existing startup model error: belt-loader tube has out-of-bounds
+  geometry, unchanged from `v1.1.1`; tracked in issue #18, outside this PR.
+
+Merge assessment: no known terminal blocker remains. Other languages and
+third-party resource-pack fonts have not been exhaustively checked.
 
 https://github.com/lotlethtroll/cesg/issues/5
