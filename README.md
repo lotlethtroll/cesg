@@ -77,6 +77,13 @@ automation can never strand you on the wrong side of a portal.
 Stress-aware kinetics, goggle overlays, JEI recipe support, advancements, and a
 server config for travel costs and chunk-loading permissions.
 
+## 1.1.1 maintenance update
+
+This patch fixes terminal crafting item loss/duplication, Bridge transfer safety,
+blocked-transfer fuel charges, routed fuel selection, and Bridge status reporting.
+Recipes, item IDs, save keys, and configuration defaults remain unchanged.
+See [CHANGELOG.md](CHANGELOG.md) for the complete changes.
+
 ## Installation
 
 1. Install [NeoForge](https://neoforged.net/) 21.1.233 or newer for Minecraft 1.21.1.
