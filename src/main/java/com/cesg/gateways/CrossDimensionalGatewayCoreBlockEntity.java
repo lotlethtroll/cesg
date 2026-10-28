@@ -379,21 +379,8 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             return true;
         int coreFuel = crossDim ? eyeMb : essenceMb;
 
-        long batteryFuel = 0;
-        boolean batteryPresent = false;
-        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
-            net.neoforged.neoforge.fluids.FluidStack fluid = battery.storedFluid();
-            if (fluid.isEmpty()) {
-                batteryPresent = true; // a dry battery still gates — that is the safety the reserve provides
-            } else if (crossDim ? GatewayFluxBatteryBlockEntity.isEye(fluid)
-                    : GatewayFluxBatteryBlockEntity.isEssence(fluid)) {
-                batteryPresent = true;
-                batteryFuel += fluid.getAmount();
-            }
-        }
-
-        if (batteryPresent && (coreFuel + batteryFuel) - cost < com.cesg.CESGConfig.batteryReserveFloor())
-            return false; // protect the reserve for travel
+        if (protectsAutomationReserve(cost, crossDim))
+            return false;
         if (coreFuel < cost)
             return false; // Core not yet topped up this tick — the battery refills it, retry next flush
 
@@ -406,6 +393,22 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         notifyUpdate();
         updateCoreFuelVisual();
         return true;
+    }
+
+    /** Same reserve rule as the spending gate, without changing fuel or loading chunks. */
+    boolean protectsAutomationReserve(int cost, boolean crossDim) {
+        long total = crossDim ? eyeMb : essenceMb;
+        boolean present = false;
+        for (GatewayFluxBatteryBlockEntity battery : scanRingBatteries()) {
+            var fluid = battery.storedFluid();
+            if (fluid.isEmpty()) present = true;
+            else if (crossDim ? GatewayFluxBatteryBlockEntity.isEye(fluid)
+                    : GatewayFluxBatteryBlockEntity.isEssence(fluid)) {
+                present = true;
+                total += fluid.getAmount();
+            }
+        }
+        return cost > 0 && present && total - cost < com.cesg.CESGConfig.batteryReserveFloor();
     }
 
     /** Destination-aware accounting shared by Ports and Bridges. No charge for a blocked move. */

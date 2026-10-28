@@ -67,6 +67,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private List<TerminalContentPacket.Entry> filtered = List.of();
     private List<TerminalContentPacket.Entry> remoteEntries = List.of();
     private List<TerminalContentPacket.Entry> remoteFiltered = List.of();
+    private boolean scanLimited;
     private int remoteStatus = TerminalContentPacket.REMOTE_NONE;
     private boolean showingRemote;
     private EditBox searchBox;
@@ -112,6 +113,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         this.remoteEntries = sortedByCount(packet.remoteEntries());
         boolean hadTabs = tabsShown();
         this.remoteStatus = packet.remoteStatus();
+        this.scanLimited = packet.scanLimited();
         if (!tabsShown())
             showingRemote = false; // bridge gone: fall back to the local view
         if (searchBox != null && hadTabs != tabsShown())
@@ -225,6 +227,10 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
 
+        if (scanLimited && mouseY >= topPos && mouseY < topPos + 16
+                && mouseX >= leftPos && mouseX < leftPos + GRID_X + COLS * CELL)
+            graphics.renderTooltip(font, font.split(Component.translatable("cesg.transfer.scan_limit"),
+                    Math.min(width - 16, 220)), mouseX, Math.max(mouseY, topPos + 48));
         int hovered = hoveredEntry(mouseX, mouseY);
         if (hovered >= 0 && menu.getCarried().isEmpty()) {
             TerminalContentPacket.Entry entry = activeFiltered().get(hovered);
@@ -241,7 +247,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, titleLabelX, titleLabelY, LABEL_COLOR, false);
+        graphics.drawString(font, scanLimited ? Component.literal("! ").append(title) : title, titleLabelX, titleLabelY, LABEL_COLOR, false);
         graphics.drawString(font, Component.translatable("cesg.network.crafting"),
                 StorageTerminalMenu.CRAFT_GRID_X, titleLabelY, LABEL_COLOR, false);
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);

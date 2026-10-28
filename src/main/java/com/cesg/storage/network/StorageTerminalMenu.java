@@ -74,6 +74,7 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
     private int refreshCountdown;
     private List<TerminalContentPacket.Entry> lastSent = List.of();
     private List<TerminalContentPacket.Entry> lastRemoteSent = List.of();
+    private boolean lastScanLimited;
     private int lastRemoteStatus = TerminalContentPacket.REMOTE_NONE;
 
     public StorageTerminalMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
@@ -336,22 +337,23 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
             return;
         refreshCountdown = REFRESH_INTERVAL;
 
-        Object2IntMap<ItemStack> totals = StorageNetwork.aggregate(
-                StorageNetwork.scan(serverPlayer.level(), terminalPos));
+        var scan = StorageNetwork.scan(serverPlayer.level(), terminalPos);
+        Object2IntMap<ItemStack> totals = StorageNetwork.aggregate(scan);
         List<TerminalContentPacket.Entry> entries = new ArrayList<>(totals.size());
         for (Object2IntMap.Entry<ItemStack> entry : totals.object2IntEntrySet())
             entries.add(new TerminalContentPacket.Entry(entry.getKey(), entry.getIntValue()));
 
         RemoteSection remote = gatherRemoteSection();
-        if (remote.status() == lastRemoteStatus
+        if (scan.limited() == lastScanLimited && remote.status() == lastRemoteStatus
                 && TerminalContentPacket.sameEntries(entries, lastSent)
                 && TerminalContentPacket.sameEntries(remote.entries(), lastRemoteSent))
             return;
+        lastScanLimited = scan.limited();
         lastSent = entries;
         lastRemoteSent = remote.entries();
         lastRemoteStatus = remote.status();
         PacketDistributor.sendToPlayer(serverPlayer,
-                new TerminalContentPacket(containerId, entries, remote.entries(), remote.status()));
+                new TerminalContentPacket(containerId, entries, remote.entries(), remote.status(), scan.limited()));
     }
 
     private record RemoteSection(List<TerminalContentPacket.Entry> entries, int status) {}
