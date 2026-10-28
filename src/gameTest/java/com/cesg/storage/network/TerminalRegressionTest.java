@@ -25,6 +25,24 @@ public class TerminalRegressionTest {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public void partialCraftOutputNeverMovesWithoutConsumingIngredients(GameTestHelper helper) {
+        ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        player.getInventory().clearContent();
+        for (int i = 0; i < 36; i++) player.getInventory().setItem(i, new ItemStack(Items.COBBLESTONE, 64));
+        player.getInventory().setItem(0, new ItemStack(Items.OAK_PLANKS, 63));
+        StorageTerminalMenu menu = menu(helper, player);
+        menu.craftSlots().setItem(0, new ItemStack(Items.OAK_LOG));
+        menu.quickMoveStack(player, StorageTerminalMenu.RESULT_SLOT);
+        helper.assertTrue(player.getInventory().countItem(Items.OAK_PLANKS) == 63, "Partial output duplicated planks");
+        helper.assertTrue(menu.craftSlots().getItem(0).is(Items.OAK_LOG), "Blocked craft consumed its input");
+        player.getInventory().setItem(1, ItemStack.EMPTY);
+        menu.quickMoveStack(player, StorageTerminalMenu.RESULT_SLOT);
+        helper.assertTrue(player.getInventory().countItem(Items.OAK_PLANKS) == 67, "A fitting craft did not deliver exactly four planks");
+        helper.assertTrue(menu.craftSlots().isEmpty(), "Successful craft did not consume its log");
+        helper.succeed();
+    }
+
     private static StorageTerminalMenu menu(GameTestHelper helper, ServerPlayer player) {
         return new StorageTerminalMenu(1, player.getInventory(), helper.absolutePos(new BlockPos(1, 2, 1)));
     }

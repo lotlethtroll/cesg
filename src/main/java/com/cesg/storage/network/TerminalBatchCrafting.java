@@ -60,16 +60,15 @@ final class TerminalBatchCrafting {
             if (recipeOutput.isEmpty())
                 break;
 
-            outputCopy = recipeOutput.copy();
-            recipeOutput.onCraftedBy(level, player, 1);
-            EventHooks.firePlayerCraftingEvent(player, recipeOutput, craftSlots);
-
             ItemStack toMove = recipeOutput.copy();
             if (!menu.moveCraftResultToPlayer(toMove) || !toMove.isEmpty())
                 break;
 
             if (!(resultSlot instanceof ResultSlot craftResult))
                 break;
+            outputCopy = recipeOutput.copy();
+            recipeOutput.onCraftedBy(level, player, 1);
+            EventHooks.firePlayerCraftingEvent(player, recipeOutput, craftSlots);
             craftResult.onTake(player, recipeOutput);
             resetStackedContents(input);
 

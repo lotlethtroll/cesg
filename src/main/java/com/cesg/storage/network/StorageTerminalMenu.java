@@ -155,6 +155,15 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
 
     /** @return true when the full result stack was merged into the player inventory */
     boolean moveCraftResultToPlayer(ItemStack stack) {
+        int remaining = stack.getCount();
+        for (int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END && remaining > 0; i++) {
+            Slot slot = slots.get(i);
+            ItemStack held = slot.getItem();
+            if (slot.mayPlace(stack) && (held.isEmpty() || ItemStack.isSameItemSameComponents(held, stack)))
+                remaining -= Math.max(0, slot.getMaxStackSize(stack) - held.getCount());
+        }
+        if (remaining > 0)
+            return false;
         return moveItemStackTo(stack, PLAYER_SLOT_START, PLAYER_SLOT_END, true);
     }
 
