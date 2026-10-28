@@ -19,9 +19,6 @@ for x in (0, 172):
     d.rectangle((x, 0, x+3, 219), fill='#424b45')
     d.line((x+1, 0, x+1, 219), fill='#b39759')
     d.line((x+2, 0, x+2, 219), fill='#e0c78d')
-    for y in (24, 78, 132, 190):
-        d.rectangle((x, y, x+3, y+5), fill='#686c5c')
-        rivet(d, x, y+1)
 for y in (0, 216):
     d.rectangle((0, y, 175, y+3), fill='#424b45')
     d.line((0, y+1, 175, y+1), fill='#b39759')
