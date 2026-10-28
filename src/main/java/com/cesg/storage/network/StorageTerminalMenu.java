@@ -103,6 +103,19 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
         return terminalPos;
     }
 
+    /** Client layout only: slot IDs and inventory indices remain unchanged. */
+    public void positionPlayerInventory(int verticalOffset) {
+        for (int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END; i++) {
+            int n = i - PLAYER_SLOT_START;
+            int inventoryIndex = n < 27 ? n + 9 : n - 27;
+            int y = n < 27 ? PLAYER_INV_Y + (n / 9) * 18 : HOTBAR_Y;
+            Slot slot = new Slot(player.getInventory(), inventoryIndex,
+                    PLAYER_INV_X + (n % 9) * 18, y + verticalOffset);
+            slot.index = i;
+            slots.set(i, slot);
+        }
+    }
+
     public void requestRefresh() {
         refreshCountdown = 0;
     }
