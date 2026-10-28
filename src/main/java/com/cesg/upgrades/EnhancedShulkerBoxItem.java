@@ -37,6 +37,8 @@ public class EnhancedShulkerBoxItem extends BlockItem {
     @Override
     public Component getName(ItemStack stack) {
         int displayTier = ensureContents(stack).tier();
+        if (displayTier <= 1)
+            return super.getName(stack);
         // Tier drives the adjective: 2 = Enhanced, 3 = Reinforced, 4 = Ultimate. Prefixed to the
         // (possibly coloured) base name, e.g. "Reinforced Red Shulker Box".
         return Component.translatable("cesg.enhanced_shulker.tier_name." + displayTier)

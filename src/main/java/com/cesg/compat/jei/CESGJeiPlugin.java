@@ -1,6 +1,13 @@
 package com.cesg.compat.jei;
 
 import java.util.List;
+import java.util.Optional;
+
+import com.cesg.client.StorageTerminalScreen;
+import mezz.jei.api.gui.builder.IClickableIngredientFactory;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
+import mezz.jei.api.runtime.IClickableIngredient;
 
 import com.cesg.CESG;
 import com.cesg.init.CESGRecipes;
@@ -58,6 +65,20 @@ public class CESGJeiPlugin implements IModPlugin {
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(CESGRegistration.ENDER_INFUSER.get()), enderInfusingType());
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiContainerHandler(StorageTerminalScreen.class,
+                new IGuiContainerHandler<StorageTerminalScreen>() {
+                    @Override
+                    public Optional<? extends IClickableIngredient<?>>
+                            getClickableIngredientUnderMouse(IClickableIngredientFactory factory,
+                                    StorageTerminalScreen screen, double mouseX, double mouseY) {
+                        return screen.recipeViewerItemAt(mouseX, mouseY)
+                                .flatMap(item -> factory.createBuilder(item.stack()).buildWithArea(item.area()));
+                    }
+                });
     }
 
     @Override

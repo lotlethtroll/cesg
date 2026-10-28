@@ -13,6 +13,30 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public class TerminalRegressionTest {
     @GameTest(template = "empty")
+    public void compactLayoutPreservesInventorySlotIdentity(GameTestHelper helper) {
+        ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        StorageTerminalMenu menu = menu(helper, player);
+        var craftingResult = menu.getSlot(0);
+        var craftingInput = menu.getSlot(1);
+        var original = java.util.stream.IntStream.range(10, 46)
+                .mapToObj(menu::getSlot).toList();
+        for (int offset : new int[] {-18, -36, 0, -18, 0}) {
+            menu.positionPlayerInventory(offset);
+            for (int i = 10; i < 46; i++) {
+                var slot = menu.getSlot(i);
+                var before = original.get(i - 10);
+                helper.assertTrue(slot.index == i && slot.container == before.container
+                        && slot.getContainerSlot() == before.getContainerSlot(), "Layout changed slot identity");
+                helper.assertTrue(slot.x == before.x && slot.y == before.y + offset,
+                        "Repeated resizing accumulated slot offsets");
+            }
+        }
+        helper.assertTrue(menu.getSlot(0) == craftingResult && menu.getSlot(1) == craftingInput,
+                "Layout replaced crafting slots");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public void closingReturnsGridContentsExactlyOnce(GameTestHelper helper) {
         ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
         player.getInventory().clearContent();
