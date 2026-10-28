@@ -159,6 +159,15 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
     }
 
     @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (!player.level().isClientSide) {
+            clearContainer(player, craftSlots);
+            resultSlots.clearContent();
+        }
+    }
+
+    @Override
     public boolean stillValid(Player player) {
         return player.level().getBlockState(terminalPos).is(CESGRegistration.STORAGE_TERMINAL.get())
                 && player.canInteractWithBlock(terminalPos, 8);
