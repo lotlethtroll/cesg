@@ -287,6 +287,7 @@ public class ShulkerStationConfigScreen extends AbstractSimiScreen {
         protected void applyValue() {
             int max = AbstractShulkerStationBlockEntity.MAX_THRESHOLD;
             setThreshold(1 + (int) Math.round(value * (max - 1)));
+            updateMessage();
         }
     }
 }

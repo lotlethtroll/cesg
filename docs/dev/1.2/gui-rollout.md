@@ -2,10 +2,10 @@
 
 - [x] Depends on the terminal prototype and Andrew's visual review (PR #6 merged).
 - [x] Apply approved assets to Bridge, gateway channel/filter, station configuration, and Enhanced Shulker screens.
-- [ ] Keep lock, push/pull, filters, and inventory interactions recognizable; use labels/tooltips alongside status colors.
-- [ ] Check all affected screens in-game, including JEI/EMI overlap and GUI scaling.
+- [x] Keep lock, push/pull, filters, and inventory interactions recognizable; use labels/tooltips alongside status colors.
+- [x] Check all affected screens in-game, including JEI/EMI overlap and GUI scaling.
 
-Targets `1.2-dev`. All rollout screens have an implementation; final visual approval and the remaining checks below are pending.
+Targets `1.2-dev`. All rollout screens are implemented and the single-player visual pass is complete. Coverage and limits are recorded below.
 
 ## Storage Bridge first pass
 
@@ -98,8 +98,30 @@ Station configuration and Enhanced Shulker implementation followed in the pass b
   modified; it retains the new station/shulker fixtures for further checks.
 - Generator: `python tools/gui/generate_mechanical.py`.
 
-Before merge: Andrew's visual approval; remaining gateway checks listed above;
-station name/slider-drag/keyboard interactions and unloader/belt variants;
-shulker live tiers 1–3, active filter/void notch expansion, and upgraded large
-counts. Other fonts/languages, isolated recipe-viewer runs, and multiplayer are
-not covered by this pass. PR #8 stays draft.
+## Final single-player visual pass — 2026-10-28
+
+- Inspected all four shulker tier layouts, including the tier-one fallback.
+  Corrected the fallback name to use the base name instead of a missing
+  translation key; verified the corrected name after restarting.
+- Tier-four active filter/void config slots extend the textured notch correctly.
+  Removing/reinstalling the void module contracts/expands it live. Three-digit
+  upgraded stack counts remain contained in their cells.
+- Inspected stationary unloader, belt loader, and belt unloader headers and
+  expanded option rows, complementing the loader checks above. A station name
+  survives row rebuild and reopening; slider dragging saves its displayed value.
+  Slider value changes now explicitly refresh their label.
+- Gateway name survives fullscreen-to-small-window resize and saves on close.
+  Both footer toggles save and reopen ON, then were restored OFF with empty name.
+- Tested all gateway footer combinations via server config: both, neither,
+  route only, and destination loading only. Panel height/bottom frame fits each.
+  Restored the original server config afterward.
+- Found/fixed gateway name field swallowing Tab. Restarted and verified Tab moves
+  from the name field to the footer, with visible focus and keyboard tooltip.
+- Final build/unit tests and all 20 server GameTests pass.
+- Restored fullscreen and the original right-mouse Use binding after temporary
+  keyboard-driven world interactions. Only the separate QA world was modified.
+
+Accepted limits for dev integration: multiplayer, other fonts/languages, every
+explicit GUI scale, isolated recipe-viewer runs, and full station keyboard-only
+operation were not verified. No remaining blocking visual issue was found.
+User authorized integrating PR #8 into `1.2-dev` after these checks.

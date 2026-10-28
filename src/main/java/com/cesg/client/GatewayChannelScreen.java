@@ -203,7 +203,7 @@ public class GatewayChannelScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Typing a name must not trigger the inventory-close key.
-        if (nameBox.isFocused() && keyCode != 256 /* ESC */)
+        if (nameBox.isFocused() && keyCode != 256 /* ESC */ && keyCode != 258 /* TAB */)
             return nameBox.keyPressed(keyCode, scanCode, modifiers) || nameBox.canConsumeInput()
                     || super.keyPressed(keyCode, scanCode, modifiers);
         return super.keyPressed(keyCode, scanCode, modifiers);
