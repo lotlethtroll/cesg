@@ -30,16 +30,16 @@ panel(image, (176, 0, 267, 91))
 d = ImageDraw.Draw(image)
 # Join the two plates without a double border.
 d.rectangle((173, 3, 179, 88), fill='#c9c3ad')
-d.rectangle((4, 3, 171, 13), fill='#a89b79')
-d.line((4, 13, 171, 13), fill='#756b51')
+d.rectangle((4, 3, 171, 14), fill='#a89b79')
+d.line((4, 14, 171, 14), fill='#756b51')
 d.rectangle((180, 3, 263, 14), fill='#b5a7bf')
 d.line((180, 14, 263, 14), fill='#756180')
-d.line((7, 141, 168, 141), fill='#8d8264')
-d.line((7, 142, 168, 142), fill='#e1d9bf')
+
+
 for x,y in [(3,3),(169,3),(3,228),(169,228),(261,3),(261,85)]:
     rivet(d,x,y)
 # Arrow between the crafting inputs and result; leaves slot hit boxes untouched.
-d.polygon([(238,39),(238,42),(240,42),(240,44),(242,40),(240,36),(240,39)], fill='#756180')
+d.line([(237,54),(240,57),(237,60)], fill='#756180', width=1)
 # Layered perimeter rails: steel backing, brass channel, and a light bevel.
 for x in (0, 172):
     d.rectangle((x, 15, x+3, 226), fill='#424b45')
@@ -48,20 +48,17 @@ for x in (0, 172):
     for y in (24, 88, 145, 202):
         d.rectangle((x, y, x+3, y+5), fill='#686c5c')
         rivet(d, x, y+1)
-# A recessed mechanical joint joins the crafting attachment to the main body.
-d.rectangle((175, 17, 179, 82), fill='#555e54')
-d.line((177, 18, 177, 81), fill='#b39759')
-for y in (20, 72):
-    d.rectangle((174, y, 180, y+8), fill='#7e806c')
-    d.line((174, y, 180, y), fill='#e0c78d')
-    rivet(d, 176, y+3)
+# Full-height joining rail with flush end caps; no floating hinge boxes.
+d.rectangle((172, 0, 179, 91), fill='#424b45')
+d.rectangle((173, 1, 178, 90), fill='#8c805e')
+d.line((174, 2, 174, 89), fill='#e0c78d')
+d.line((177, 2, 177, 89), fill='#555e54')
+for y in (5, 83):
+    rivet(d, 175, y)
 # Reinforced cross-member above the inventory; label remains on a quiet plate.
 d.line((7, 138, 168, 138), fill='#424b45')
 d.line((7, 139, 168, 139), fill='#b39759')
 d.line((7, 140, 168, 140), fill='#eee0b9')
-for x in range(103, 165, 5):
-    d.line((x, 144, x+2, 144), fill='#626c5e')
-    d.line((x, 145, x+2, 145), fill='#eee0b9')
 # Crafting module's vented lower lip and right-hand rail.
 d.rectangle((181, 85, 263, 89), fill='#5a6257')
 d.line((181, 85, 263, 85), fill='#d2b774')
