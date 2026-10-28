@@ -64,6 +64,37 @@ public class TerminalRegressionTest {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public void batchRefillPreservesCakeBuckets(GameTestHelper helper) {
+        ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        player.getInventory().clearContent();
+        var level = helper.getLevel();
+        BlockPos anchor = helper.absolutePos(new BlockPos(1, 2, 1));
+        level.setBlock(anchor, com.cesg.init.CESGRegistration.STORAGE_NETWORK_CONTROLLER.get().defaultBlockState(), 3);
+        level.setBlock(anchor.east(), com.cesg.upgrades.EnhancedShulkerBoxes.DEFAULT.get().defaultBlockState(), 3);
+        ItemStack box = new ItemStack(com.cesg.upgrades.EnhancedShulkerBoxes.DEFAULT.get());
+        box.set(com.cesg.init.CESGDataComponents.ENHANCED_SHULKER.get(),
+                new com.cesg.upgrades.EnhancedShulkerContents(2, 54, 2,
+                        java.util.List.of(new com.cesg.upgrades.EnhancedShulkerContents.StoredSlot(0,
+                                new ItemStack(Items.MILK_BUCKET))), java.util.List.of(), ItemStack.EMPTY));
+        ((com.cesg.upgrades.EnhancedShulkerBoxBlockEntity) level.getBlockEntity(anchor.east())).loadFromItem(box);
+        StorageTerminalMenu menu = menu(helper, player);
+        for (int slot = 0; slot < 3; slot++) menu.craftSlots().setItem(slot, new ItemStack(Items.MILK_BUCKET));
+        menu.craftSlots().setItem(3, new ItemStack(Items.SUGAR));
+        menu.craftSlots().setItem(4, new ItemStack(Items.EGG));
+        menu.craftSlots().setItem(5, new ItemStack(Items.SUGAR));
+        for (int slot = 6; slot < 9; slot++) menu.craftSlots().setItem(slot, new ItemStack(Items.WHEAT));
+        menu.quickMoveStack(player, StorageTerminalMenu.RESULT_SLOT);
+        helper.assertTrue(player.getInventory().countItem(Items.CAKE) == 1, "Expected exactly one crafted cake");
+        for (int slot = 0; slot < 3; slot++)
+            helper.assertTrue(menu.craftSlots().getItem(slot).is(Items.BUCKET), "Refill overwrote a returned bucket");
+        helper.assertTrue(StorageNetwork.extract(level, anchor, new ItemStack(Items.MILK_BUCKET), 1).getCount() == 1,
+                "Refill extracted milk over a crafting remainder");
+        menu.removed(player);
+        helper.assertTrue(player.getInventory().countItem(Items.BUCKET) == 3, "Closing lost cake buckets");
+        helper.succeed();
+    }
+
     private static StorageTerminalMenu menu(GameTestHelper helper, ServerPlayer player) {
         return new StorageTerminalMenu(1, player.getInventory(), helper.absolutePos(new BlockPos(1, 2, 1)));
     }

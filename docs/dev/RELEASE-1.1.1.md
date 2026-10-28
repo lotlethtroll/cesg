@@ -16,6 +16,9 @@ The 1.2 feature plan is in [NEXT-RELEASE.md](NEXT-RELEASE.md).
 - Avoid unloaded chunks in network/fuel scans, isolate membership caches by
   world, recheck controllers, and fix prematurely truncated branching scans.
 - Repair Ponder verification and clarify supported dependency versions.
+- Return terminal grid contents on close, prevent partial-output crafting
+  duplication, preserve rejected recipe-transfer leftovers, and keep crafting
+  remainders intact during network refill.
 
 No recipes, item IDs, existing NBT keys, or configuration defaults changed.
 Automation still defaults to free transfers. Existing buffers load normally.
@@ -34,12 +37,15 @@ and server world. Test classes/resources live in `src/gameTest` and do not ship
 in the jar. JUnit fuel-accounting tests live in `src/test`.
 
 - [x] Build and 2 JUnit tests pass.
-- [x] All 13 server GameTests pass (2026-10-28).
+- [x] All 17 server GameTests pass (2026-10-28).
 - [x] Ponder registration, geometry, battery footprints, belts, and language checks pass.
 - [x] Release jar reports version 1.1.1 and excludes test classes/template.
 - [x] `git diff --check` passes.
 
 GameTest coverage:
+- Terminal close returns items exactly once; partial output cannot duplicate;
+  recipe transfer preserves refused grid contents; cake crafting retains all
+  three buckets even when the network has spare milk buckets.
 - Failed fuel payment leaves a filtered source untouched; a funded withdrawal
   succeeds and pays the configured cost.
 - A nearly full Bridge buffer only extracts what it can retain.
