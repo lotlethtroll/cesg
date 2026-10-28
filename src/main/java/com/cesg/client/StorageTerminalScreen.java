@@ -68,6 +68,8 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private boolean showingRemote;
     private EditBox searchBox;
     private int scrollRow;
+    private int visibleRows = ROWS;
+    private int inventoryOffset;
 
     public StorageTerminalScreen(StorageTerminalMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -80,12 +82,20 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     @Override
     protected void init() {
+        // Reserve 24 GUI pixels for recipe viewers' bottom search controls.
+        visibleRows = Math.max(4, Math.min(ROWS, (height - 24 - 126) / CELL));
+        inventoryOffset = (visibleRows - ROWS) * CELL;
+        imageHeight = 234 + inventoryOffset;
+        inventoryLabelY = StorageTerminalMenu.PLAYER_INV_Y + inventoryOffset - 11;
+        menu.positionPlayerInventory(inventoryOffset);
         super.init();
+        topPos = Math.max(0, (height - 24 - imageHeight) / 2);
         searchBox = new EditBox(font, leftPos + GRID_X, topPos + SEARCH_Y, searchWidth(), 12,
                 Component.translatable("cesg.network.search"));
         searchBox.setBordered(true);
         searchBox.setResponder(text -> refilter());
         addRenderableWidget(searchBox);
+        refilter(); // A resize may change how many rows fit and the last valid scroll position.
     }
 
     public static void acceptContent(TerminalContentPacket packet) {
@@ -174,16 +184,20 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
 
     private int maxScrollRow() {
         int totalRows = (activeFiltered().size() + COLS - 1) / COLS;
-        return Math.max(0, totalRows - ROWS);
+        return Math.max(0, totalRows - visibleRows);
     }
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x0 = leftPos;
         int y0 = topPos;
-        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, imageHeight, 268, 234);
+        // Cut unused storage rows out of the body without stretching pixel art.
+        int seam = GRID_Y + visibleRows * CELL;
+        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, seam, 268, 234);
+        graphics.blit(BACKGROUND, x0, y0 + seam, 0, GRID_Y + ROWS * CELL,
+                StorageTerminalMenu.MAIN_PANEL_WIDTH, 234 - GRID_Y - ROWS * CELL, 268, 234);
 
-        for (int row = 0; row < ROWS; row++)
+        for (int row = 0; row < visibleRows; row++)
             for (int col = 0; col < COLS; col++)
                 drawSlotBox(graphics, x0 + GRID_X + col * CELL, y0 + GRID_Y + row * CELL);
         for (int row = 0; row < 3; row++)
@@ -194,10 +208,10 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < COLS; col++)
                 drawSlotBox(graphics, x0 + StorageTerminalMenu.PLAYER_INV_X - 1 + col * CELL,
-                        y0 + StorageTerminalMenu.PLAYER_INV_Y - 1 + row * CELL);
+                        y0 + StorageTerminalMenu.PLAYER_INV_Y + inventoryOffset - 1 + row * CELL);
         for (int col = 0; col < COLS; col++)
             drawSlotBox(graphics, x0 + StorageTerminalMenu.PLAYER_INV_X - 1 + col * CELL,
-                    y0 + StorageTerminalMenu.HOTBAR_Y - 1);
+                    y0 + StorageTerminalMenu.HOTBAR_Y + inventoryOffset - 1);
     }
 
     private static void drawSlotBox(GuiGraphics graphics, int x, int y) {
@@ -236,7 +250,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             drawTabs(graphics, mouseX, mouseY);
 
         List<TerminalContentPacket.Entry> active = activeFiltered();
-        for (int cell = 0; cell < ROWS * COLS; cell++) {
+        for (int cell = 0; cell < visibleRows * COLS; cell++) {
             int index = (scrollRow + cell / COLS) * COLS + cell % COLS;
             if (index >= active.size())
                 break;
@@ -315,7 +329,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         Component msg = Component.translatable(key);
         int w = font.width(msg);
         int x = GRID_X + (COLS * CELL) / 2 - w / 2;
-        int y = GRID_Y + (ROWS * CELL) / 2 - 4;
+        int y = GRID_Y + (visibleRows * CELL) / 2 - 4;
         // Sit the text on a panel plate; bare text over the slot grid is unreadable.
         int x0 = x - 4, y0 = y - 3, x1 = x + w + 4, y1 = y + 11;
         graphics.fill(x0, y0, x1, y1, PANEL_COLOR);
@@ -366,7 +380,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private int hoveredEntry(double mouseX, double mouseY) {
         int gx = (int) mouseX - leftPos - GRID_X;
         int gy = (int) mouseY - topPos - GRID_Y;
-        if (gx < 0 || gy < 0 || gx >= COLS * CELL || gy >= ROWS * CELL)
+        if (gx < 0 || gy < 0 || gx >= COLS * CELL || gy >= visibleRows * CELL)
             return -1;
         int index = (scrollRow + gy / CELL) * COLS + gx / CELL;
         return index < activeFiltered().size() ? index : -1;
@@ -381,7 +395,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private boolean isInGrid(double mouseX, double mouseY) {
         double gx = mouseX - leftPos - GRID_X;
         double gy = mouseY - topPos - GRID_Y;
-        return gx >= 0 && gy >= 0 && gx < COLS * CELL && gy < ROWS * CELL;
+        return gx >= 0 && gy >= 0 && gx < COLS * CELL && gy < visibleRows * CELL;
     }
 
     private boolean isClearCraftHovered(double mouseX, double mouseY) {
