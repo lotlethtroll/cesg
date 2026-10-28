@@ -49,7 +49,7 @@ for x in (0, 172):
         d.rectangle((x, y, x+3, y+5), fill='#686c5c')
         rivet(d, x, y+1)
 # Clear the former wide joining bar; the common 4px rail is drawn below.
-d.rectangle((172, 0, 179, 91), fill='#c9c3ad')
+d.rectangle((172, 0, 175, 91), fill='#c9c3ad')
 # Reinforced cross-member above the inventory; label remains on a quiet plate.
 d.line((7, 138, 168, 138), fill='#424b45')
 d.line((7, 139, 168, 139), fill='#b39759')
