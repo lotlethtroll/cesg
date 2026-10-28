@@ -32,8 +32,8 @@ d = ImageDraw.Draw(image)
 d.rectangle((173, 3, 179, 88), fill='#c9c3ad')
 d.rectangle((4, 3, 171, 14), fill='#a89b79')
 d.line((4, 14, 171, 14), fill='#756b51')
-d.rectangle((180, 3, 263, 14), fill='#b5a7bf')
-d.line((180, 14, 263, 14), fill='#756180')
+d.rectangle((176, 3, 263, 14), fill='#b5a7bf')
+d.line((176, 14, 263, 14), fill='#756180')
 
 
 for x,y in [(3,3),(169,3),(3,228),(169,228),(261,3),(261,85)]:
