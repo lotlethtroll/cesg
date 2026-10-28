@@ -615,6 +615,125 @@ public class GatewayRegressionTest {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public void singletonBatteryPickupTransfersFuelExactlyOnceInSurvivalAndCreative(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(level);
+        var batteryBlock = CESGRegistration.GATEWAY_FLUX_BATTERY.get();
+        var batteryItem = (GatewayFluxBatteryItem) batteryBlock.asItem();
+        for (boolean creative : new boolean[] {false, true}) {
+            player.setGameMode(creative ? net.minecraft.world.level.GameType.CREATIVE : net.minecraft.world.level.GameType.SURVIVAL);
+            for (net.minecraft.world.level.material.Fluid fluid : List.<net.minecraft.world.level.material.Fluid>of(com.cesg.init.CESGFluids.TELEPORT_ESSENCE.getSource(),
+                    com.cesg.init.CESGFluids.LIQUID_EYE_OF_ENDER.getSource())) {
+                for (int amount : new int[] {0, 1234, GatewayFluxBatteryBlockEntity.capacityPerBlock()}) {
+                    player.getInventory().clearContent();
+                    place(level, local, batteryBlock);
+                    var battery = (GatewayFluxBatteryBlockEntity) level.getBlockEntity(local);
+                    battery.getTankInventory().fill(new FluidStack(fluid, amount), IFluidHandler.FluidAction.EXECUTE);
+                    for (int cycle = 0; cycle < 3; cycle++) {
+                        var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(local),
+                                net.minecraft.core.Direction.UP, local, false);
+                        var context = new net.minecraft.world.item.context.UseOnContext(player,
+                                net.minecraft.world.InteractionHand.MAIN_HAND, hit);
+                        batteryBlock.onSneakWrenched(level.getBlockState(local), context);
+                        assertTrue(level.getBlockEntity(local) == null);
+                        int totalFuel = 0;
+                        ItemStack pickup = ItemStack.EMPTY;
+                        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+                            ItemStack held = player.getInventory().getItem(slot);
+                            totalFuel += GatewayFluxBatteryItem.storedFuel(held, level.registryAccess()).getAmount() * held.getCount();
+                            if (held.is(batteryItem)) pickup = held;
+                        }
+                        assertEquals(amount, totalFuel);
+                        assertEquals(1, pickup.getCount());
+                        pickup = ItemStack.parse(level.registryAccess(), pickup.save(level.registryAccess())).orElseThrow();
+                        assertEquals(amount, GatewayFluxBatteryItem.storedFuel(pickup, level.registryAccess()).getAmount());
+                        // Exercise the actual item placement path into air; support is not required.
+                        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, pickup.copy());
+                        player.getInventory().clearContent();
+                        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, pickup.copy());
+                        var placeContext = new net.minecraft.world.item.context.BlockPlaceContext(player,
+                                net.minecraft.world.InteractionHand.MAIN_HAND, player.getMainHandItem(), hit);
+                        assertTrue(batteryItem.place(placeContext).consumesAction());
+                        assertEquals(amount, ((GatewayFluxBatteryBlockEntity) level.getBlockEntity(local)).storedFluid().getAmount());
+                        if (amount > 0 || !creative) assertTrue(player.getMainHandItem().isEmpty());
+                        // Empty creative items retain vanilla copying behavior; remove the template before pickup.
+                        player.getInventory().clearContent();
+                    }
+                    var restored = new GatewayFluxBatteryBlockEntity(local, level.getBlockState(local));
+                    restored.loadAdditional(((GatewayFluxBatteryBlockEntity) level.getBlockEntity(local))
+                            .getUpdateTag(level.registryAccess()), level.registryAccess());
+                    assertEquals(amount, restored.storedFluid().getAmount());
+                    level.removeBlock(local, false);
+                }
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void arrayPickupAndChargedPlacementBesideBatteriesAreRefused(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(level);
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.getInventory().clearContent();
+        var block = CESGRegistration.GATEWAY_FLUX_BATTERY.get();
+        place(level, local, block);
+        var battery = (GatewayFluxBatteryBlockEntity) level.getBlockEntity(local);
+        battery.getTankInventory().fill(new FluidStack((net.minecraft.world.level.material.Fluid) com.cesg.init.CESGFluids.TELEPORT_ESSENCE.getSource(), 1000),
+                IFluidHandler.FluidAction.EXECUTE);
+        ItemStack charged = GatewayFluxBatteryItem.pickupStack(battery);
+        place(level, local.above(), block);
+        var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(local),
+                net.minecraft.core.Direction.UP, local, false);
+        block.onSneakWrenched(level.getBlockState(local), new net.minecraft.world.item.context.UseOnContext(player,
+                net.minecraft.world.InteractionHand.MAIN_HAND, hit));
+        assertTrue(level.getBlockEntity(local) != null && level.getBlockEntity(local.above()) != null);
+        assertTrue(player.getInventory().isEmpty());
+        BlockPos adjacent = local.east();
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, charged);
+        var placeHit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(adjacent),
+                net.minecraft.core.Direction.UP, adjacent, false);
+        var ctx = new net.minecraft.world.item.context.BlockPlaceContext(player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                charged, placeHit);
+        assertTrue(((GatewayFluxBatteryItem) block.asItem()).place(ctx) == net.minecraft.world.InteractionResult.FAIL);
+        assertTrue(level.getBlockEntity(adjacent) == null);
+        assertEquals(1000, GatewayFluxBatteryItem.storedFuel(player.getMainHandItem(), level.registryAccess()).getAmount());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void fullInventoryBatteryPickupDropsOneChargedItem(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(level);
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setPos(local.getX() + 0.5, local.getY(), local.getZ() + 0.5);
+        player.getInventory().clearContent();
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++)
+            player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+        var block = CESGRegistration.GATEWAY_FLUX_BATTERY.get();
+        place(level, local, block);
+        var battery = (GatewayFluxBatteryBlockEntity) level.getBlockEntity(local);
+        battery.getTankInventory().fill(new FluidStack((net.minecraft.world.level.material.Fluid)
+                com.cesg.init.CESGFluids.LIQUID_EYE_OF_ENDER.getSource(), 2345), IFluidHandler.FluidAction.EXECUTE);
+        var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(local),
+                net.minecraft.core.Direction.UP, local, false);
+        block.onSneakWrenched(level.getBlockState(local), new net.minecraft.world.item.context.UseOnContext(player,
+                net.minecraft.world.InteractionHand.MAIN_HAND, hit));
+        assertTrue(level.getBlockEntity(local) == null);
+        var drops = level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(local).inflate(3), entity -> entity.getItem().is(block.asItem()));
+        assertEquals(1, drops.size());
+        assertEquals(1, drops.get(0).getItem().getCount());
+        assertEquals(2345, GatewayFluxBatteryItem.storedFuel(drops.get(0).getItem(), level.registryAccess()).getAmount());
+        drops.get(0).discard();
+        player.getInventory().clearContent();
+        helper.succeed();
+    }
+
     private StorageBridgeBlockEntity linkedBridges(ServerLevel level) {
         CrossDimensionalGatewayCoreBlockEntity core = core(level, local);
         core(level, remote);

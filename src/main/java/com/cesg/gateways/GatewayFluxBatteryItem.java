@@ -26,11 +26,69 @@ public class GatewayFluxBatteryItem extends BlockItem {
 
     @Override
     public InteractionResult place(BlockPlaceContext ctx) {
+        ItemStack stack = ctx.getItemInHand();
+        var fuel = storedFuel(stack, ctx.getLevel().registryAccess());
+        boolean charged = !fuel.isEmpty();
+        if (charged && !isolatedPosition(ctx.getLevel(), ctx.getClickedPos())) {
+            if (!ctx.getLevel().isClientSide && ctx.getPlayer() != null)
+                ctx.getPlayer().displayClientMessage(net.minecraft.network.chat.Component.translatable("cesg.battery.pickup.place_alone"), true);
+            return InteractionResult.FAIL;
+        }
         InteractionResult result = super.place(ctx);
-        if (!result.consumesAction())
-            return result;
-        tryMultiPlace(ctx);
+        if (!result.consumesAction()) return result;
+        if (charged) {
+            if (!ctx.getLevel().isClientSide
+                    && ctx.getLevel().getBlockEntity(ctx.getClickedPos()) instanceof GatewayFluxBatteryBlockEntity battery)
+                battery.getTankInventory().fill(fuel, net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+            // Creative placement normally copies items; a charged battery instead transfers ownership.
+            if (ctx.getPlayer() != null && ctx.getPlayer().getAbilities().instabuild) stack.shrink(1);
+        } else tryMultiPlace(ctx);
         return result;
+    }
+
+    static boolean isolatedPosition(Level level, BlockPos pos) {
+        for (Direction direction : Direction.values()) {
+            BlockPos neighbor = pos.relative(direction);
+            if (!level.isLoaded(neighbor) || GatewayFluxBatteryBlock.isBattery(level.getBlockState(neighbor))) return false;
+        }
+        return true;
+    }
+
+    static ItemStack pickupStack(GatewayFluxBatteryBlockEntity battery) {
+        ItemStack stack = new ItemStack(battery.getBlockState().getBlock());
+        var fuel = battery.storedFluid().copy();
+        if (!fuel.isEmpty()) {
+            var tag = new net.minecraft.nbt.CompoundTag();
+            tag.put("CESGBatteryFuel", fuel.save(battery.getLevel().registryAccess()));
+            stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                    net.minecraft.world.item.component.CustomData.of(tag));
+        }
+        return stack;
+    }
+
+    static net.neoforged.neoforge.fluids.FluidStack storedFuel(ItemStack stack, net.minecraft.core.HolderLookup.Provider registries) {
+        var data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        if (data == null) return net.neoforged.neoforge.fluids.FluidStack.EMPTY;
+        var fuel = net.neoforged.neoforge.fluids.FluidStack.parseOptional(registries, data.copyTag().getCompound("CESGBatteryFuel"));
+        if (!GatewayFluxBatteryBlockEntity.isEssence(fuel) && !GatewayFluxBatteryBlockEntity.isEye(fuel))
+            return net.neoforged.neoforge.fluids.FluidStack.EMPTY;
+        return fuel.copyWithAmount(Math.min(fuel.getAmount(), GatewayFluxBatteryBlockEntity.capacityPerBlock()));
+    }
+
+    @Override
+    public int getMaxStackSize(ItemStack stack) {
+        var data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        return data != null && data.copyTag().contains("CESGBatteryFuel") ? 1 : super.getMaxStackSize(stack);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<net.minecraft.network.chat.Component> tooltip,
+            net.minecraft.world.item.TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag);
+        if (context.registries() == null) return;
+        var fuel = storedFuel(stack, context.registries());
+        if (!fuel.isEmpty()) tooltip.add(net.minecraft.network.chat.Component.translatable("cesg.battery.pickup.fuel",
+                fuel.getHoverName(), fuel.getAmount()));
     }
 
     private void tryMultiPlace(BlockPlaceContext ctx) {
