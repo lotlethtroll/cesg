@@ -38,7 +38,7 @@ public final class StorageNetwork {
 
     private StorageNetwork() {}
 
-    public record Scan(List<IItemHandler> handlers, boolean hasController, int memberCount) {
+    public record Scan(List<IItemHandler> handlers, boolean hasController, int memberCount, boolean limited) {
         public boolean operational() {
             return hasController;
         }
@@ -63,7 +63,7 @@ public final class StorageNetwork {
     private static final java.util.Map<Level, java.util.Map<BlockPos, CachedCluster>> CLUSTER_CACHE =
             new java.util.WeakHashMap<>();
 
-    private record CachedCluster(long expiresAt, List<BlockPos> members, int memberCount) {}
+    private record CachedCluster(long expiresAt, List<BlockPos> members, int memberCount, boolean limited) {}
 
     /** Walks (or recalls) the member cluster containing {@code start} and collects fresh item handlers. */
     public static Scan scan(Level level, BlockPos start) {
@@ -79,7 +79,7 @@ public final class StorageNetwork {
             if (handler != null)
                 handlers.add(handler);
         }
-        return new Scan(handlers, hasController, cluster.memberCount());
+        return new Scan(handlers, hasController, cluster.memberCount(), cluster.limited());
     }
 
     private static CachedCluster walkCluster(Level level, BlockPos start, long now) {
@@ -88,7 +88,7 @@ public final class StorageNetwork {
         Queue<BlockPos> queue = new ArrayDeque<>();
         long expiry = now + CLUSTER_CACHE_TICKS;
         if (!level.isLoaded(start) || !isMember(level.getBlockState(start)))
-            return new CachedCluster(expiry, List.of(), 0);
+            return new CachedCluster(expiry, List.of(), 0, false);
         queue.add(start.immutable());
         visited.add(start.immutable());
         while (!queue.isEmpty() && members.size() < SCAN_LIMIT) {
@@ -102,7 +102,7 @@ public final class StorageNetwork {
                 }
             }
         }
-        return new CachedCluster(expiry, members, members.size());
+        return new CachedCluster(expiry, members, members.size(), !queue.isEmpty());
     }
 
     /**

@@ -17,7 +17,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@code remoteStatus} tells the client whether to show the Partner tab and how to colour it.
  */
 public record TerminalContentPacket(int containerId, List<Entry> entries, List<Entry> remoteEntries,
-        int remoteStatus) implements CustomPacketPayload {
+        int remoteStatus, boolean scanLimited) implements CustomPacketPayload {
     public static final Type<TerminalContentPacket> TYPE = new Type<>(CESG.id("terminal_content"));
 
     /** No Storage Bridge on the network — the client hides the Partner tab entirely. */
@@ -48,6 +48,7 @@ public record TerminalContentPacket(int containerId, List<Entry> entries, List<E
                     Entry.STREAM_CODEC.apply(ByteBufCodecs.list()), TerminalContentPacket::entries,
                     Entry.STREAM_CODEC.apply(ByteBufCodecs.list()), TerminalContentPacket::remoteEntries,
                     ByteBufCodecs.VAR_INT, TerminalContentPacket::remoteStatus,
+                    ByteBufCodecs.BOOL, TerminalContentPacket::scanLimited,
                     TerminalContentPacket::new);
 
     public static boolean sameEntries(List<Entry> a, List<Entry> b) {

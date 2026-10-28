@@ -345,6 +345,93 @@ public class GatewayRegressionTest {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public void diagnosticsExplainFailuresAndClearOnRecovery(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        StorageBridgeBlockEntity bridge = linkedBridges(level);
+        var core = coreAt(level, local);
+        box(level, local.east(3), List.of(new StoredSlot(0, new ItemStack(Items.DIAMOND, 20))), false);
+        List<StoredSlot> full = new ArrayList<>();
+        for (int i = 0; i < 54; i++) full.add(new StoredSlot(i, new ItemStack(Items.GOLD_INGOT, 64)));
+        box(level, remote.east(3), full, false);
+        assertDiagnostic(bridge, true, TransferDiagnostic.DISABLED);
+        bridge.setPushEnabled(true);
+        core.fillEssence(4000, false);
+        assertDiagnostic(bridge, true, TransferDiagnostic.IDLE);
+        bridge.getSendFilter().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+        withCost("bridge", "transferCostMb", 100, () -> {
+            assertDiagnostic(bridge, true, TransferDiagnostic.DESTINATION_FULL);
+            box(level, remote.east(3), List.of(), false);
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            core.setRouteMode(true);
+            assertDiagnostic(bridge, true, TransferDiagnostic.NO_ROUTE);
+            core.getOrCreateChannelFilter(0).items().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            core.setBinding(0, new GatewayPartner(level.dimension(), local.offset(4096, 0, 4096), true));
+            assertDiagnostic(bridge, true, TransferDiagnostic.PARTNER_OFFLINE);
+            assertTrue(!level.isLoaded(local.offset(4096, 0, 4096)));
+            core.setBinding(0, new GatewayPartner(level.dimension(), remote, true));
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            core.setSpeed(0);
+            assertDiagnostic(bridge, true, TransferDiagnostic.GATEWAY_INACTIVE);
+            core.setSpeed(16);
+            assertDiagnostic(bridge, true, TransferDiagnostic.READY);
+            assertEquals(4000, core.getEssenceMb());
+            assertEquals(20, StorageNetwork.aggregate(StorageNetwork.scan(level, local.east())).values().intStream().sum());
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void pullDiagnosticsRespectLockReserveAndFuel(GameTestHelper helper) {
+        prepare(helper);
+        ServerLevel level = helper.getLevel();
+        var bridge = linkedBridges(level);
+        var core = coreAt(level, local);
+        box(level, remote.east(3), List.of(new StoredSlot(0, new ItemStack(Items.DIAMOND, 20))), false);
+        box(level, local.east(3), List.of(), false);
+        bridge.setPullEnabled(true);
+        bridge.getPullFilter().setStackInSlot(0, new ItemStack(Items.DIAMOND));
+        var partner = (StorageBridgeBlockEntity) level.getBlockEntity(remote.east());
+        partner.toggleLocked();
+        assertDiagnostic(bridge, false, TransferDiagnostic.PARTNER_LOCKED);
+        partner.toggleLocked();
+        assertDiagnostic(bridge, false, TransferDiagnostic.INSUFFICIENT_FUEL);
+        core.fillEssence(4000, false);
+        assertDiagnostic(bridge, false, TransferDiagnostic.READY);
+        place(level, local.north(), CESGRegistration.GATEWAY_FLUX_BATTERY.get());
+        withCost("bridge", "transferCostMb", 100, () -> {
+            withCost("battery", "reserveFloorMb", 4000, () -> {
+                assertDiagnostic(bridge, false, TransferDiagnostic.PROTECTED_RESERVE);
+                assertTrue(!core.tryConsumeAutomationFuel(100));
+                assertEquals(4000, core.getEssenceMb());
+            });
+        });
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public void scanDiagnosticDistinguishesExactLimitFromTruncation(GameTestHelper helper) {
+        BlockPos start = helper.absolutePos(new BlockPos(1000, 3, 1000));
+        ServerLevel level = helper.getLevel();
+        place(level, start.east(StorageNetwork.SCAN_LIMIT), net.minecraft.world.level.block.Blocks.AIR);
+        for (int i = 0; i < StorageNetwork.SCAN_LIMIT; i++)
+            place(level, start.east(i), CESGRegistration.STORAGE_NETWORK_CONTROLLER.get());
+        assertTrue(!StorageNetwork.scan(level, start).limited());
+        place(level, start.east(StorageNetwork.SCAN_LIMIT), CESGRegistration.STORAGE_NETWORK_CONTROLLER.get());
+        // Use uncached anchors to inspect each topology immediately, before distant fixture chunks unload.
+        assertTrue(StorageNetwork.scan(level, start.east()).limited());
+        level.removeBlock(start.east(StorageNetwork.SCAN_LIMIT), false);
+        assertTrue(!StorageNetwork.scan(level, start.east(2)).limited());
+        helper.succeed();
+    }
+
+    private static void assertDiagnostic(StorageBridgeBlockEntity bridge, boolean push, TransferDiagnostic expected) {
+        TransferDiagnostic actual = bridge.transferDiagnostic(push);
+        if (actual != expected) throw new AssertionError("Expected " + expected + " but got " + actual);
+    }
+
     private StorageBridgeBlockEntity linkedBridges(ServerLevel level) {
         CrossDimensionalGatewayCoreBlockEntity core = core(level, local);
         core(level, remote);
