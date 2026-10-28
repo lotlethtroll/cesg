@@ -16,6 +16,8 @@ Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 ## [1.1.1] — Unreleased
 
 ### Fixed
+- Closing a Storage Terminal returns its crafting-grid items to the player,
+  dropping overflow safely instead of abandoning the temporary inventory.
 - Storage Bridge terminal withdrawals reserve fuel before extracting items. An
   unfuelled withdrawal no longer needs to return items to a source that may
   reject them through its storage filter.
