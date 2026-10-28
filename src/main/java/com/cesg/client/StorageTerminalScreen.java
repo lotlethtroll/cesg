@@ -9,6 +9,7 @@ import com.cesg.network.TerminalContentPacket;
 import com.cesg.storage.network.StorageTerminalMenu;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -35,13 +36,15 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int SEARCH_WIDTH = StorageTerminalMenu.MAIN_PANEL_WIDTH - GRID_X * 2;
     private static final int CELL = 18;
 
-    private static final int PANEL_COLOR = 0xFFC6C6C6;
-    private static final int HIGHLIGHT_COLOR = 0xFFFFFFFF;
-    private static final int SHADOW_COLOR = 0xFF555555;
-    private static final int SLOT_BG = 0xFF8B8B8B;
-    private static final int SLOT_SHADOW = 0xFF373737;
-    private static final int SLOT_HIGHLIGHT = 0xFFFFFFFF;
-    private static final int LABEL_COLOR = 0x404040;
+    private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/terminal.png");
+    private static final ResourceLocation SLOT = ResourceLocation.fromNamespaceAndPath(
+            "cesg", "textures/gui/slot.png");
+    private static final int PANEL_COLOR = 0xFFC9C3AD;
+    private static final int HIGHLIGHT_COLOR = 0xFFE7D9B5;
+    private static final int SHADOW_COLOR = 0xFF555B50;
+    private static final int SLOT_HIGHLIGHT = 0xFFE7D9B5;
+    private static final int LABEL_COLOR = 0x34392F;
     private static final int CLEAR_NORMAL = 0xFFAA3333;
     private static final int CLEAR_HOVER = 0xFFFF5555;
 
@@ -51,8 +54,8 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     private static final int TAB_H = 12;
     private static final int TAB_PAD = 8;
     private static final int TAB_DOT_SPACE = 7;
-    private static final int TAB_ACTIVE = 0xFFC6C6C6;
-    private static final int TAB_INACTIVE = 0xFF9A9A9A;
+    private static final int TAB_ACTIVE = 0xFFB5A7BF;
+    private static final int TAB_INACTIVE = 0xFFA39F89;
     private static final int STATUS_LIVE = 0xFF55DD55;
     private static final int STATUS_OFFLINE = 0xFFAAAAAA;
     private static final int STATUS_FAULT = 0xFFFF5555;
@@ -178,13 +181,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x0 = leftPos;
         int y0 = topPos;
-        int mainW = StorageTerminalMenu.MAIN_PANEL_WIDTH;
-        int notchW = imageWidth - mainW;
-        int notchH = StorageTerminalMenu.CRAFT_NOTCH_HEIGHT;
-
-        drawOutline(graphics, x0, y0, mainW, imageHeight, notchW, notchH);
-        drawMainPanel(graphics, x0, y0, mainW, imageHeight, notchH);
-        drawCraftNotch(graphics, x0 + mainW, y0, notchW, notchH);
+        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, imageHeight, 268, 234);
 
         for (int row = 0; row < ROWS; row++)
             for (int col = 0; col < COLS; col++)
@@ -203,38 +200,8 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
                     y0 + StorageTerminalMenu.HOTBAR_Y - 1);
     }
 
-    /** L-shaped outer border: right edge only as tall as the crafting notch. */
-    private static void drawOutline(GuiGraphics graphics, int x, int y, int mainW, int mainH,
-            int notchW, int notchH) {
-        int totalW = mainW + notchW;
-        graphics.fill(x - 1, y - 1, x + totalW + 1, y, SHADOW_COLOR);
-        graphics.fill(x - 1, y, x, y + mainH + 1, SHADOW_COLOR);
-        graphics.fill(x - 1, y + mainH, x + totalW + 1, y + mainH + 1, SHADOW_COLOR);
-        graphics.fill(x + totalW, y, x + totalW + 1, y + notchH, SHADOW_COLOR);
-    }
-
-    /** Main terminal body — right edge appears only below the crafting notch. */
-    private static void drawMainPanel(GuiGraphics graphics, int x, int y, int width, int height,
-            int notchHeight) {
-        graphics.fill(x, y, x + width, y + height, PANEL_COLOR);
-        graphics.fill(x, y, x + width, y + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x, y, x + 1, y + height, HIGHLIGHT_COLOR);
-        graphics.fill(x + width - 1, y + notchHeight, x + width, y + height, SHADOW_COLOR);
-        graphics.fill(x, y + height - 1, x + width, y + height, SHADOW_COLOR);
-    }
-
-    /** Short crafting extension on the right — open on the left, no full-height column. */
-    private static void drawCraftNotch(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, PANEL_COLOR);
-        graphics.fill(x, y, x + width, y + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x + width - 1, y, x + width, y + height, SHADOW_COLOR);
-        graphics.fill(x, y + height - 1, x + width, y + height, SHADOW_COLOR);
-    }
-
     private static void drawSlotBox(GuiGraphics graphics, int x, int y) {
-        graphics.fill(x, y, x + CELL, y + CELL, SLOT_SHADOW);
-        graphics.fill(x + 1, y + 1, x + CELL, y + CELL, SLOT_HIGHLIGHT);
-        graphics.fill(x + 1, y + 1, x + CELL - 1, y + CELL - 1, SLOT_BG);
+        graphics.blit(SLOT, x, y, 0, 0, CELL, CELL, CELL, CELL);
     }
 
     @Override
