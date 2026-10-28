@@ -49,3 +49,25 @@ other languages/resource-pack fonts, and multiplayer. The remaining rollout
 screens still need implementation and their own in-game checks.
 
 https://github.com/lotlethtroll/cesg/issues/7
+
+## Gateway channel/filter first pass — 2026-10-28
+
+- Added matching metal/brass panels with corner-only fasteners, purple status
+  plates, recessed filter/inventory slots, and beveled channel/footer controls.
+- Channel panel reserves space for all 16 channels and config-dependent footer
+  buttons. Pending name text survives screen resize. Native button focus,
+  narration, tooltips, and existing packet/menu behavior remain in place.
+- Fixed a live rendering issue: draw the channel panel after Minecraft's
+  background blur, keeping the frame crisp.
+- Build and unit tests pass. Live checks with JEI/EMI installed cover fullscreen
+  and the small Auto-scale window: both panels fit; filter inventory/hotbar and
+  EMI search remain separate. Channel 2 selection persists when reopened;
+  channel 1 was restored. Bound/active/unbound colors render correctly.
+- Right-click opens the correct channel filter. WL/BL toggles and tooltips work.
+  A pickaxe copies into the ghost row without consumption, returns to inventory,
+  and empty-cursor clicking clears the ghost. Restored empty WL filter.
+- Still pending: name-save/resize interaction, footer toggle persistence,
+  keyboard focus, config-disabled footer variants, other languages, and multiplayer.
+- Generator: `python tools/gui/generate_gateway.py`.
+
+Remaining implementation: station configuration and Enhanced Shulker panels.
