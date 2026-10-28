@@ -59,14 +59,27 @@ for y in (5, 83):
 d.line((7, 138, 168, 138), fill='#424b45')
 d.line((7, 139, 168, 139), fill='#b39759')
 d.line((7, 140, 168, 140), fill='#eee0b9')
-# Crafting module's vented lower lip and right-hand rail.
-d.rectangle((181, 85, 263, 89), fill='#5a6257')
-d.line((181, 85, 263, 85), fill='#d2b774')
-for x in range(193, 253, 4):
-    d.line((x, 87, x+1, 87), fill='#2e3934')
-d.rectangle((264, 16, 266, 84), fill='#565e53')
-d.line((265, 16, 265, 84), fill='#b39759')
-for x,y in ((181,86),(259,86),(3,228),(169,228)):
+# One rail construction around the entire perimeter, including corner plates.
+def horizontal_rail(x0, x1, y):
+    d.rectangle((x0, y, x1, y+3), fill='#424b45')
+    d.line((x0, y+1, x1, y+1), fill='#b39759')
+    d.line((x0, y+2, x1, y+2), fill='#e0c78d')
+
+def vertical_rail(x, y0, y1):
+    d.rectangle((x, y0, x+3, y1), fill='#424b45')
+    d.line((x+1, y0, x+1, y1), fill='#b39759')
+    d.line((x+2, y0, x+2, y1), fill='#e0c78d')
+
+horizontal_rail(0, 267, 0)
+horizontal_rail(0, 175, 230)
+# Clear the old vent strip before drawing the crafting bottom frame.
+d.rectangle((180, 84, 267, 91), fill='#c9c3ad')
+horizontal_rail(176, 267, 88)
+vertical_rail(0, 0, 233)
+vertical_rail(172, 92, 233)
+vertical_rail(264, 0, 91)
+for x,y in ((0,0),(172,0),(264,0),(0,230),(172,230),(264,88)):
+    d.rectangle((x,y,x+3,y+3), fill='#686c5c')
     rivet(d,x,y)
 image.save(OUT / 'terminal.png')
 

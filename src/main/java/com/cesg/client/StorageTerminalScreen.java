@@ -226,7 +226,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.drawString(font, title, titleLabelX, titleLabelY, LABEL_COLOR, false);
         graphics.drawString(font, Component.translatable("cesg.network.crafting"),
-                StorageTerminalMenu.CRAFT_GRID_X, 6, LABEL_COLOR, false);
+                StorageTerminalMenu.CRAFT_GRID_X, titleLabelY, LABEL_COLOR, false);
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);
 
         int clearColor = isClearCraftHovered(mouseX, mouseY) ? CLEAR_HOVER : CLEAR_NORMAL;
