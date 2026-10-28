@@ -121,12 +121,14 @@ dependencies {
 
     // EMI recipe viewer: compile against the API, ship the full mod only in the dev runtime.
     compileOnly("dev.emi:emi-neoforge:${emi_version}:api")
-    localRuntime("dev.emi:emi-neoforge:${emi_version}")
+    if (!providers.gradleProperty("withoutEmi").isPresent())
+        localRuntime("dev.emi:emi-neoforge:${emi_version}")
 
     // JEI: compile against the API; full mod in the dev runtime (alongside EMI) for plugin testing.
     compileOnly("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
     compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
-    localRuntime("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
+    if (!providers.gradleProperty("withoutJei").isPresent())
+        localRuntime("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
 }
 
 tasks.named('test', Test) {

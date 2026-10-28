@@ -3,6 +3,9 @@ package com.cesg.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+
+import net.minecraft.client.renderer.Rect2i;
 
 import com.cesg.network.TerminalActionPacket;
 import com.cesg.network.TerminalContentPacket;
@@ -386,6 +389,24 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
         return index < activeFiltered().size() ? index : -1;
     }
 
+    /** Viewer-neutral hover data for the aggregated grid (not a vanilla inventory slot). */
+    public record HoveredNetworkItem(ItemStack stack, Rect2i area) {}
+
+    public Optional<HoveredNetworkItem> recipeViewerItemAt(double mouseX, double mouseY) {
+        if (searchBox == null || searchBox.isFocused() || !menu.getCarried().isEmpty())
+            return Optional.empty();
+        int index = hoveredEntry(mouseX, mouseY);
+        if (index < 0)
+            return Optional.empty();
+        ItemStack sample = activeFiltered().get(index).sample();
+        if (sample.isEmpty())
+            return Optional.empty();
+        int visible = index - scrollRow * COLS;
+        return Optional.of(new HoveredNetworkItem(sample.copyWithCount(1),
+                new Rect2i(leftPos + GRID_X + visible % COLS * CELL,
+                        topPos + GRID_Y + visible / COLS * CELL, CELL, CELL)));
+    }
+
     private boolean isTabHovered(double mouseX, double mouseY, int tabX, int tabW) {
         double x = mouseX - leftPos - tabX;
         double y = mouseY - topPos - SEARCH_Y;
@@ -423,6 +444,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
             }
         }
         if (isInGrid(mouseX, mouseY)) {
+            setFocused(null);
             ItemStack carried = menu.getCarried();
             if (!carried.isEmpty()) {
                 int amount = button == 1 ? 1 : carried.getCount();
@@ -461,6 +483,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     }
 
     private void setShowingRemote(boolean remote) {
+        setFocused(null);
         if (showingRemote == remote)
             return;
         showingRemote = remote;
@@ -480,7 +503,7 @@ public class StorageTerminalScreen extends AbstractContainerScreen<StorageTermin
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (searchBox.isFocused() && searchBox.keyPressed(keyCode, scanCode, modifiers))
             return true;
-        if (searchBox.isFocused() && keyCode != 256 /* ESC */)
+        if (searchBox.isFocused() && keyCode != 256 /* ESC */ && keyCode != 258 /* TAB */)
             return searchBox.canConsumeInput() || super.keyPressed(keyCode, scanCode, modifiers);
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
