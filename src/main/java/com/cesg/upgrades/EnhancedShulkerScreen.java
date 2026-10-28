@@ -1,6 +1,7 @@
 package com.cesg.upgrades;
 
 import com.cesg.init.CESGRegistration;
+import com.cesg.client.MechanicalPanel;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,21 +13,20 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Procedurally drawn chest-style GUI. The panel and every slot background are painted to fit the
+ * Tiled mechanical GUI. The panel and every slot background are painted to fit the
  * menu's slot positions exactly, so the window grows wider (not taller) as capacity increases and
  * never relies on a fixed-width vanilla texture that would bleed or misalign. The upgrade sidebar
  * renders as a NOTCH only as tall as its slots (plus the filter slot while one is configured).
  */
 public class EnhancedShulkerScreen extends AbstractContainerScreen<EnhancedShulkerMenu> {
     private static final int VANILLA_SLOT = 18;
-    private static final int TEXTURE_SIZE = 256;
-    private static final int SLOT_U = 7;
-    private static final int SLOT_V = 17;
+    private static final int TEXTURE_SIZE = 18;
+    private static final int SLOT_U = 0;
+    private static final int SLOT_V = 0;
 
-    private static final int BODY_COLOR = 0xFFC6C6C6;
-    private static final int HIGHLIGHT_COLOR = 0xFFFFFFFF;
-    private static final int SHADOW_COLOR = 0xFF555555;
-    private static final int LABEL_COLOR = 0x404040;
+    private static final int HIGHLIGHT_COLOR = 0xFFE0C78D;
+    private static final int SHADOW_COLOR = 0xFF424B45;
+    private static final int LABEL_COLOR = 0x34392F;
     /** Aqua accent marking the filter configuration slot apart from storage/upgrade slots. */
     private static final int FILTER_ACCENT = 0xFF3D9E9C;
     /** Crimson accent for the void-list configuration slot. */
@@ -39,7 +39,7 @@ public class EnhancedShulkerScreen extends AbstractContainerScreen<EnhancedShulk
 
     /** Only the 18×18 single-slot sprite is sampled from this texture; the panel itself is drawn with fills. */
     private static final ResourceLocation SLOT_TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/gui/container/generic_54.png");
+            ResourceLocation.fromNamespaceAndPath("cesg", "textures/gui/slot.png");
 
     private final int labelLeft;
     private final int playerLabelLeft;
@@ -57,6 +57,16 @@ public class EnhancedShulkerScreen extends AbstractContainerScreen<EnhancedShulk
         this.filterGhost = new ItemStack(com.simibubi.create.AllItems.FILTER.get());
         this.voidGhost = new ItemStack(CESGRegistration.VOID_UPGRADE.get());
         this.upgradeGhost = new ItemStack(CESGRegistration.STACK_DEPTH_UPGRADE_T1.get());
+    }
+
+    @Override
+    protected void init() {
+        int normalHeight = menu.getImageHeight();
+        int hotbarOffset = height < normalHeight + 48 ? -4 : 0;
+        imageHeight = normalHeight + hotbarOffset;
+        menu.positionHotbar(hotbarOffset);
+        super.init();
+        topPos = Math.max(0, (height - 24 - imageHeight) / 2);
     }
 
     @Override
@@ -109,18 +119,17 @@ public class EnhancedShulkerScreen extends AbstractContainerScreen<EnhancedShulk
      * panel — no right border, and the bottom shadow stops where the main panel body begins.
      */
     private static void drawNotchPanel(GuiGraphics graphics, int x, int y, int width, int height, int mainLeft) {
-        graphics.fill(x, y, x + width, y + height, BODY_COLOR);
-        graphics.fill(x, y, x + width, y + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x, y, x + 1, y + height, HIGHLIGHT_COLOR);
-        graphics.fill(x, y + height - 1, x + mainLeft + 1, y + height, SHADOW_COLOR);
+        MechanicalPanel.panel(graphics, x, y, mainLeft+4, height);
+        MechanicalPanel.body(graphics, x+mainLeft, y+4, 4, height-4);
+        graphics.fill(x+mainLeft-4, y, x+mainLeft+4, y+1, SHADOW_COLOR);
+        graphics.fill(x+mainLeft-4, y+1, x+mainLeft+4, y+2, 0xFFB39759);
+        graphics.fill(x+mainLeft-4, y+2, x+mainLeft+4, y+3, HIGHLIGHT_COLOR);
+        graphics.fill(x+mainLeft-4, y+3, x+mainLeft+4, y+4, SHADOW_COLOR);
     }
 
     private static void drawPanel(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, BODY_COLOR);
-        graphics.fill(x, y, x + width, y + 1, HIGHLIGHT_COLOR);
-        graphics.fill(x, y, x + 1, y + height, HIGHLIGHT_COLOR);
-        graphics.fill(x + width - 1, y, x + width, y + height, SHADOW_COLOR);
-        graphics.fill(x, y + height - 1, x + width, y + height, SHADOW_COLOR);
+        MechanicalPanel.panel(graphics, x, y, width, height);
+        graphics.fill(x+4, y+4, x+width-4, y+16, 0xFFA89B79);
     }
 
     @Override
@@ -189,10 +198,11 @@ public class EnhancedShulkerScreen extends AbstractContainerScreen<EnhancedShulk
 
     private void drawShrunkCount(GuiGraphics graphics, int count, int x, int y) {
         String text = String.valueOf(count);
-        float scale = text.length() >= SHRINK_DIGIT_THRESHOLD ? SHRUNK_COUNT_SCALE : 1.0f;
+        float scale = Math.min(text.length() >= SHRINK_DIGIT_THRESHOLD ? SHRUNK_COUNT_SCALE : 1.0f,
+                16.0f / Math.max(1, font.width(text)));
         graphics.pose().pushPose();
         graphics.pose().translate(0.0F, 0.0F, 200.0F);
-        graphics.pose().translate(x + VANILLA_SLOT - 1, y + VANILLA_SLOT - 1, 0.0F);
+        graphics.pose().translate(x + 16, y + 16, 0.0F);
         graphics.pose().scale(scale, scale, 1.0F);
         graphics.drawString(this.font, text, -this.font.width(text), -this.font.lineHeight, 0xFFFFFFFF, true);
         graphics.pose().popPose();
@@ -200,7 +210,8 @@ public class EnhancedShulkerScreen extends AbstractContainerScreen<EnhancedShulk
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, labelLeft, 6, LABEL_COLOR, false);
+        graphics.drawString(font, font.plainSubstrByWidth(title.getString(), imageWidth-labelLeft-8),
+                labelLeft, 6, LABEL_COLOR, false);
         graphics.drawString(font, playerInventoryTitle, playerLabelLeft, inventoryLabelY, LABEL_COLOR, false);
     }
 }

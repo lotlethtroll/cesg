@@ -1,6 +1,7 @@
 package com.cesg.compat.emi;
 
 import com.cesg.CESG;
+import com.cesg.client.StorageTerminalScreen;
 import com.cesg.init.CESGRecipes;
 import com.cesg.init.CESGRegistration;
 import com.cesg.recipe.EnderInfusingRecipe;
@@ -10,6 +11,7 @@ import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.stack.EmiStackInteraction;
 
 import net.minecraft.world.item.crafting.RecipeHolder;
 
@@ -22,6 +24,10 @@ public class CESGEmiPlugin implements EmiPlugin {
 
     @Override
     public void register(EmiRegistry registry) {
+        registry.addStackProvider(StorageTerminalScreen.class, (screen, mouseX, mouseY) ->
+                screen.recipeViewerItemAt(mouseX, mouseY)
+                        .map(item -> new EmiStackInteraction(EmiStack.of(item.stack()), null, false))
+                        .orElse(EmiStackInteraction.EMPTY));
         registry.addCategory(ENDER_INFUSING);
         registry.addWorkstation(ENDER_INFUSING, INFUSER);
         for (RecipeHolder<EnderInfusingRecipe> holder :

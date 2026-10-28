@@ -103,6 +103,16 @@ public class StorageBridgeMenu extends AbstractContainerMenu {
         return toggles.get(DATA_PUSH) != 0;
     }
 
+    /** Client presentation only; preserve hotbar slot IDs and inventory indices. */
+    public void positionHotbar(int verticalOffset) {
+        for (int col = 0; col < 9; col++) {
+            int id = GHOST_END + 27 + col;
+            Slot slot = new Slot(player.getInventory(), col, SEND_X + col * SLOT, HOTBAR_Y + verticalOffset);
+            slot.index = id;
+            slots.set(id, slot);
+        }
+    }
+
     public boolean isPullEnabled() {
         return toggles.get(DATA_PULL) != 0;
     }
