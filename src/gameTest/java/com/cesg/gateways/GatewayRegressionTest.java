@@ -33,6 +33,32 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("cesg")
 @PrefixGameTestTemplate(false)
 public class GatewayRegressionTest {
+    @GameTest(template = "empty")
+    public void shulkerCompactLayoutPreservesSlots(GameTestHelper helper) {
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        for (int tier = 1; tier <= 4; tier++) {
+            ItemStack item = new ItemStack(EnhancedShulkerBoxes.DEFAULT.get());
+            item.set(CESGDataComponents.ENHANCED_SHULKER.get(), EnhancedShulkerContents.forTier(tier));
+            var menu = new com.cesg.upgrades.EnhancedShulkerMenu(1, player.getInventory(), item);
+            var original = List.copyOf(menu.slots);
+            int hotbarStart = original.size() - 9;
+            for (int offset : new int[] {-4, 0, -4, 0}) {
+                menu.positionHotbar(offset);
+                for (int i = 0; i < original.size(); i++) {
+                    var slot = menu.getSlot(i);
+                    var before = original.get(i);
+                    helper.assertTrue(slot.index == i && slot.container == before.container
+                            && slot.getContainerSlot() == before.getContainerSlot(), "Shulker slot mapping changed");
+                    helper.assertTrue(slot.x == before.x && slot.y == before.y + (i >= hotbarStart ? offset : 0),
+                            "Shulker layout moved storage/upgrades or accumulated offsets");
+                    if (i < hotbarStart) helper.assertTrue(slot == before, "Shulker layout replaced a storage/upgrade slot");
+                }
+            }
+            menu.removed(player);
+        }
+        helper.succeed();
+    }
+
     @net.minecraft.gametest.framework.GameTest(template = "empty")
     public void bridgeCompactLayoutPreservesSlots(net.minecraft.gametest.framework.GameTestHelper helper) {
         var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());

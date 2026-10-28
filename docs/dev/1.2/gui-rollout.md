@@ -1,11 +1,11 @@
 ## Scope
 
 - [x] Depends on the terminal prototype and Andrew's visual review (PR #6 merged).
-- [ ] Apply approved assets to Bridge, gateway channel/filter, station configuration, and Enhanced Shulker screens.
+- [x] Apply approved assets to Bridge, gateway channel/filter, station configuration, and Enhanced Shulker screens.
 - [ ] Keep lock, push/pull, filters, and inventory interactions recognizable; use labels/tooltips alongside status colors.
 - [ ] Check all affected screens in-game, including JEI/EMI overlap and GUI scaling.
 
-Targets `1.2-dev`. Storage Bridge is the first rollout prototype; other screens remain pending.
+Targets `1.2-dev`. All rollout screens have an implementation; final visual approval and the remaining checks below are pending.
 
 ## Storage Bridge first pass
 
@@ -70,4 +70,36 @@ https://github.com/lotlethtroll/cesg/issues/7
   keyboard focus, config-disabled footer variants, other languages, and multiplayer.
 - Generator: `python tools/gui/generate_gateway.py`.
 
-Remaining implementation: station configuration and Enhanced Shulker panels.
+Station configuration and Enhanced Shulker implementation followed in the pass below.
+
+
+## Station and Enhanced Shulker rollout — 2026-10-28
+
+- Added a tiled, fixed-width mechanical frame for variable panel dimensions.
+  Brass rails and corner-only fasteners stay consistent across wide shulkers.
+- Station configuration uses matching brass/steel sections, purple option rows,
+  directional buttons, Done button, and a brass-handled threshold slider.
+  Retention/fullness/threshold/name packet behavior remains unchanged.
+- Enhanced Shulkers use the shared recessed slots and textured frame, preserving
+  upgrade-notch shape, placeholder icons, filter/void accents, and menu positions.
+  Long titles are bounded; large counts scale to the slot width.
+- Live station QA: Hold -> Auto Eject -> Slot Threshold expands/recenters the
+  panel correctly. Threshold increment (27 -> 28) and Done save correctly after
+  reopening. Full expanded panel fits fullscreen and a small Auto-scale window.
+- Live tier-4 shulker QA caught EMI search overlapping the hotbar. Fixed by
+  reserving bottom space and removing the four-pixel hotbar gap at tight heights.
+  Retested fullscreen, small window, and maximized normal layout: frame and
+  hotbar clear search. Moved a wrench from hotbar to inventory and back across
+  resize; hit targets and inventory contents remain correct.
+- All 20 server GameTests pass, including a new all-tier regression checking
+  repeated compact/normal changes preserve slot IDs, containers, indices,
+  positions, and storage/upgrade slot objects. Build/unit tests pass.
+- Restored fullscreen and wrench hotbar position. Only the separate QA copy was
+  modified; it retains the new station/shulker fixtures for further checks.
+- Generator: `python tools/gui/generate_mechanical.py`.
+
+Before merge: Andrew's visual approval; remaining gateway checks listed above;
+station name/slider-drag/keyboard interactions and unloader/belt variants;
+shulker live tiers 1–3, active filter/void notch expansion, and upgraded large
+counts. Other fonts/languages, isolated recipe-viewer runs, and multiplayer are
+not covered by this pass. PR #8 stays draft.
