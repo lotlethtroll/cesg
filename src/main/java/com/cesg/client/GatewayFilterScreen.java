@@ -45,7 +45,7 @@ public class GatewayFilterScreen extends AbstractContainerScreen<GatewayFilterMe
     }
 
     private int modeX() {
-        return (imageWidth - MODE_W) / 2;
+        return 92;
     }
 
     @Override
@@ -65,6 +65,13 @@ public class GatewayFilterScreen extends AbstractContainerScreen<GatewayFilterMe
             drawSlotBox(graphics, x0 + GatewayFilterMenu.FILTER_X + col * GatewayFilterMenu.SLOT,
                     y0 + GatewayFilterMenu.HOTBAR_Y - 1);
 
+        boolean fluidView = menu.editingFluids();
+        int tx = leftPos + 8, ty = topPos + MODE_Y;
+        graphics.fill(tx - 1, ty - 1, tx + MODE_W + 1, ty + MODE_H + 1,
+                isTypeHovered(mouseX, mouseY) ? HIGHLIGHT_COLOR : SHADOW_COLOR);
+        graphics.fill(tx, ty, tx + MODE_W, ty + MODE_H, WL_FILL);
+        Component type = Component.translatable(fluidView ? "cesg.gateway.filter.fluids" : "cesg.gateway.filter.items");
+        graphics.drawString(font, type, tx + (MODE_W - font.width(type)) / 2, ty + 3, BTN_TEXT, true);
         boolean bl = menu.isBlacklist();
         int px = leftPos + modeX();
         int py = topPos + MODE_Y;
@@ -93,22 +100,31 @@ public class GatewayFilterScreen extends AbstractContainerScreen<GatewayFilterMe
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
-        if (isModeHovered(mouseX, mouseY))
+        if (isTypeHovered(mouseX, mouseY))
+            graphics.renderTooltip(font, Component.translatable("cesg.gateway.filter.type.tip"), mouseX, mouseY);
+        else if (isModeHovered(mouseX, mouseY))
             graphics.renderTooltip(font, Component.translatable(menu.isBlacklist()
-                    ? "cesg.gateway.filter.blacklist.tip" : "cesg.gateway.filter.whitelist.tip"), mouseX, mouseY);
-        else if (hoveredSlot != null && hoveredSlot.index < GatewayFilterMenu.FILTER_COLS && !hoveredSlot.hasItem())
+                    ? (menu.editingFluids() ? "cesg.gateway.filter.fluid_blacklist.tip" : "cesg.gateway.filter.blacklist.tip")
+                    : (menu.editingFluids() ? "cesg.gateway.filter.fluid_whitelist.tip" : "cesg.gateway.filter.whitelist.tip")), mouseX, mouseY);
+        else if (hoveredSlot != null && hoveredSlot.index < GatewayFilterMenu.GHOST_END && !hoveredSlot.hasItem())
             graphics.renderComponentTooltip(font,
-                    List.of(Component.translatable("cesg.gateway.filter.hint")), mouseX, mouseY);
+                    List.of(Component.translatable(menu.editingFluids() ? "cesg.gateway.filter.fluid_hint" : "cesg.gateway.filter.hint")), mouseX, mouseY);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && isModeHovered(mouseX, mouseY)) {
+        if (button == 0 && (isModeHovered(mouseX, mouseY) || isTypeHovered(mouseX, mouseY))) {
             if (minecraft != null && minecraft.gameMode != null)
-                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, GatewayFilterMenu.BTN_BLACKLIST);
+                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, isTypeHovered(mouseX, mouseY)
+                        ? GatewayFilterMenu.BTN_FLUIDS : GatewayFilterMenu.BTN_BLACKLIST);
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private boolean isTypeHovered(double mouseX, double mouseY) {
+        return mouseX >= leftPos + 8 && mouseX < leftPos + 8 + MODE_W
+                && mouseY >= topPos + MODE_Y && mouseY < topPos + MODE_Y + MODE_H;
     }
 
     private boolean isModeHovered(double mouseX, double mouseY) {

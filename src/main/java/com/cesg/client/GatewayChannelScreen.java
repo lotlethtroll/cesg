@@ -39,12 +39,14 @@ public class GatewayChannelScreen extends Screen {
     private boolean sent;
     private boolean chunkLoading;
     private boolean routeMode;
+    private boolean fluidRouteMode;
 
     public GatewayChannelScreen(CrossDimensionalGatewayCoreBlockEntity core) {
         super(Component.translatable("cesg.gateway.channel_screen"));
         this.core = core;
         this.chunkLoading = core.isChunkLoading();
         this.routeMode = core.isRouteMode();
+        this.fluidRouteMode = core.isFluidRouteMode();
     }
 
     @Override
@@ -86,13 +88,20 @@ public class GatewayChannelScreen extends Screen {
             int rowsTotal = CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT / COLS;
             int gridBottom = y0 + rowsTotal * BUTTON_SIZE + (rowsTotal - 1) * GAP;
             int extra = com.cesg.CESGConfig.gatewayChunkLoadingAllowed() ? 20 : 0;
-            Button routeButton = new MechanicalButton(panelLeft + 8, gridBottom + 6 + extra, 160, 16,
+            Button routeButton = new MechanicalButton(panelLeft + 8, gridBottom + 6 + extra, 78, 16,
                     routeLabel(), b -> {
                         routeMode = !routeMode;
                         b.setMessage(routeLabel());
                     }, () -> routeMode);
             routeButton.setTooltip(Tooltip.create(Component.translatable("cesg.gateway.route_tooltip")));
             addRenderableWidget(routeButton);
+            Button fluidButton = new MechanicalButton(panelLeft + 90, gridBottom + 6 + extra, 78, 16,
+                    fluidRouteLabel(), b -> {
+                        fluidRouteMode = !fluidRouteMode;
+                        b.setMessage(fluidRouteLabel());
+                    }, () -> fluidRouteMode);
+            fluidButton.setTooltip(Tooltip.create(Component.translatable("cesg.gateway.fluid_route_tooltip")));
+            addRenderableWidget(fluidButton);
         }
 
         for (int channel = 0; channel < CrossDimensionalGatewayCoreBlockEntity.CHANNEL_COUNT; channel++) {
@@ -140,9 +149,13 @@ public class GatewayChannelScreen extends Screen {
         return Component.translatable(routeMode ? "cesg.gateway.route_on" : "cesg.gateway.route_off");
     }
 
+    private Component fluidRouteLabel() {
+        return Component.translatable(fluidRouteMode ? "cesg.gateway.fluid_route_on" : "cesg.gateway.fluid_route_off");
+    }
+
     private void select(int channel) {
         PacketDistributor.sendToServer(new SetGatewayChannelPacket(
-                core.getBlockPos(), channel, nameBox.getValue(), chunkLoading, routeMode));
+                core.getBlockPos(), channel, nameBox.getValue(), chunkLoading, routeMode, fluidRouteMode));
         sent = true;
         onClose();
     }
@@ -154,7 +167,7 @@ public class GatewayChannelScreen extends Screen {
             int channel = channelAt(mouseX, mouseY);
             if (channel >= 0) {
                 PacketDistributor.sendToServer(new SetGatewayChannelPacket(
-                        core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode));
+                        core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode, fluidRouteMode));
                 PacketDistributor.sendToServer(new OpenGatewayFilterPacket(core.getBlockPos(), channel));
                 sent = true;
                 return true;
@@ -177,9 +190,10 @@ public class GatewayChannelScreen extends Screen {
     public void onClose() {
         // Closing without picking a channel still commits the name + chunk-load + route toggles.
         if (!sent && (!nameBox.getValue().equals(core.getGatewayName())
-                || chunkLoading != core.isChunkLoading() || routeMode != core.isRouteMode()))
+                || chunkLoading != core.isChunkLoading() || routeMode != core.isRouteMode()
+                || fluidRouteMode != core.isFluidRouteMode()))
             PacketDistributor.sendToServer(new SetGatewayChannelPacket(
-                    core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode));
+                    core.getBlockPos(), -1, nameBox.getValue(), chunkLoading, routeMode, fluidRouteMode));
         super.onClose();
     }
 

@@ -19,7 +19,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * (name-only update, sent when the screen closes without a pick).
  */
 public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, boolean chunkLoading,
-        boolean routeMode) implements CustomPacketPayload {
+        boolean routeMode, boolean fluidRouteMode) implements CustomPacketPayload {
     public static final Type<SetGatewayChannelPacket> TYPE = new Type<>(CESG.id("set_gateway_channel"));
 
     public static final StreamCodec<ByteBuf, SetGatewayChannelPacket> STREAM_CODEC = StreamCodec.composite(
@@ -28,6 +28,7 @@ public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, bo
             ByteBufCodecs.stringUtf8(32), SetGatewayChannelPacket::name,
             ByteBufCodecs.BOOL, SetGatewayChannelPacket::chunkLoading,
             ByteBufCodecs.BOOL, SetGatewayChannelPacket::routeMode,
+            ByteBufCodecs.BOOL, SetGatewayChannelPacket::fluidRouteMode,
             SetGatewayChannelPacket::new);
 
     @Override
@@ -49,6 +50,7 @@ public record SetGatewayChannelPacket(BlockPos pos, int channel, String name, bo
                 core.setGatewayName(packet.name());
                 core.setChunkLoading(packet.chunkLoading());
                 core.setRouteMode(packet.routeMode());
+                core.setFluidRouteMode(packet.fluidRouteMode());
                 core.setChanged();
             }
         });
