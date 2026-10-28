@@ -491,10 +491,19 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.gateway.chunkload_off", "Load Destination: OFF");
         add("cesg.gateway.chunkload_tooltip",
                 "While ON, this gateway keeps its own chunk and the bound destination's chunk loaded and ticking — Gateway Port transfers keep flowing with nobody on either side. Follows the active channel: switching destinations moves the loading with it.");
-        add("cesg.gateway.route_on", "Route: ON");
-        add("cesg.gateway.route_off", "Route: OFF");
+        add("cesg.gateway.route_on", "Items: Route");
+        add("cesg.gateway.route_off", "Items: Active");
         add("cesg.gateway.route_tooltip",
-                "Route mode: a Gateway Port or Storage Bridge fans each item out to whichever bound channel's filter accepts it, instead of only the active channel. Right-click a channel to edit its filter. Fluids and manual/terminal moves still use the active channel.");
+                "Route mode: a Gateway Port or Storage Bridge fans each item out to whichever bound channel's filter accepts it, instead of only the active channel. Right-click a channel to edit its filter. Fluid routing is configured separately; manual/terminal moves use the active channel.");
+        add("cesg.gateway.fluid_route_on", "Fluids: Route");
+        add("cesg.gateway.fluid_route_off", "Fluids: Active");
+        add("cesg.gateway.fluid_route_tooltip", "Fluid routing: off sends fluids to the active channel. On uses the first matching bound channel (1-16). Right-click a channel and switch to Fluids to edit its filters. Blocked routes keep their fluid buffered.");
+        add("cesg.gateway.filter.items", "Items");
+        add("cesg.gateway.filter.fluids", "Fluids");
+        add("cesg.gateway.filter.type.tip", "Switch between independent item and fluid filters for this channel.");
+        add("cesg.gateway.filter.fluid_hint", "Click with a filled fluid container to select its fluid without consuming it. Empty cursor clears; other items leave the filter unchanged.");
+        add("cesg.gateway.filter.fluid_whitelist.tip", "Whitelist: only selected fluids route here (empty = none). Matches fluid and components, ignoring container and amount.");
+        add("cesg.gateway.filter.fluid_blacklist.tip", "Blacklist: all fluids except these route here (empty = catch-all). First matching bound channel wins.");
         add("cesg.gateway.filter.title", "Channel %s Filter");
         add("cesg.gateway.filter.whitelist", "Whitelist");
         add("cesg.gateway.filter.blacklist", "Blacklist");
