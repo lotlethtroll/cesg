@@ -84,6 +84,9 @@ blocked-transfer fuel charges, routed fuel selection, and Bridge status reportin
 Recipes, item IDs, save keys, and configuration defaults remain unchanged.
 See [CHANGELOG.md](CHANGELOG.md) for the complete changes.
 
+[Download 1.1.1](https://github.com/lotlethtroll/cesg/releases/tag/v1.1.1).
+Back up your world before updating, and install the same version on client and server.
+
 ## Installation
 
 1. Install [NeoForge](https://neoforged.net/) 21.1.233 or newer for Minecraft 1.21.1.
@@ -115,6 +118,7 @@ The jar is written to the Gradle `libs` output directory as
 ## Links
 
 - **Source & issues:** [github.com/lotlethtroll/cesg](https://github.com/lotlethtroll/cesg)
+- **Wiki:** [www.cesg.dev](https://www.cesg.dev)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 
 ## License

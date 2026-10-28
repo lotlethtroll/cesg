@@ -1,6 +1,9 @@
 # 1.1.1 upload package
 
-Status: prepared for release review; not uploaded or tagged.
+Status: GitHub release approved for 2026-10-28; CurseForge upload is handled by Andrew.
+
+- GitHub release: https://github.com/lotlethtroll/cesg/releases/tag/v1.1.1
+- Release jar: https://github.com/lotlethtroll/cesg/releases/download/v1.1.1/cesg-1.21.1-1.1.1.jar
 
 ## CurseForge file settings
 

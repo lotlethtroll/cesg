@@ -21,7 +21,7 @@ the feature set changes; the description below is the canonical listing copy.
 |---|---|
 | Game version | 1.21.1 |
 | Loader | NeoForge |
-| Release channel | Release after the 1.1.1 QA gates pass |
+| Release channel | Release (1.1.1 approved 2026-10-28; known QA limitations recorded in the release checklist) |
 | File | `cesg-1.21.1-1.1.1.jar` (from `%LOCALAPPDATA%\gradle-builds\Create-End-Storage-and-Gateways\libs`) |
 | Required dependency | Create 6.0.10, supported 6.0.x series (Modrinth project `create`; CurseForge project "Create") |
 | Changelog | Paste the matching section from `CHANGELOG.md` |

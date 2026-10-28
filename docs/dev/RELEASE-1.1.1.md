@@ -1,6 +1,7 @@
 # CESG 1.1.1 — reliability patch
 
-Status: unreleased validation build on `1.1-dev`. No release tag or upload has been made.
+Status: approved for the 2026-10-28 GitHub release, `v1.1.1`.
+The unverified checks below remain documented limitations accepted for this release.
 The 1.2 feature plan is in [NEXT-RELEASE.md](NEXT-RELEASE.md).
 
 ## Scope

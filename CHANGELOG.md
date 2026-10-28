@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
-## [1.1.1] — Unreleased
+## [1.1.1] — 2026-10-28
 
 ### Fixed
 - Terminal batch refill leaves crafting remainders such as cake buckets in
