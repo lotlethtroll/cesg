@@ -19,4 +19,27 @@ Targets `1.2-dev`. First visual prototype implemented; in-game review is pending
   Local/Partner tabs and offline states, GUI scales, and JEI/EMI overlap.
 - This pass does not change menus, network packets, transfer logic, or crafting.
 
+## In-game QA — 2026-10-28
+
+Tested in the separate `QA legacy 1.1 upgrade` creative world using the real
+client, with both JEI and EMI loaded (EMI provides the visible recipe sidebar).
+
+- GUI scale 2 and 3: complete terminal, crafting panel, and hotbar fit; recipe
+  sidebar and bottom search stay outside the terminal. Headers align and the
+  shared divider and perimeter render without the earlier gaps/dashed strip.
+- Scale 2: Local/Partner switching and the empty partner message work. Long
+  search text stays within its field and shows the no-results message.
+- Synthetic storage counts 1,234,567, 12,345, and 999 render abbreviated inside
+  their slots at scales 2 and 3. These command-injected counts are display stress
+  fixtures, not normal legal stack sizes or an inventory-capacity test.
+- Stored-item tooltip reports the full 1,234,567 total. Clear-grid tooltip is
+  readable at scale 3.
+- **Open issue:** Auto scale leaves too little vertical margin: EMI's centered
+  bottom search overlays the hotbar. The frame itself fits, but recipe-viewer
+  integration is not passed at this scale. Do not mark this PR ready to merge.
+- Not yet checked: scale 1 terminal, narrow window, other languages/resource
+  fonts, disconnected/faulted partner states, JEI alone, and EMI alone.
+
+Client left at scale 3 for inspection. No production world was modified.
+
 https://github.com/lotlethtroll/cesg/issues/5
