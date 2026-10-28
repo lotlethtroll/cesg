@@ -33,6 +33,26 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("cesg")
 @PrefixGameTestTemplate(false)
 public class GatewayRegressionTest {
+    @net.minecraft.gametest.framework.GameTest(template = "empty")
+    public void bridgeCompactLayoutPreservesSlots(net.minecraft.gametest.framework.GameTestHelper helper) {
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        var menu = new StorageBridgeMenu(1, player.getInventory(), helper.absolutePos(new BlockPos(1, 1, 1)));
+        var original = java.util.stream.IntStream.range(0, 54).mapToObj(menu::getSlot).toList();
+        for (int offset : new int[] {-4, 0, -4, 0}) {
+            menu.positionHotbar(offset);
+            for (int i = 0; i < 54; i++) {
+                var slot = menu.getSlot(i);
+                var before = original.get(i);
+                helper.assertTrue(slot.index == i && slot.container == before.container
+                        && slot.getContainerSlot() == before.getContainerSlot(), "Bridge layout changed slot mapping");
+                helper.assertTrue(slot.x == before.x && slot.y == before.y + (i >= 45 ? offset : 0),
+                        "Bridge layout moved filters/inventory or accumulated offsets");
+                if (i < 45) helper.assertTrue(slot == before, "Bridge layout replaced a filter or inventory slot");
+            }
+        }
+        helper.succeed();
+    }
+
     private BlockPos local;
     private BlockPos remote;
 

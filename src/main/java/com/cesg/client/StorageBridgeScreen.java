@@ -52,6 +52,7 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     private static final int LOCK_Y = 4;
     private static final int LOCK_W = 44;
     private static final int LOCK_FILL = 0xFFC08030;
+    private int hotbarOffset;
 
     public StorageBridgeScreen(StorageBridgeMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -64,10 +65,22 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
     }
 
     @Override
+    protected void init() {
+        hotbarOffset = height < StorageBridgeMenu.IMAGE_H + 48 ? -4 : 0;
+        imageHeight = StorageBridgeMenu.IMAGE_H + hotbarOffset;
+        menu.positionHotbar(hotbarOffset);
+        super.init();
+        topPos = Math.max(0, (height - 24 - imageHeight) / 2);
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int x0 = leftPos;
         int y0 = topPos;
-        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, imageHeight, 176, 220);
+        int seam = StorageBridgeMenu.HOTBAR_Y - 1 + hotbarOffset;
+        graphics.blit(BACKGROUND, x0, y0, 0, 0, imageWidth, seam, 176, 220);
+        graphics.blit(BACKGROUND, x0, y0 + seam, 0, StorageBridgeMenu.HOTBAR_Y - 1,
+                imageWidth, StorageBridgeMenu.IMAGE_H - StorageBridgeMenu.HOTBAR_Y + 1, 176, 220);
 
         drawFilterRow(graphics, x0 + StorageBridgeMenu.SEND_X, y0 + StorageBridgeMenu.SEND_Y);
         drawFilterRow(graphics, x0 + StorageBridgeMenu.PULL_X, y0 + StorageBridgeMenu.PULL_Y);
@@ -85,7 +98,7 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
                         y0 + StorageBridgeMenu.PLAYER_INV_Y - 1 + row * StorageBridgeMenu.SLOT);
         for (int col = 0; col < 9; col++)
             drawSlotBox(graphics, x0 + StorageBridgeMenu.SEND_X + col * StorageBridgeMenu.SLOT,
-                    y0 + StorageBridgeMenu.HOTBAR_Y - 1);
+                    y0 + StorageBridgeMenu.HOTBAR_Y + hotbarOffset - 1);
 
         drawToggle(graphics, EN_X, PUSH_BTN_Y, menu.isPushEnabled() ? ON_FILL : OFF_FILL,
                 enableLabel(menu.isPushEnabled()), isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y));
@@ -176,7 +189,8 @@ public class StorageBridgeScreen extends AbstractContainerScreen<StorageBridgeMe
         if (isBtnHovered(mouseX, mouseY, EN_X, PUSH_BTN_Y) || isBtnHovered(mouseX, mouseY, EN_X, PULL_BTN_Y))
             tip = Component.translatable("cesg.bridge.enable.tip");
         else if (isBtnHovered(mouseX, mouseY, MODE_X, PUSH_BTN_Y))
-            tip = Component.translatable(menu.isSendBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
+            tip = Component.translatable(menu.isRouteMode() ? "cesg.bridge.push.routed.tip"
+                    : (menu.isSendBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip"));
         else if (isBtnHovered(mouseX, mouseY, MODE_X, PULL_BTN_Y))
             tip = Component.translatable(menu.isPullBlacklist() ? "cesg.bridge.blacklist.tip" : "cesg.bridge.whitelist.tip");
         else if (isLockHovered(mouseX, mouseY))
