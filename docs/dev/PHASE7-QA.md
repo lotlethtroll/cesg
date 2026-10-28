@@ -1,5 +1,10 @@
 # Phase 7 QA & Verification Log
 
+> Archived 1.1.0 development history. The release shipped on 2026-07-31;
+> dated snapshots below retain their original context. Current work and release
+> gates are tracked in [RELEASE-1.1.1.md](RELEASE-1.1.1.md), with 1.2 candidates
+> in [NEXT-RELEASE.md](NEXT-RELEASE.md).
+
 Living checklist for CESG 1.1.0 ("Logistics & Power"). Companion to
 [PHASE7.md](PHASE7.md) — that doc is the *plan*, this is the *proof*. Add
 verification steps here as each track is built, and check them off as they pass
@@ -667,7 +672,7 @@ reachable by static checks.
   existing sections; deliberately not an exhaustive list)_
 - [x] `docs/publishing/LISTING.md` updated for 1.1 _(2026-07-29 — jar refs now
   1.1.0, description and screenshot list refreshed)_
-- [ ] `CHANGELOG.md` — move Unreleased + add Bridge / routing / battery /
+- [x] `CHANGELOG.md` — move Unreleased + add Bridge / routing / battery /
   Crushing+Washing / polish into `[1.1.0]` when releasing
 
 ### Deferred / accepted as-is (not blocking)

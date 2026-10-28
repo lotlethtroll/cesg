@@ -554,10 +554,6 @@ public final class CESGPonderScenes {
         scene.idle(70);
     }
 
-    // --- Gateway Flux Battery arrays (gateway_flux_battery_array.nbt, 5x5 plate). The full 3x3x3 is baked
-    // into the schematic so the scene bounds reach it; the storyboard clears it and grows
-    // 1x1x1 -> 2x2x2 -> 3x3x3 from one corner. ---
-
     // --- Flux Battery arrays (gateway_flux_battery_array.nbt, 8x4x8 with an 8x8 base plate) ---
     // The three sizes are REAL captured multiblocks laid side by side, not assembled here. Building them
     // in-scene never rendered connected: the connected-texture behaviour asks

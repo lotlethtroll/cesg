@@ -149,7 +149,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         if (!(level instanceof ServerLevel serverLevel) || !hasOutgoing())
             return FLUSH_INTERVAL;
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
-        if (core == null || !core.canTravel())
+        if (core == null || core.getSpeed() == 0)
             return IDLE_BACKOFF; // no active gateway: don't re-run the ring scan at full cadence
         return core.isRouteMode() ? flushRouted(serverLevel, core) : flushActive(serverLevel, core);
     }
@@ -160,13 +160,13 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         if (targets == null || targets.isEmpty())
             return IDLE_BACKOFF; // partner unloaded or portless: keep buffering, retry later
 
-        // Automated transfer costs fuel (config; default 0). A Gateway Flux Battery on the ring gates
-        // this against its reserve floor, so automation never starves player travel — see the Core.
-        if (!core.tryConsumeAutomationFuel(com.cesg.CESGConfig.gatewayPortTransferCost()))
-            return IDLE_BACKOFF;
-
-        pushItems(targets);
-        pushFluid(targets);
+        AutomationFuelBudget fuel = core.automationFuelBudget(com.cesg.CESGConfig.gatewayPortTransferCost());
+        fuel.transfer(core.isCrossDimension(core.getPartner()), () -> {
+            int before = outgoingAmount();
+            pushItems(targets);
+            pushFluid(targets);
+            return before - outgoingAmount();
+        });
         return FLUSH_INTERVAL;
     }
 
@@ -189,9 +189,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         if (!anyReachable)
             return IDLE_BACKOFF; // no channel reachable: hold everything, no fuel spent
 
-        if (!core.tryConsumeAutomationFuel(com.cesg.CESGConfig.gatewayPortTransferCost()))
-            return IDLE_BACKOFF;
-
+        AutomationFuelBudget fuel = core.automationFuelBudget(com.cesg.CESGConfig.gatewayPortTransferCost());
         for (int slot = 0; slot < sendItems.getSlots(); slot++) {
             ItemStack stack = sendItems.getStackInSlot(slot);
             if (stack.isEmpty())
@@ -200,18 +198,26 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
             List<GatewayPortBlockEntity> targets = channel < 0 ? null : targetsByChannel.get(channel);
             if (targets == null || targets.isEmpty())
                 continue; // unroutable or that channel is down: leave it buffered
-            ItemStack remainder = stack.copy();
-            for (GatewayPortBlockEntity target : targets) {
-                remainder = ItemHandlerHelper.insertItemStacked(target.receiveItems, remainder, false);
-                if (remainder.isEmpty())
-                    break;
-            }
-            sendItems.setStackInSlot(slot, remainder);
+            final int sendSlot = slot;
+            fuel.transfer(core.isCrossDimension(core.getBinding(channel)), () -> {
+                ItemStack remainder = stack.copy();
+                for (GatewayPortBlockEntity target : targets) {
+                    remainder = ItemHandlerHelper.insertItemStacked(target.receiveItems, remainder, false);
+                    if (remainder.isEmpty())
+                        break;
+                }
+                sendItems.setStackInSlot(sendSlot, remainder);
+                return stack.getCount() - remainder.getCount();
+            });
         }
 
         List<GatewayPortBlockEntity> activeTargets = targetsByChannel.get(core.getActiveChannel());
-        if (activeTargets != null && !activeTargets.isEmpty())
-            pushFluid(activeTargets);
+        if (activeTargets != null && !activeTargets.isEmpty() && !sendTank.isEmpty())
+            fuel.transfer(core.isCrossDimension(core.getPartner()), () -> {
+                int before = sendTank.getFluidAmount();
+                pushFluid(activeTargets);
+                return before - sendTank.getFluidAmount();
+            });
         return FLUSH_INTERVAL;
     }
 

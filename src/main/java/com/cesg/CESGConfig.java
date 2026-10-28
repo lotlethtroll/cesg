@@ -41,7 +41,7 @@ public final class CESGConfig {
                 .comment("Fuel (mB) a Gateway Port spends per flush (every 10 ticks) when it moves items or",
                         "fluid. Default 0 = Ports are free (1.0 behaviour). Set >0 to make automated",
                         "transfer cost fuel; a Gateway Flux Battery on the ring then protects a travel",
-                        "reserve (see battery.reserveFloorMb).")
+                        "reserve (see battery.reserveFloorMb). Routed flushes pay once per fuel type used.")
                 .defineInRange("portTransferCostMb", 0, 0, 4000);
         GATEWAY_FAN_OUT = builder
                 .comment("Allow the per-gateway \"route\" mode: when enabled on a Core, a Gateway Port or",
@@ -74,7 +74,7 @@ public final class CESGConfig {
                 .comment("Fuel (mB) a Gateway Flux Battery array keeps in reserve for player travel. While a",
                         "battery is on the ring, automated Port/Bridge transfers may only draw combined fuel",
                         "(Core + battery) down to this floor; player travel ignores it. Only has an effect",
-                        "when gateway.portTransferCostMb > 0.")
+                        "when gateway.portTransferCostMb or bridge.transferCostMb is greater than 0.")
                 .defineInRange("reserveFloorMb", 1000, 0, 1_000_000);
         builder.pop();
 
@@ -84,7 +84,8 @@ public final class CESGConfig {
                         "(every 10 ticks) when it moves items between the linked networks. Default 0 =",
                         "bridging is free. Set >0 to make cross-dim logistics cost fuel; a Gateway Flux",
                         "Battery on the ring then protects the travel reserve (see battery.reserveFloorMb).",
-                        "Manual pull/push through the terminal pays the same cost per action.")
+                        "Manual pull/push through the terminal pays the same cost per successful action.",
+                        "Routed flushes pay once per fuel type used; blocked moves cost nothing.")
                 .defineInRange("transferCostMb", 0, 0, 4000);
         BRIDGE_MAX_ITEMS = builder
                 .comment("Max items a Storage Bridge moves per passive flush, per direction. Bounds how",

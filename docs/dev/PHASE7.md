@@ -1,5 +1,10 @@
 # Phase 7 — "Logistics & Power" (ships as CESG 1.1.0)
 
+> Archived 1.1.0 development history. The release shipped on 2026-07-31;
+> dated snapshots below retain their original context. Current work and release
+> gates are tracked in [RELEASE-1.1.1.md](RELEASE-1.1.1.md), with 1.2 candidates
+> in [NEXT-RELEASE.md](NEXT-RELEASE.md).
+
 Big themed content drop that **deepens the systems shipped in 1.0** rather than
 opening new frontiers (deliberately no worldgen / combat this cycle). Three
 pillars, chosen 2026-07-22:

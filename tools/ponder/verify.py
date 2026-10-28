@@ -104,9 +104,18 @@ for comp, schem, method in regs:
     if 'GATEWAY_RING' in src:
         used |= RING
     if method == 'gatewayFluxBatteryArray':
-        o = consts['ARRAY_ORIGIN']
-        used |= {(o[0] + dx, o[1] + dy, o[2] + dz)
-                 for dx in range(3) for dy in range(3) for dz in range(3)}
+        for name, width in (('ARRAY_SINGLE', 1), ('ARRAY_2X2', 2), ('ARRAY_3X3', 3)):
+            if name not in consts:
+                fail('%s: missing array origin %s' % (method, name))
+                continue
+            o = consts[name]
+            footprint = {(o[0] + dx, o[1] + dy, o[2] + dz)
+                         for dx in range(width) for dy in range(width) for dz in range(width)}
+            used |= footprint
+            _, grid = schematics[schem]
+            missing = sorted(p for p in footprint if grid.get(p) != 'cesg:gateway_flux_battery')
+            if missing:
+                fail('%s: %s missing battery cells: %s' % (method, name, missing))
     oob = sorted(p for p in used if not (0 <= p[0] < sx and 0 <= p[1] < sy and 0 <= p[2] < sz))
     print('   %-30s %-30s x<%d y<%d z<%d  n=%2d' % (comp, schem, sx, sy, sz, len(used)))
     if oob:

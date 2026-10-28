@@ -356,7 +356,7 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
     }
 
     /**
-     * Fuel gate for automation (Gateway Ports now, the Storage Bridge later). Charges {@code cost} of the
+     * Fuel gate for automation through the active channel. Charges {@code cost} of the
      * active fuel, but respects the Gateway Flux Battery reserve: while a battery of the relevant fuel (or
      * a dry one) is on the ring, automation may only draw the combined Core+battery fuel down to
      * {@link CESGConfig#batteryReserveFloor()} — that charge is left for player travel, which is never
@@ -367,7 +367,16 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
     public boolean tryConsumeAutomationFuel(int cost) {
         if (cost <= 0)
             return true;
-        boolean crossDim = partnerIsCrossDimension();
+        return tryConsumeAutomationFuel(cost, partnerIsCrossDimension());
+    }
+
+    boolean tryConsumeAutomationFuel(int cost, boolean crossDim) {
+        return automationFuel(cost, crossDim, false);
+    }
+
+    private boolean automationFuel(int cost, boolean crossDim, boolean simulate) {
+        if (cost <= 0)
+            return true;
         int coreFuel = crossDim ? eyeMb : essenceMb;
 
         long batteryFuel = 0;
@@ -388,6 +397,8 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         if (coreFuel < cost)
             return false; // Core not yet topped up this tick — the battery refills it, retry next flush
 
+        if (simulate)
+            return true;
         if (crossDim)
             eyeMb -= cost;
         else
@@ -395,6 +406,33 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
         notifyUpdate();
         updateCoreFuelVisual();
         return true;
+    }
+
+    /** Destination-aware accounting shared by Ports and Bridges. No charge for a blocked move. */
+    AutomationFuelBudget automationFuelBudget(int cost) {
+        return new AutomationFuelBudget(crossDim -> getSpeed() != 0
+                && (crossDim ? eyeMb : essenceMb) >= travelCost()
+                && tryConsumeAutomationFuel(cost, crossDim),
+                crossDim -> refundAutomationFuel(cost, crossDim));
+    }
+
+    void refundAutomationFuel(int cost, boolean crossDim) {
+        // Called synchronously after an unsuccessful move; the reservation made exactly this room.
+        if (crossDim)
+            fillEye(cost, false);
+        else
+            fillEssence(cost, false);
+    }
+
+    boolean canAutomateTo(GatewayPartner destination, int cost) {
+        boolean crossDim = isCrossDimension(destination);
+        return destination.isBound() && getSpeed() != 0
+                && (crossDim ? eyeMb : essenceMb) >= travelCost()
+                && automationFuel(cost, crossDim, true);
+    }
+
+    boolean isCrossDimension(GatewayPartner destination) {
+        return level != null && !destination.dimension().equals(level.dimension());
     }
 
     /**
@@ -438,6 +476,8 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             BlockPos pos = queue.poll();
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
+                if (!level.isLoaded(next))
+                    continue;
                 if (level.getBlockEntity(next) instanceof GatewayFluxBatteryBlockEntity battery) {
                     GatewayFluxBatteryBlockEntity controller = battery.getControllerBE();
                     if (controller != null)
@@ -572,6 +612,8 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             }
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
+                if (!level.isLoaded(next))
+                    continue;
                 if (!visited.contains(next) && isOwnRingBlock(next)) {
                     visited.add(next);
                     queue.add(next);

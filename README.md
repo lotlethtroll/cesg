@@ -6,8 +6,8 @@ containers, link twin Ender Barrels across dimensions, build kinetic-powered
 gateways fueled by liquid ender essences, and bridge entire storage networks
 between worlds.
 
-- **Minecraft:** 1.21.1 (NeoForge 21.1.x)
-- **Requires:** Create 6.0.10+
+- **Minecraft:** 1.21.1 (NeoForge 21.1.233+)
+- **Requires:** Create 6.0.10 or newer, below 6.1.0
 - **Environment:** required on both client and server
 - **Mod ID:** `cesg`
 
@@ -79,8 +79,8 @@ server config for travel costs and chunk-loading permissions.
 
 ## Installation
 
-1. Install [NeoForge](https://neoforged.net/) for Minecraft 1.21.1.
-2. Install [Create](https://modrinth.com/mod/create) 6.0.10 or newer.
+1. Install [NeoForge](https://neoforged.net/) 21.1.233 or newer for Minecraft 1.21.1.
+2. Install [Create](https://modrinth.com/mod/create) 6.0.10 or a later 6.0.x release.
 3. Drop `cesg-1.21.1-<version>.jar` into your `mods` folder (client **and**
    server).
 
@@ -89,6 +89,18 @@ server config for travel costs and chunk-loading permissions.
 ```sh
 ./gradlew build
 ```
+
+Run the checks before preparing a release:
+
+```sh
+./gradlew build runGameTestServer
+python tools/ponder/verify.py
+```
+
+GameTests run in an isolated `run/gametest` world. Test classes and their empty
+structure template are development-only and are excluded from the release jar.
+See [the 1.1.1 checklist](docs/dev/RELEASE-1.1.1.md) for the remaining multiplayer
+checks and [the next-release backlog](docs/dev/NEXT-RELEASE.md) for 1.2 scope.
 
 The jar is written to the Gradle `libs` output directory as
 `cesg-<minecraft version>-<mod version>.jar`.

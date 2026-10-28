@@ -243,8 +243,13 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             remoteStatus = RemoteStatus.FAULT; // bound + loaded, but the partner ring has no Bridge
             return null;
         }
+        BlockPos anchor = bridges.get(0).worldPosition;
+        if (!StorageNetwork.scan(partnerLevel, anchor).operational()) {
+            remoteStatus = RemoteStatus.FAULT;
+            return null;
+        }
         remoteStatus = RemoteStatus.LIVE;
-        return new RemoteEndpoint(partnerLevel, bridges.get(0).worldPosition);
+        return new RemoteEndpoint(partnerLevel, anchor);
     }
 
     /**
@@ -303,7 +308,8 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     }
 
     public RemoteStatus remoteStatus() {
-        return remoteStatus;
+        return level != null && level.isClientSide && getBlockState().hasProperty(StorageBridgeBlock.STATUS)
+                ? getBlockState().getValue(StorageBridgeBlock.STATUS) : remoteStatus;
     }
 
     private void refreshRemoteSnapshot(ServerLevel level) {
@@ -339,48 +345,39 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     private int flushPassive() {
         if (!(level instanceof ServerLevel serverLevel))
             return FLUSH_INTERVAL;
-        boolean hasBuffered = !isEmpty(outBuffer) || !isEmpty(inBuffer);
-        if (!pushEnabled && !pullEnabled && !hasBuffered)
-            return FLUSH_INTERVAL; // nothing to do
-
+        // These items have already crossed the gateway. Deliver locally even if the link is now down.
+        int moved = flushBufferToNetwork(serverLevel, worldPosition, inBuffer);
+        if (!pushEnabled && !pullEnabled && isEmpty(outBuffer)) {
+            if (moved > 0)
+                emitTransferFx(serverLevel);
+            return FLUSH_INTERVAL;
+        }
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
-        if (core == null || !core.canTravel())
-            return IDLE_BACKOFF; // no active gateway: hold whatever is buffered, retry slowly
+        if (core == null || core.getSpeed() == 0)
+            return IDLE_BACKOFF;
 
-        RemoteEndpoint remote = resolveStatus(serverLevel); // active channel; also sets remoteStatus
+        RemoteEndpoint remote = resolveStatus(serverLevel);
         boolean routing = core.isRouteMode();
-        // Non-route: nothing moves while the active partner is down. Route: push may still fan out to
-        // other channels, so only bail when there is no push work AND the active channel is down.
-        if (remote == null && !routing)
-            return IDLE_BACKOFF;
-        if (remote == null && routing && !pushEnabled && isEmpty(outBuffer))
-            return IDLE_BACKOFF;
-
-        // A Gateway Flux Battery on the ring gates this against its reserve so automation never starves
-        // player travel — identical to the Gateway Port's flush.
-        if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost()))
-            return IDLE_BACKOFF;
-
+        int cost = CESGConfig.bridgeTransferCost();
+        AutomationFuelBudget fuel = core.automationFuelBudget(cost);
         int max = CESGConfig.bridgeMaxItemsPerFlush();
-        int moved = 0;
-        // PUSH: pull items out of the LOCAL network into outBuffer, then deliver. In route mode the
-        // per-channel filters are the only gate (extract whatever some channel accepts, then fan out);
-        // otherwise the Bridge's own send filter decides, delivered to the active partner.
-        if (pushEnabled) {
-            if (routing)
-                moved += fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, max,
-                        s -> core.routeChannel(s) >= 0);
-            else
-                moved += fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, sendFilter, sendBlacklist, max);
+        if (pushEnabled && (routing || sendBlacklist || !isEmpty(sendFilter))) {
+            fillBufferFromNetwork(serverLevel, worldPosition, outBuffer, max, sample -> {
+                int channel = routing ? core.routeChannel(sample) : core.getActiveChannel();
+                return channel >= 0 && core.canAutomateTo(core.getBinding(channel), cost)
+                        && (routing || passesFilter(sample, sendFilter, sendBlacklist));
+            });
         }
         if (routing)
-            moved += flushBufferRouted(serverLevel, core, outBuffer);
-        else if (remote != null) // non-route already bailed above when the partner is down
-            moved += flushBufferToNetwork(remote.level, remote.anchor, outBuffer);
-        // PULL (active channel only — fan-out is a distribution/send concern). Draining inBuffer into the
-        // LOCAL network always runs, since local is reachable even when the partner is down.
-        if (remote != null && pullEnabled && !partnerLocked(remote))
-            moved += fillBufferFromNetwork(remote.level, remote.anchor, inBuffer, pullFilter, pullBlacklist, max);
+            moved += flushBufferRouted(serverLevel, core, outBuffer, fuel);
+        else if (remote != null && !isEmpty(outBuffer))
+            moved += fuel.transfer(core.isCrossDimension(core.getPartner()),
+                    () -> flushBufferToNetwork(remote.level, remote.anchor, outBuffer));
+
+        if (remote != null && pullEnabled && (pullBlacklist || !isEmpty(pullFilter)) && !partnerLocked(remote))
+            moved += fuel.transfer(core.isCrossDimension(core.getPartner()),
+                    () -> fillBufferFromNetwork(remote.level, remote.anchor, inBuffer, max,
+                            sample -> passesFilter(sample, pullFilter, pullBlacklist)));
         moved += flushBufferToNetwork(serverLevel, worldPosition, inBuffer);
         if (moved > 0)
             emitTransferFx(serverLevel);
@@ -389,7 +386,7 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
 
     /** Delivers each buffered stack to the partner network of the channel whose filter accepts it. */
     private int flushBufferRouted(ServerLevel level, CrossDimensionalGatewayCoreBlockEntity core,
-            ItemStackHandler buffer) {
+            ItemStackHandler buffer, AutomationFuelBudget fuel) {
         Map<Integer, RemoteEndpoint> cache = new HashMap<>();
         int moved = 0;
         for (int slot = 0; slot < buffer.getSlots(); slot++) {
@@ -402,20 +399,17 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             RemoteEndpoint remote = cache.computeIfAbsent(channel, c -> resolvePartner(level, core.getBinding(c)));
             if (remote == null)
                 continue; // that channel's partner is down: hold, retry next flush
-            ItemStack remainder = StorageNetwork.insert(remote.level, remote.anchor, stack.copy());
-            buffer.setStackInSlot(slot, remainder);
-            moved += stack.getCount() - remainder.getCount();
+            final int bufferSlot = slot;
+            moved += fuel.transfer(core.isCrossDimension(core.getBinding(channel)), () -> {
+                ItemStack remainder = StorageNetwork.insert(remote.level, remote.anchor, stack.copy());
+                buffer.setStackInSlot(bufferSlot, remainder);
+                return stack.getCount() - remainder.getCount();
+            });
         }
         return moved;
     }
 
-    /** Extracts up to {@code max} filtered items out of a network into {@code buffer} (never overfills it). */
-    private static int fillBufferFromNetwork(Level level, BlockPos anchor, ItemStackHandler buffer,
-            ItemStackHandler filter, boolean blacklist, int max) {
-        return fillBufferFromNetwork(level, anchor, buffer, max, sample -> passesFilter(sample, filter, blacklist));
-    }
-
-    /** As above, but with an arbitrary acceptance test (route mode extracts whatever any channel accepts). */
+    /** Stages up to max items, reserving space before each source extraction. */
     private static int fillBufferFromNetwork(Level level, BlockPos anchor, ItemStackHandler buffer, int max,
             java.util.function.Predicate<ItemStack> accept) {
         StorageNetwork.Scan scan = StorageNetwork.scan(level, anchor);
@@ -432,16 +426,23 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             ItemStack sample = entry.getKey();
             if (!accept.test(sample))
                 continue;
-            ItemStack pulled = StorageNetwork.extract(level, anchor, sample, budget);
-            if (pulled.isEmpty())
-                continue;
-            // Any part that does not fit the buffer is returned to the network it came from.
-            ItemStack overflow = insertIntoBuffer(buffer, pulled);
-            if (!overflow.isEmpty())
-                StorageNetwork.insert(level, anchor, overflow);
-            int inserted = pulled.getCount() - overflow.getCount();
-            moved += inserted;
-            budget -= inserted;
+            // Reserve a concrete buffer slot BEFORE extracting. No rollback into a filtered source:
+            // a source may allow extraction while refusing the exact same item on reinsertion.
+            for (int slot = 0; slot < buffer.getSlots() && budget > 0; slot++) {
+                ItemStack held = buffer.getStackInSlot(slot);
+                if (!held.isEmpty() && !ItemStack.isSameItemSameComponents(held, sample))
+                    continue;
+                int room = Math.min(buffer.getSlotLimit(slot), sample.getMaxStackSize()) - held.getCount();
+                if (room <= 0)
+                    continue;
+                ItemStack pulled = StorageNetwork.extract(level, anchor, sample, Math.min(room, budget));
+                if (pulled.isEmpty())
+                    break;
+                ItemStack combined = pulled.copyWithCount(held.getCount() + pulled.getCount());
+                buffer.setStackInSlot(slot, combined);
+                moved += pulled.getCount();
+                budget -= pulled.getCount();
+            }
         }
         return moved;
     }
@@ -468,13 +469,6 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         level.sendParticles(ParticleTypes.REVERSE_PORTAL, worldPosition.getX() + 0.5,
                 worldPosition.getY() + 0.65, worldPosition.getZ() + 0.5,
                 4, 0.16, 0.2, 0.16, 0.025);
-    }
-
-    private static ItemStack insertIntoBuffer(ItemStackHandler buffer, ItemStack stack) {
-        ItemStack remainder = stack.copy();
-        for (int slot = 0; slot < buffer.getSlots() && !remainder.isEmpty(); slot++)
-            remainder = buffer.insertItem(slot, remainder, false);
-        return remainder;
     }
 
     private static boolean passesFilter(ItemStack sample, ItemStackHandler filter, boolean blacklist) {
@@ -514,8 +508,8 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
 
     /**
      * Terminal withdraw: pull up to {@code count} of {@code sample} out of the REMOTE network to hand to
-     * the player. Fuel is charged only on a successful extract (bounced back to the remote net if the
-     * gateway can't pay), so a click that finds nothing — or an unfuelled gateway — costs nothing.
+     * the player. Fuel is reserved before extraction and refunded if nothing is found. No items
+     * need to be returned to a source that may refuse reinsertion.
      * Returns the extracted stack ({@link ItemStack#EMPTY} if nothing moved).
      */
     public ItemStack terminalWithdrawRemote(ItemStack sample, int count, ServerPlayer player) {
@@ -531,12 +525,15 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
             notifyLocked(player);
             return ItemStack.EMPTY;
         }
-        ItemStack pulled = StorageNetwork.extract(remote.level, remote.anchor, sample, count);
-        if (pulled.isEmpty())
-            return ItemStack.EMPTY;
-        if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost())) {
-            StorageNetwork.insert(remote.level, remote.anchor, pulled); // unfuelled: put it back
+        int cost = CESGConfig.bridgeTransferCost();
+        boolean crossDim = core.isCrossDimension(core.getPartner());
+        if (!core.tryConsumeAutomationFuel(cost, crossDim)) {
             notifyGated(player);
+            return ItemStack.EMPTY;
+        }
+        ItemStack pulled = StorageNetwork.extract(remote.level, remote.anchor, sample, count);
+        if (pulled.isEmpty()) {
+            core.refundAutomationFuel(cost, crossDim);
             return ItemStack.EMPTY;
         }
         invalidateRemoteSnapshot();
@@ -546,7 +543,8 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     /**
      * Terminal deposit: push {@code stack} from the player into the REMOTE network. Fuel is charged up
      * front (an insert can't be cleanly rolled back), so an unfuelled gateway rejects the deposit
-     * outright rather than moving items for free. Returns whatever did not fit.
+     * outright rather than moving items for free. A full destination refunds the reservation.
+     * Returns whatever did not fit.
      */
     public ItemStack terminalDepositRemote(ItemStack stack, ServerPlayer player) {
         if (!(level instanceof ServerLevel serverLevel) || stack.isEmpty())
@@ -557,13 +555,17 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
         RemoteEndpoint remote = resolveRemote(serverLevel);
         if (remote == null)
             return stack;
-        if (!core.tryConsumeAutomationFuel(CESGConfig.bridgeTransferCost())) {
+        int cost = CESGConfig.bridgeTransferCost();
+        boolean crossDim = core.isCrossDimension(core.getPartner());
+        if (!core.tryConsumeAutomationFuel(cost, crossDim)) {
             notifyGated(player);
             return stack;
         }
         ItemStack remainder = StorageNetwork.insert(remote.level, remote.anchor, stack.copy());
         if (remainder.getCount() < stack.getCount())
             invalidateRemoteSnapshot();
+        else
+            core.refundAutomationFuel(cost, crossDim);
         return remainder;
     }
 
@@ -708,12 +710,13 @@ public class StorageBridgeBlockEntity extends BlockEntity implements IHaveGoggle
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.title", ChatFormatting.WHITE);
-        ChatFormatting statusColor = switch (remoteStatus) {
+        RemoteStatus status = remoteStatus();
+        ChatFormatting statusColor = switch (status) {
             case LIVE -> ChatFormatting.GREEN;
             case FAULT -> ChatFormatting.RED;
             case OFFLINE -> ChatFormatting.GRAY;
         };
-        CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.status." + remoteStatus.name().toLowerCase(), statusColor);
+        CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.status." + status.getSerializedName(), statusColor);
         if (locked)
             CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.locked", ChatFormatting.GOLD);
         CESGLang.forGoggles(tooltip, "cesg.goggles.bridge.transit", ChatFormatting.AQUA,

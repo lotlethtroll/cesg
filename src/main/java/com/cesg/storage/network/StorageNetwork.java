@@ -59,56 +59,50 @@ public final class StorageNetwork {
      * handlers snapshot contents at wrap time, so they must be created fresh per operation.
      */
     private static final int CLUSTER_CACHE_TICKS = 20;
-    private static final java.util.Map<net.minecraft.core.GlobalPos, CachedCluster> CLUSTER_CACHE =
-            new java.util.HashMap<>();
+    // Level identity keeps a newly opened world from reusing another world's coordinates/timestamps.
+    private static final java.util.Map<Level, java.util.Map<BlockPos, CachedCluster>> CLUSTER_CACHE =
+            new java.util.WeakHashMap<>();
 
-    private record CachedCluster(long expiresAt, List<BlockPos> members, boolean hasController, int memberCount) {}
+    private record CachedCluster(long expiresAt, List<BlockPos> members, int memberCount) {}
 
     /** Walks (or recalls) the member cluster containing {@code start} and collects fresh item handlers. */
     public static Scan scan(Level level, BlockPos start) {
-        net.minecraft.core.GlobalPos key = net.minecraft.core.GlobalPos.of(level.dimension(), start.immutable());
-        long now = level.getGameTime();
-        CachedCluster cluster = CLUSTER_CACHE.get(key);
-        if (cluster == null || now >= cluster.expiresAt()) {
-            cluster = walkCluster(level, start, now);
-            CLUSTER_CACHE.values().removeIf(entry -> now >= entry.expiresAt());
-            CLUSTER_CACHE.put(key, cluster);
-        }
+        CachedCluster cluster = cluster(level, start);
         List<IItemHandler> handlers = new ArrayList<>(cluster.members().size());
         Set<java.util.UUID> seenPairs = new HashSet<>();
+        boolean hasController = false;
         for (BlockPos pos : cluster.members()) {
+            if (!level.isLoaded(pos) || !isMember(level.getBlockState(pos)))
+                continue;
+            hasController |= level.getBlockState(pos).is(CESGRegistration.STORAGE_NETWORK_CONTROLLER.get());
             IItemHandler handler = memberHandler(level, pos, seenPairs);
             if (handler != null)
                 handlers.add(handler);
         }
-        return new Scan(handlers, cluster.hasController(), cluster.memberCount());
+        return new Scan(handlers, hasController, cluster.memberCount());
     }
 
     private static CachedCluster walkCluster(Level level, BlockPos start, long now) {
         List<BlockPos> members = new ArrayList<>();
-        boolean hasController = false;
         Set<BlockPos> visited = new HashSet<>();
         Queue<BlockPos> queue = new ArrayDeque<>();
         long expiry = now + CLUSTER_CACHE_TICKS;
-        if (!isMember(level.getBlockState(start)))
-            return new CachedCluster(expiry, List.of(), false, 0);
+        if (!level.isLoaded(start) || !isMember(level.getBlockState(start)))
+            return new CachedCluster(expiry, List.of(), 0);
         queue.add(start.immutable());
         visited.add(start.immutable());
-        while (!queue.isEmpty() && visited.size() <= SCAN_LIMIT) {
+        while (!queue.isEmpty() && members.size() < SCAN_LIMIT) {
             BlockPos pos = queue.poll();
-            BlockState state = level.getBlockState(pos);
-            if (state.is(CESGRegistration.STORAGE_NETWORK_CONTROLLER.get()))
-                hasController = true;
             members.add(pos);
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
-                if (!visited.contains(next) && isMember(level.getBlockState(next))) {
+                if (!visited.contains(next) && level.isLoaded(next) && isMember(level.getBlockState(next))) {
                     visited.add(next.immutable());
                     queue.add(next.immutable());
                 }
             }
         }
-        return new CachedCluster(expiry, members, hasController, visited.size());
+        return new CachedCluster(expiry, members, members.size());
     }
 
     /**
@@ -134,15 +128,22 @@ public final class StorageNetwork {
      * Handy for finding typed members — e.g. Storage Bridges — without re-walking per lookup.
      */
     public static List<BlockPos> memberPositions(Level level, BlockPos start) {
-        net.minecraft.core.GlobalPos key = net.minecraft.core.GlobalPos.of(level.dimension(), start.immutable());
+        return cluster(level, start).members().stream()
+                .filter(pos -> level.isLoaded(pos) && isMember(level.getBlockState(pos)))
+                .toList();
+    }
+
+    private static CachedCluster cluster(Level level, BlockPos start) {
+        java.util.Map<BlockPos, CachedCluster> cache = CLUSTER_CACHE.computeIfAbsent(level,
+                ignored -> new java.util.HashMap<>());
         long now = level.getGameTime();
-        CachedCluster cluster = CLUSTER_CACHE.get(key);
-        if (cluster == null || now >= cluster.expiresAt()) {
+        CachedCluster cluster = cache.get(start);
+        if (cluster == null || now >= cluster.expiresAt() || now < cluster.expiresAt() - CLUSTER_CACHE_TICKS) {
             cluster = walkCluster(level, start, now);
-            CLUSTER_CACHE.values().removeIf(entry -> now >= entry.expiresAt());
-            CLUSTER_CACHE.put(key, cluster);
+            cache.values().removeIf(entry -> now >= entry.expiresAt());
+            cache.put(start.immutable(), cluster);
         }
-        return cluster.members();
+        return cluster;
     }
 
     /** Aggregated view: one entry per distinct item+components, summed across the network. */

@@ -137,6 +137,8 @@ public class GatewayFuelHandler implements IFluidHandler {
             }
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
+                if (!level.isLoaded(next))
+                    continue;
                 if (!parents.containsKey(next) && isRingBlock(level.getBlockState(next))) {
                     parents.put(next.immutable(), pos);
                     queue.add(next.immutable());
@@ -214,6 +216,8 @@ public class GatewayFuelHandler implements IFluidHandler {
                 return core;
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
+                if (!level.isLoaded(next))
+                    continue;
                 if (!visited.contains(next) && isRingBlock(level.getBlockState(next))) {
                     visited.add(next);
                     queue.add(next);
@@ -264,6 +268,8 @@ public class GatewayFuelHandler implements IFluidHandler {
             level.updateNeighborsAt(pos, level.getBlockState(pos).getBlock());
             for (Direction dir : Direction.values()) {
                 BlockPos next = pos.relative(dir);
+                if (!level.isLoaded(next))
+                    continue;
                 if (!visited.contains(next) && isRingBlock(level.getBlockState(next))) {
                     visited.add(next);
                     queue.add(next);

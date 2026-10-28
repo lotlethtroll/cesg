@@ -13,6 +13,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
+## [1.1.1] — Unreleased
+
+### Fixed
+- Storage Bridge terminal withdrawals reserve fuel before extracting items. An
+  unfuelled withdrawal no longer needs to return items to a source that may
+  reject them through its storage filter.
+- Passive Storage Bridge transfers reserve buffer space before extracting, so
+  a full or nearly full buffer cannot discard items during overflow recovery.
+- Ports and Bridges only spend automation fuel when cargo actually crosses the
+  gateway. Empty filters, full destinations, and failed terminal deposits do
+  not consume fuel.
+- Routed transfers use the destination's fuel and travel reserve, even when the
+  active channel points to another dimension or lacks its own fuel. A flush pays
+  the configured cost once per fuel type used; same-dimension traffic uses
+  Teleport Essence and cross-dimension traffic uses Liquid Eye of Ender.
+- Bridge incoming buffers can finish delivering locally after their gateway
+  loses power or its partner goes offline.
+- Bridge goggles read the synchronized block status instead of an unsynchronized
+  client field. A missing remote controller consistently reports a fault instead
+  of periodically reverting to linked.
+- Storage-network and gateway fuel scans avoid unloaded chunks. Cached network
+  membership is isolated by world, removed controllers stop authorizing transfers
+  immediately, and branching scans process up to the full 256-member limit.
+
+### Development
+- Added fuel-accounting unit tests and headless server GameTests covering
+  transfer safety, routing, travel reserves, persistence, and network scans.
+- Repaired the Ponder verifier for the captured battery-array scenes.
+- Clarified the existing Create 6.0.x and NeoForge 21.1.233+ requirements.
+
 ## [1.1.0] — 2026-07-31
 
 ### Added
