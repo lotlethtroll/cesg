@@ -43,6 +43,27 @@ public class TerminalRegressionTest {
         helper.succeed();
     }
 
+    @GameTest(template = "empty")
+    public void recipeTransferPreservesRejectedGridContents(GameTestHelper helper) {
+        ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        player.getInventory().clearContent();
+        player.getInventory().setItem(0, new ItemStack(Items.OAK_LOG, 2));
+        StorageTerminalMenu menu = menu(helper, player);
+        menu.craftSlots().setItem(0, new ItemStack(Items.DIAMOND, 17));
+        var holder = helper.getLevel().getRecipeManager().byKey(
+                net.minecraft.resources.ResourceLocation.withDefaultNamespace("oak_planks")).orElseThrow();
+        var recipe = (net.minecraft.world.item.crafting.CraftingRecipe) holder.value();
+        menu.fillFromRecipe(recipe); // disconnected network refuses all grid contents
+        helper.assertTrue(menu.craftSlots().getItem(0).is(Items.DIAMOND)
+                && menu.craftSlots().getItem(0).getCount() == 17, "Recipe transfer overwrote leftovers");
+        helper.assertTrue(player.getInventory().countItem(Items.OAK_LOG) == 2, "Blocked transfer took new ingredients");
+        menu.craftSlots().clearContent();
+        menu.fillFromRecipe(recipe);
+        helper.assertTrue(menu.craftSlots().getItem(0).is(Items.OAK_LOG), "Empty grid did not accept the recipe");
+        helper.assertTrue(player.getInventory().countItem(Items.OAK_LOG) == 1, "Recipe transfer used the wrong ingredient count");
+        helper.succeed();
+    }
+
     private static StorageTerminalMenu menu(GameTestHelper helper, ServerPlayer player) {
         return new StorageTerminalMenu(1, player.getInventory(), helper.absolutePos(new BlockPos(1, 2, 1)));
     }

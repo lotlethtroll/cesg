@@ -16,6 +16,8 @@ Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 ## [1.1.1] — Unreleased
 
 ### Fixed
+- JEI/EMI terminal recipe transfer preserves crafting-grid leftovers when the
+  network cannot accept them, instead of overwriting them with new ingredients.
 - Terminal shift-crafting checks room for the entire output before moving it,
   preventing partial output duplication when the player inventory is nearly full.
 - Closing a Storage Terminal returns its crafting-grid items to the player,

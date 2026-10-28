@@ -243,6 +243,8 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
             return;
         Ingredient[] grid = gridLayout(recipe);
         clearCraftingGrid(); // return whatever is on the grid to the network first
+        if (!craftSlots.isEmpty())
+            return; // storage refused leftovers: preserve them and do not take new ingredients
         for (int slot = 0; slot < 9; slot++) {
             Ingredient ingredient = grid[slot];
             if (ingredient == null || ingredient.isEmpty())
