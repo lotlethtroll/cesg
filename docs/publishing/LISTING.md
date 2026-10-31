@@ -22,7 +22,7 @@ the feature set changes; the description below is the canonical listing copy.
 | Game version | 1.21.1 |
 | Loader | NeoForge |
 | Release channel | Release (1.1.1 approved 2026-10-28; known QA limitations recorded in the release checklist) |
-| File | `cesg-1.21.1-1.1.1.jar` (from `%LOCALAPPDATA%\gradle-builds\Create-End-Storage-and-Gateways\libs`) |
+| File | `cesg-1.21.1-1.2.0.jar` (from `%LOCALAPPDATA%\gradle-builds\Create-End-Storage-and-Gateways\libs`) |
 | Required dependency | Create 6.0.10, supported 6.0.x series (Modrinth project `create`; CurseForge project "Create") |
 | Changelog | Paste the matching section from `CHANGELOG.md` |
 
@@ -91,7 +91,7 @@ chunk-loading permissions.
 2. Modrinth: set environment to required client + required server; add Create as
    a required dependency on the version you upload.
 3. CurseForge: add Create under Related Projects → Required Dependency.
-4. Upload `cesg-1.21.1-1.1.1.jar`, game version 1.21.1, NeoForge, Release,
+4. Upload `cesg-1.21.1-1.2.0.jar`, game version 1.21.1, NeoForge, Release,
    changelog from `CHANGELOG.md`.
 5. Add 3–5 gallery screenshots: a gateway ring mid-flow (conduits showing fuel),
    a belt loader line, the storage terminal showing a Partner tab, a Flux Battery

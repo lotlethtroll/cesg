@@ -77,14 +77,13 @@ automation can never strand you on the wrong side of a portal.
 Stress-aware kinetics, goggle overlays, JEI recipe support, advancements, and a
 server config for travel costs and chunk-loading permissions.
 
-## 1.1.1 maintenance update
+## 1.2.0 release candidate
 
-This patch fixes terminal crafting item loss/duplication, Bridge transfer safety,
-blocked-transfer fuel charges, routed fuel selection, and Bridge status reporting.
-Recipes, item IDs, save keys, and configuration defaults remain unchanged.
-See [CHANGELOG.md](CHANGELOG.md) for the complete changes.
+Custom mechanical GUIs, independent fluid routing filters, terminal recipe/uses
+shortcuts, transfer diagnostics, and fuel-preserving pickup for isolated batteries.
+See [CHANGELOG.md](CHANGELOG.md) and the [1.2 guide](docs/GUIDE-1.2.md).
 
-[Download 1.1.1](https://github.com/lotlethtroll/cesg/releases/tag/v1.1.1).
+1.2.0 is being prepared; [1.1.1 remains the published release](https://github.com/lotlethtroll/cesg/releases/tag/v1.1.1).
 Back up your world before updating, and install the same version on client and server.
 
 ## Installation
@@ -109,8 +108,8 @@ python tools/ponder/verify.py
 
 GameTests run in an isolated `run/gametest` world. Test classes and their empty
 structure template are development-only and are excluded from the release jar.
-See [the 1.1.1 checklist](docs/dev/RELEASE-1.1.1.md) for the remaining multiplayer
-checks and [the next-release backlog](docs/dev/NEXT-RELEASE.md) for 1.2 scope.
+See the [1.2 release checklist](docs/publishing/RELEASE-1.2.0.md) for validation
+and remaining coverage limits, and the [post-1.2 roadmap](docs/dev/NEXT-RELEASE.md).
 
 The jar is written to the Gradle `libs` output directory as
 `cesg-<minecraft version>-<mod version>.jar`.

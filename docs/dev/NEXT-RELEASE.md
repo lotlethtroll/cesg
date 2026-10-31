@@ -1,51 +1,25 @@
-# After 1.1.1
+# After 1.2.0
 
-Agreed sequence: finish the reliability patch first, then build 1.2.0 around
-fluid routing, terminal usability, and custom GUI polish. No 1.2 feature is implemented by the patch.
+These are candidates for the next feature release (provisionally 1.3.0), not release commitments. The 1.2 implementation records live in docs/dev/1.2.
 
-## Proposed 1.2.0 scope
+## First design task: fueled battery-array relocation
 
-GUI polish is an explicit release priority; establish the visual direction before
-expanding the routing and diagnostic interfaces described below.
+1.2 supports isolated single-battery pickup only. An array has one shared controller tank; individual members do not each own a full tank. Before relocating fueled arrays, define how much fuel belongs to a removed block, how splits distribute fuel and overflow, and how unloaded members are handled. Specify controller/member removal, partial arrays, survival/creative, save/reload and canceled placement. Prove that dropped items plus remaining world tanks never exceed the original fuel. Prefer an atomic whole-array relocation design if per-block ownership becomes ambiguous. Drain arrays before dismantling under 1.2.
 
-1. Per-channel fluid filters. Extend existing gateway routing; retain the current
-   active-channel behavior for old worlds unless players enable fluid routing.
-   Decide filter UI, catch-all behavior, and per-fuel accounting before coding.
-2. Terminal JEI/EMI recipe and uses shortcuts (R/U).
-3. Transfer diagnostics: destination full, partner locked, no matching route,
-   protected reserve, and network scan limit reached.
-4. Consider fuel-preserving battery pickup, starting with lone batteries.
-   Specify multiblock ownership before supporting array relocation.
+## Processing-module candidates
 
-## GUI polish direction
+- Blasting and Haunting: establish distinct uses alongside existing Smelting, Crushing and Washing.
+- Mixing and Mechanical Crafting: design multi-input recipes, fluid handling, buffering and outputs before implementation.
+- New recipes and balance require Andrew's sign-off.
 
-Andrew requested more custom, textured GUIs that feel at home beside Create's
-interfaces. The final look is still open; start with a reviewable prototype.
+## Separate compatibility project
 
-- Establish a shared CESG palette, textured panel edges, recessed slots, buttons,
-  tabs, and status indicators. Explore Create-like mechanical materials with
-  restrained End/purpur accents; keep text and item counts easy to read.
-- Prototype the Storage Terminal first: search, Local/Partner tabs, crafting area,
-  and transfer feedback. Review it in-game before applying the style elsewhere.
-- Follow with Storage Bridge push/pull and lock controls, gateway channel/filter
-  screens, station configuration, and Enhanced Shulker inventory/module panels.
-- Make enabled, disabled, selected, hover, locked, and unavailable states clear;
-  pair status colors with labels/tooltips. Integrate the planned transfer diagnostics.
-- Preserve familiar inventory interactions. Check supported GUI scales, narrow
-  windows, long labels, large counts, and JEI/EMI overlap in-game.
-- Keep the first visual pass separate from menu/container and transfer behavior
-  changes so the 1.1.1 safety fixes remain easy to verify.
+Touching-frame gateway detection: investigate replacing flood-fill detection without invalidating any previously valid gateway. Requires old-world fixtures and migration checks.
 
-First deliverable: one textured terminal prototype and a small shared set of UI
-assets, followed by Andrew's visual review. No final art direction is chosen yet.
+## Longer-term exploration
 
-## Back burner
+Kinetic capacitor, world generation, combat features, ambient sound/particle work, and further cosmetics. These need concrete use cases and scope before scheduling. They are not prerequisites for 1.2.0.
 
-- Blasting / Haunting modules: assess distinct uses alongside existing processing.
-- Mixing / Mechanical Crafting modules: require multi-input and fluid design.
-- Touching-frame gateway detection: separate compatibility-sensitive project;
-  preserve every previously valid gateway when replacing flood-fill detection.
-- Kinetic capacitor, worldgen, combat, ambient sounds/particles, and previously
-  deferred cosmetic work.
+## Carry-forward validation
 
-New recipes remain Andrew's balance decisions and need sign-off before authoring.
+Multiplayer, third-party fonts/resource packs, modded non-bucket fluid containers, and third-party block-moving tools need broader compatibility coverage. Keep these as explicit validation limits rather than claiming they were tested.
