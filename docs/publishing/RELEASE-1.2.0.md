@@ -18,7 +18,7 @@ Custom mechanical GUIs across CESG, independent per-channel fluid routing filter
 
 On the integrated 1.2.0 candidate: Gradle build and all 30 required GameTests passed; Ponder verification passed. Release jar metadata confirms 1.2.0, expected GUI textures are present, and development GameTest classes/templates are excluded. SHA256SUMS accompanies the local candidate jar.
 
-Earlier single-player GUI/viewer checks and feature-specific coverage are recorded in docs/dev/1.2. Live battery pickup/tooltip passed; battery placement passed GameTests, while the live placement attempt was inconclusive. Multiplayer, third-party fonts/resource packs, non-bucket modded fluid containers, third-party moving tools, a fresh normal-install packaged-jar smoke test, and an exact released-1.1.1 world upgrade remain unverified. Do not describe those as passed.
+Earlier single-player GUI/viewer checks and feature-specific coverage are recorded in docs/dev/1.2. Live battery pickup/tooltip passed; battery placement passed GameTests, while the live placement attempt was inconclusive. Multiplayer, third-party fonts/resource packs, non-bucket modded fluid containers, third-party moving tools, a graphical normal-install client smoke test remain unverified. Do not describe those as passed.
 
 ## Publication steps
 
@@ -31,3 +31,5 @@ Earlier single-player GUI/viewer checks and feature-specific coverage are record
 ## Documentation and reconciliation
 
 GUI issues #5, #7 and #17 were closed against completed PRs and their QA records. The post-1.2 roadmap covers fueled array ownership/relocation, processing modules, touching-frame detection and longer-term ideas. Player-facing updates are in docs/GUIDE-1.2.md. The GitHub wiki git endpoint returned Repository not found; no wiki publication is claimed.
+
+Packaged production-server upgrade verification passed on 2026-10-30: released 1.1.1 baseline to the candidate jar, then a second 1.2.0 startup; all 1,093 fixture block entities retained. See [upgrade QA](../dev/RELEASE-1.2.0-UPGRADE.md) for method, data changes and limits.
