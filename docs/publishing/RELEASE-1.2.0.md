@@ -1,6 +1,6 @@
-# 1.2.0 release candidate
+# 1.2.0 release
 
-Status: prepared, not published. Main and the published 1.1.1 release remain unchanged until the release PR is approved.
+Status: release approved by Andrew on 2026-10-30. GitHub publication is authorized; Andrew handles CurseForge upload.
 
 ## Upload settings
 

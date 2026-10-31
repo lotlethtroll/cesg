@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
-## [1.2.0] — Unreleased
+## [1.2.0] — 2026-10-30
 
 ### Added
 - Independent per-channel fluid routing, with filled-container ghost filters and separate whitelist/blacklist settings. Fluid routing is opt-in; existing worlds keep active-channel fluid transfers.

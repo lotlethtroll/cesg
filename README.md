@@ -77,13 +77,13 @@ automation can never strand you on the wrong side of a portal.
 Stress-aware kinetics, goggle overlays, JEI recipe support, advancements, and a
 server config for travel costs and chunk-loading permissions.
 
-## 1.2.0 release candidate
+## 1.2.0 update
 
 Custom mechanical GUIs, independent fluid routing filters, terminal recipe/uses
 shortcuts, transfer diagnostics, and fuel-preserving pickup for isolated batteries.
 See [CHANGELOG.md](CHANGELOG.md) and the [1.2 guide](docs/GUIDE-1.2.md).
 
-1.2.0 is being prepared; [1.1.1 remains the published release](https://github.com/lotlethtroll/cesg/releases/tag/v1.1.1).
+[Download 1.2.0](https://github.com/lotlethtroll/cesg/releases/tag/v1.2.0).
 Back up your world before updating, and install the same version on client and server.
 
 ## Installation
