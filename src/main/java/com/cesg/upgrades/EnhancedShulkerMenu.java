@@ -303,6 +303,19 @@ public final class EnhancedShulkerMenu extends AbstractContainerMenu {
             blockEntity.setChanged();
     }
 
+    /** Client layout only: retain slot IDs and inventory indices during compact/normal resizes. */
+    public void positionHotbar(int verticalOffset) {
+        int first = slots.size() - 9;
+        for (int col = 0; col < 9; col++) {
+            int id = first + col;
+            Slot previous = slots.get(id);
+            Slot slot = new Slot(previous.container, col, getPlayerInventoryLeft() + col * 18,
+                    EnhancedShulkerGuiLayout.hotbarY(storageRows) + verticalOffset);
+            slot.index = id;
+            slots.set(id, slot);
+        }
+    }
+
     private void addPlayerInventory(Inventory playerInventory, int topY, int storageLeft) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {

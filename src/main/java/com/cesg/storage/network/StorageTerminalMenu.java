@@ -74,6 +74,7 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
     private int refreshCountdown;
     private List<TerminalContentPacket.Entry> lastSent = List.of();
     private List<TerminalContentPacket.Entry> lastRemoteSent = List.of();
+    private boolean lastScanLimited;
     private int lastRemoteStatus = TerminalContentPacket.REMOTE_NONE;
 
     public StorageTerminalMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
@@ -101,6 +102,19 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
 
     public BlockPos getTerminalPos() {
         return terminalPos;
+    }
+
+    /** Client layout only: slot IDs and inventory indices remain unchanged. */
+    public void positionPlayerInventory(int verticalOffset) {
+        for (int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END; i++) {
+            int n = i - PLAYER_SLOT_START;
+            int inventoryIndex = n < 27 ? n + 9 : n - 27;
+            int y = n < 27 ? PLAYER_INV_Y + (n / 9) * 18 : HOTBAR_Y;
+            Slot slot = new Slot(player.getInventory(), inventoryIndex,
+                    PLAYER_INV_X + (n % 9) * 18, y + verticalOffset);
+            slot.index = i;
+            slots.set(i, slot);
+        }
     }
 
     public void requestRefresh() {
@@ -323,22 +337,23 @@ public class StorageTerminalMenu extends AbstractContainerMenu {
             return;
         refreshCountdown = REFRESH_INTERVAL;
 
-        Object2IntMap<ItemStack> totals = StorageNetwork.aggregate(
-                StorageNetwork.scan(serverPlayer.level(), terminalPos));
+        var scan = StorageNetwork.scan(serverPlayer.level(), terminalPos);
+        Object2IntMap<ItemStack> totals = StorageNetwork.aggregate(scan);
         List<TerminalContentPacket.Entry> entries = new ArrayList<>(totals.size());
         for (Object2IntMap.Entry<ItemStack> entry : totals.object2IntEntrySet())
             entries.add(new TerminalContentPacket.Entry(entry.getKey(), entry.getIntValue()));
 
         RemoteSection remote = gatherRemoteSection();
-        if (remote.status() == lastRemoteStatus
+        if (scan.limited() == lastScanLimited && remote.status() == lastRemoteStatus
                 && TerminalContentPacket.sameEntries(entries, lastSent)
                 && TerminalContentPacket.sameEntries(remote.entries(), lastRemoteSent))
             return;
+        lastScanLimited = scan.limited();
         lastSent = entries;
         lastRemoteSent = remote.entries();
         lastRemoteStatus = remote.status();
         PacketDistributor.sendToPlayer(serverPlayer,
-                new TerminalContentPacket(containerId, entries, remote.entries(), remote.status()));
+                new TerminalContentPacket(containerId, entries, remote.entries(), remote.status(), scan.limited()));
     }
 
     private record RemoteSection(List<TerminalContentPacket.Entry> entries, int status) {}

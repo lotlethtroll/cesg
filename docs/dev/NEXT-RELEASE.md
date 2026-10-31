@@ -1,26 +1,25 @@
-# After 1.1.1
+# After 1.2.0
 
-Agreed sequence: finish the reliability patch first, then build 1.2.0 around
-fluid routing and terminal usability. No 1.2 feature is implemented by the patch.
+These are candidates for the next feature release (provisionally 1.3.0), not release commitments. The 1.2 implementation records live in docs/dev/1.2.
 
-## Proposed 1.2.0 scope
+## First design task: fueled battery-array relocation
 
-1. Per-channel fluid filters. Extend existing gateway routing; retain the current
-   active-channel behavior for old worlds unless players enable fluid routing.
-   Decide filter UI, catch-all behavior, and per-fuel accounting before coding.
-2. Terminal JEI/EMI recipe and uses shortcuts (R/U).
-3. Transfer diagnostics: destination full, partner locked, no matching route,
-   protected reserve, and network scan limit reached.
-4. Consider fuel-preserving battery pickup, starting with lone batteries.
-   Specify multiblock ownership before supporting array relocation.
+1.2 supports isolated single-battery pickup only. An array has one shared controller tank; individual members do not each own a full tank. Before relocating fueled arrays, define how much fuel belongs to a removed block, how splits distribute fuel and overflow, and how unloaded members are handled. Specify controller/member removal, partial arrays, survival/creative, save/reload and canceled placement. Prove that dropped items plus remaining world tanks never exceed the original fuel. Prefer an atomic whole-array relocation design if per-block ownership becomes ambiguous. Drain arrays before dismantling under 1.2.
 
-## Back burner
+## Processing-module candidates
 
-- Blasting / Haunting modules: assess distinct uses alongside existing processing.
-- Mixing / Mechanical Crafting modules: require multi-input and fluid design.
-- Touching-frame gateway detection: separate compatibility-sensitive project;
-  preserve every previously valid gateway when replacing flood-fill detection.
-- Kinetic capacitor, worldgen, combat, ambient sounds/particles, and previously
-  deferred cosmetic work.
+- Blasting and Haunting: establish distinct uses alongside existing Smelting, Crushing and Washing.
+- Mixing and Mechanical Crafting: design multi-input recipes, fluid handling, buffering and outputs before implementation.
+- New recipes and balance require Andrew's sign-off.
 
-New recipes remain Andrew's balance decisions and need sign-off before authoring.
+## Separate compatibility project
+
+Touching-frame gateway detection: investigate replacing flood-fill detection without invalidating any previously valid gateway. Requires old-world fixtures and migration checks.
+
+## Longer-term exploration
+
+Kinetic capacitor, world generation, combat features, ambient sound/particle work, and further cosmetics. These need concrete use cases and scope before scheduling. They are not prerequisites for 1.2.0.
+
+## Carry-forward validation
+
+Multiplayer, third-party fonts/resource packs, modded non-bucket fluid containers, and third-party block-moving tools need broader compatibility coverage. Keep these as explicit validation limits rather than claiming they were tested.

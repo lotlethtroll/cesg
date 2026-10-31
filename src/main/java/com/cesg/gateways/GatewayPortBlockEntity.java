@@ -151,7 +151,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
         CrossDimensionalGatewayCoreBlockEntity core = GatewayFuelHandler.findCore(level, worldPosition);
         if (core == null || core.getSpeed() == 0)
             return IDLE_BACKOFF; // no active gateway: don't re-run the ring scan at full cadence
-        return core.isRouteMode() ? flushRouted(serverLevel, core) : flushActive(serverLevel, core);
+        return core.isRouteMode() || core.isFluidRouteMode() ? flushRouted(serverLevel, core) : flushActive(serverLevel, core);
     }
 
     /** Single-active-channel transfer (1.0/default behaviour): everything goes to the active partner. */
@@ -172,7 +172,7 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
 
     /**
      * Fan-out transfer (7B route mode): each send item goes to the first bound channel whose filter
-     * accepts it; fluid follows the active channel (filters are item-only). Partner rings are resolved
+     * accepts it; fluid independently uses its configured routing mode. Partner rings are resolved
      * once per flush and cached.
      */
     private int flushRouted(ServerLevel serverLevel, CrossDimensionalGatewayCoreBlockEntity core) {
@@ -211,11 +211,12 @@ public class GatewayPortBlockEntity extends BlockEntity implements IHaveGoggleIn
             });
         }
 
-        List<GatewayPortBlockEntity> activeTargets = targetsByChannel.get(core.getActiveChannel());
-        if (activeTargets != null && !activeTargets.isEmpty() && !sendTank.isEmpty())
-            fuel.transfer(core.isCrossDimension(core.getPartner()), () -> {
+        int fluidChannel = core.routeFluidChannel(sendTank.getFluid());
+        List<GatewayPortBlockEntity> fluidTargets = targetsByChannel.get(fluidChannel);
+        if (fluidTargets != null && !fluidTargets.isEmpty() && !sendTank.isEmpty())
+            fuel.transfer(core.isCrossDimension(core.getBinding(fluidChannel)), () -> {
                 int before = sendTank.getFluidAmount();
-                pushFluid(activeTargets);
+                pushFluid(fluidTargets);
                 return before - sendTank.getFluidAmount();
             });
         return FLUSH_INTERVAL;

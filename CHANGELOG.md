@@ -13,6 +13,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
+## [1.2.0] — 2026-10-30
+
+### Added
+- Independent per-channel fluid routing, with filled-container ghost filters and separate whitelist/blacklist settings. Fluid routing is opt-in; existing worlds keep active-channel fluid transfers.
+- JEI/EMI recipe and uses shortcuts over terminal network items, respecting configured keys and search focus.
+- Bridge push/pull status indicators and tooltips for unavailable transfers, plus terminal network scan-limit warnings.
+- Fuel-preserving sneak-wrench pickup for isolated batteries. Charged placement consumes the item in creative too; fueled array relocation remains deferred.
+
+### Changed
+- Custom mechanical GUI textures and consistent panels, slots, headers and controls across terminals, bridges, gateways, stations and enhanced shulkers.
+- Compact layouts keep inventory slots clear of recipe-viewer search at tight GUI scales.
+
+### Fixed
+- Removed obsolete out-of-bounds belt tube models.
+
+No recipes or fuel costs changed. Install the same version on client and server.
+
 ## [1.1.1] — 2026-10-28
 
 ### Fixed
