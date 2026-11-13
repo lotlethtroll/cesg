@@ -36,6 +36,11 @@ crushing wheels with an encased fan blowing through water (or use the Washing up
 - Polished End Stone is crafted from 2×2 Smooth End Stone (smelt End Stone first). The
   stonecutter recipe from End Stone is unchanged.
 
+### Removed
+- Loading of gateway cores saved by pre-1.0.0 development builds (single-partner format).
+  Worlds from any public release are unaffected.
+- Uses of NeoForge's `EventBusSubscriber` bus option, which is marked for removal.
+
 ## [1.2.0] — 2026-10-30
 
 ### Added

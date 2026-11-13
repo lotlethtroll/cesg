@@ -855,12 +855,6 @@ public class CrossDimensionalGatewayCoreBlockEntity extends KineticBlockEntity {
             if (bound.isBound())
                 bindings.put(Math.floorMod(entry.getInt("Channel"), CHANNEL_COUNT), bound);
         }
-        // Pre-6A saves stored a single partner; migrate it onto channel 0.
-        if (tag.contains("Partner")) {
-            GatewayPartner legacy = GatewayPartner.load(tag.getCompound("Partner"));
-            if (legacy.isBound())
-                bindings.putIfAbsent(0, legacy);
-        }
         channelFilters.clear();
         for (net.minecraft.nbt.Tag raw : tag.getList("ChannelFilters", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
             CompoundTag entry = (CompoundTag) raw;
