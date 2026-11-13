@@ -125,6 +125,39 @@ public class TerminalRegressionTest {
         helper.succeed();
     }
 
+    /**
+     * Shift-crafting sticks from two planks must make sticks from every plank in the network. Topping up
+     * filled the first slot with all the network planks, its sibling ran dry, and the batch then crafted
+     * whatever the leftovers matched: one plank at a time into Oak Buttons.
+     */
+    @GameTest(template = "empty")
+    public void batchCraftKeepsItsRecipeAndRefillsEverySlot(GameTestHelper helper) {
+        ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        player.getInventory().clearContent();
+        var level = helper.getLevel();
+        BlockPos anchor = helper.absolutePos(new BlockPos(1, 2, 1));
+        level.setBlock(anchor, com.cesg.init.CESGRegistration.STORAGE_NETWORK_CONTROLLER.get().defaultBlockState(), 3);
+        level.setBlock(anchor.east(), com.cesg.upgrades.EnhancedShulkerBoxes.DEFAULT.get().defaultBlockState(), 3);
+        ItemStack box = new ItemStack(com.cesg.upgrades.EnhancedShulkerBoxes.DEFAULT.get());
+        box.set(com.cesg.init.CESGDataComponents.ENHANCED_SHULKER.get(),
+                new com.cesg.upgrades.EnhancedShulkerContents(1, 27, 0,
+                        java.util.List.of(new com.cesg.upgrades.EnhancedShulkerContents.StoredSlot(0,
+                                new ItemStack(Items.OAK_PLANKS, 14))), java.util.List.of(), ItemStack.EMPTY));
+        ((com.cesg.upgrades.EnhancedShulkerBoxBlockEntity) level.getBlockEntity(anchor.east())).loadFromItem(box);
+        StorageTerminalMenu menu = menu(helper, player);
+        menu.craftSlots().setItem(0, new ItemStack(Items.OAK_PLANKS));
+        menu.craftSlots().setItem(3, new ItemStack(Items.OAK_PLANKS));
+        menu.quickMoveStack(player, StorageTerminalMenu.RESULT_SLOT);
+        helper.assertTrue(player.getInventory().countItem(Items.OAK_BUTTON) == 0,
+                "Batch crafting switched recipe and made buttons");
+        helper.assertTrue(player.getInventory().countItem(Items.STICK) == 32,
+                "Expected 32 sticks from 16 planks, got " + player.getInventory().countItem(Items.STICK));
+        helper.assertTrue(StorageNetwork.extract(level, anchor, new ItemStack(Items.OAK_PLANKS), 64).isEmpty(),
+                "Planks were left in the network");
+        menu.removed(player);
+        helper.succeed();
+    }
+
     private static StorageTerminalMenu menu(GameTestHelper helper, ServerPlayer player) {
         return new StorageTerminalMenu(1, player.getInventory(), helper.absolutePos(new BlockPos(1, 2, 1)));
     }
