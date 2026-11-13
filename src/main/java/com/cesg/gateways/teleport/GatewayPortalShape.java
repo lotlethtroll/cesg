@@ -19,6 +19,11 @@ import net.minecraft.world.level.BlockGetter;
  * as one of the ring blocks: we flood-fill the connected loop of Gateway Frame blocks (plus the Core)
  * in the Core's vertical plane, then accept it when that loop is exactly the perimeter of a rectangle
  * whose interior is air/portal. The Core may sit anywhere on the ring (edge or corner).
+ *
+ * <p>That flood-fill also absorbs the frames of any ring touching this one, so when it fails on both
+ * axes a fallback looks for the opening instead: starting beside the Core it floods the air/portal
+ * region and accepts it when it is a full rectangle whose whole outline is Gateway Frames plus this
+ * Core. The flood-fill always runs first, so every ring it accepts keeps exactly the same result.
  */
 public final class GatewayPortalShape {
     public static final int MIN_WIDTH = 1;
@@ -37,30 +42,56 @@ public final class GatewayPortalShape {
         this.frame = frame;
     }
 
+    private static final Direction.Axis[] AXES = { Direction.Axis.X, Direction.Axis.Z };
+    /** In-plane {width, height} offsets from the Core where an opening may start; corner Cores need the diagonals. */
+    private static final int[][] OPENING_STARTS = {
+            { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 }, { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 } };
+
     public static Optional<GatewayPortalShape> detect(BlockGetter level, BlockPos core) {
-        for (Direction.Axis widthAxis : new Direction.Axis[] { Direction.Axis.X, Direction.Axis.Z }) {
+        GatewayPortalShape ring = detectRing(level, core);
+        if (ring != null)
+            return Optional.of(ring);
+        return Optional.ofNullable(detectOpening(level, core));
+    }
+
+    /** The original flood-fill detection (X plane, then Z). Kept unchanged so existing gateways never move. */
+    private static GatewayPortalShape detectRing(BlockGetter level, BlockPos core) {
+        for (Direction.Axis widthAxis : AXES) {
             Attempt attempt = tryAxis(level, core, widthAxis);
             if (attempt.shape() != null)
-                return Optional.of(attempt.shape());
+                return attempt.shape();
         }
-        return Optional.empty();
+        return null;
+    }
+
+    /** Fallback for rings touching other frames: X plane then Z, first valid opening in start order. */
+    private static GatewayPortalShape detectOpening(BlockGetter level, BlockPos core) {
+        for (Direction.Axis widthAxis : AXES) {
+            GatewayPortalShape shape = tryOpening(level, core, widthAxis);
+            if (shape != null)
+                return shape;
+        }
+        return null;
     }
 
     /**
      * Why {@link #detect} found no portal, as a {@code cesg.goggles.gateway.frame.*} lang key, or null
      * when the ring is valid. Reports whichever axis found the most ring blocks — that is the plane the
      * player was actually building in, so the message describes the ring they meant to make rather than
-     * the empty perpendicular one.
+     * the empty perpendicular one. Returns null exactly when {@link #detect} finds a shape, including
+     * through the touching-frames fallback.
      */
     public static String describeFailure(BlockGetter level, BlockPos core) {
         Attempt best = null;
-        for (Direction.Axis widthAxis : new Direction.Axis[] { Direction.Axis.X, Direction.Axis.Z }) {
+        for (Direction.Axis widthAxis : AXES) {
             Attempt attempt = tryAxis(level, core, widthAxis);
             if (attempt.shape() != null)
                 return null;
             if (best == null || attempt.ringSize() > best.ringSize())
                 best = attempt;
         }
+        if (detectOpening(level, core) != null)
+            return null;
         return best.reason();
     }
 
@@ -153,6 +184,77 @@ public final class GatewayPortalShape {
             if (!ringCell.equals(core))
                 frame.add(ringCell);
         return Attempt.ok(new GatewayPortalShape(widthAxis, interior, frame));
+    }
+
+    private static GatewayPortalShape tryOpening(BlockGetter level, BlockPos core, Direction.Axis widthAxis) {
+        Direction.Axis otherAxis = widthAxis == Direction.Axis.X ? Direction.Axis.Z : Direction.Axis.X;
+        int planeFixed = coord(core, otherAxis);
+        for (int[] start : OPENING_STARTS) {
+            BlockPos cell = make(widthAxis, coord(core, widthAxis) + start[0], core.getY() + start[1], planeFixed);
+            if (isFillable(level, cell)) {
+                GatewayPortalShape shape = tryOpeningFrom(level, core, widthAxis, planeFixed, cell);
+                if (shape != null)
+                    return shape;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Floods the air/portal region containing {@code start} (giving up once it outgrows the largest
+     * opening) and accepts it when it is a full rectangle of a valid size whose entire outline, corners
+     * included, is Gateway Frames plus this Core. Another Core never counts as part of the outline.
+     */
+    private static GatewayPortalShape tryOpeningFrom(BlockGetter level, BlockPos core, Direction.Axis widthAxis,
+            int planeFixed, BlockPos start) {
+        Direction widthPos = Direction.fromAxisAndDirection(widthAxis, Direction.AxisDirection.POSITIVE);
+        Direction[] dirs = { Direction.UP, Direction.DOWN, widthPos, widthPos.getOpposite() };
+        Set<BlockPos> region = new HashSet<>();
+        Queue<BlockPos> queue = new ArrayDeque<>();
+        region.add(start);
+        queue.add(start);
+        int uMin = coord(start, widthAxis), uMax = uMin, yMin = start.getY(), yMax = yMin;
+        while (!queue.isEmpty()) {
+            BlockPos p = queue.poll();
+            for (Direction d : dirs) {
+                BlockPos n = p.relative(d);
+                if (region.contains(n) || !isFillable(level, n))
+                    continue;
+                uMin = Math.min(uMin, coord(n, widthAxis));
+                uMax = Math.max(uMax, coord(n, widthAxis));
+                yMin = Math.min(yMin, n.getY());
+                yMax = Math.max(yMax, n.getY());
+                if (uMax - uMin + 1 > MAX_WIDTH || yMax - yMin + 1 > MAX_HEIGHT)
+                    return null; // open air, or an opening too large to be a gateway
+                region.add(n);
+                queue.add(n);
+            }
+        }
+        int width = uMax - uMin + 1;
+        int height = yMax - yMin + 1;
+        if (width < MIN_WIDTH || height < MIN_HEIGHT || region.size() != width * height)
+            return null;
+
+        List<BlockPos> interior = new ArrayList<>();
+        for (int u = uMin; u <= uMax; u++)
+            for (int y = yMin; y <= yMax; y++)
+                interior.add(make(widthAxis, u, y, planeFixed));
+        List<BlockPos> frame = new ArrayList<>();
+        boolean coreOnOutline = false;
+        for (int u = uMin - 1; u <= uMax + 1; u++) {
+            for (int y = yMin - 1; y <= yMax + 1; y++) {
+                if (u >= uMin && u <= uMax && y >= yMin && y <= yMax)
+                    continue;
+                BlockPos cell = make(widthAxis, u, y, planeFixed);
+                if (cell.equals(core))
+                    coreOnOutline = true;
+                else if (isRingBlock(level, cell, core))
+                    frame.add(cell);
+                else
+                    return null;
+            }
+        }
+        return coreOnOutline ? new GatewayPortalShape(widthAxis, interior, frame) : null;
     }
 
     private static int coord(BlockPos p, Direction.Axis axis) {
