@@ -205,11 +205,21 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
             return stack;
         if (smeltTerminalItems.contains(stack.getItem()))
             return stack;
+        boolean crushingInstalled = ShulkerUpgradeItems.highestInstalledCrushingTier(upgradeStacks) > 0;
+        boolean held = false;
         ItemStack current = stack;
         java.util.Set<net.minecraft.world.item.Item> seen = new java.util.HashSet<>();
         for (int step = 0; step < 8; step++) {
             if (!seen.add(current.getItem()))
                 break; // recipe cycle (a -> b -> a): stop at the last stable form
+            // Tools/armour are never melted into nuggets, and anything an installed Crushing module can
+            // process (raw ore, ore blocks) is left for it so the crushing bonus isn't lost. Not cached:
+            // both depend on the stack or the installed modules, not only the item.
+            if (current.getMaxStackSize() <= 1
+                    || (crushingInstalled && ShulkerProcessingUpgrades.canCrush(level, current))) {
+                held = true;
+                break;
+            }
             var recipe = level.getRecipeManager().getRecipeFor(
                     net.minecraft.world.item.crafting.RecipeType.SMELTING,
                     new net.minecraft.world.item.crafting.SingleRecipeInput(current), level);
@@ -221,7 +231,8 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
                 break;
             current = result.copyWithCount(current.getCount());
         }
-        smeltTerminalItems.add(current.getItem());
+        if (!held)
+            smeltTerminalItems.add(current.getItem());
         return current;
     }
 
