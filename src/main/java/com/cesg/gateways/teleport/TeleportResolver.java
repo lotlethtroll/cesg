@@ -185,7 +185,7 @@ public final class TeleportResolver {
         if (sourceShape.isPresent()) {
             PortalBounds sourceBounds = PortalBounds.of(sourceShape.get());
             inPortal = destBounds.mapFrom(sourceBounds, traveler.blockPosition());
-            exitDir = exitThroughDirection(sourceShape.get(), sourceBounds, traveler.blockPosition());
+            exitDir = exitThroughDirection(sourceShape.get(), sourceBounds, traveler);
         } else {
             inPortal = destBounds.center();
             exitDir = fallbackExitDirection(destPortal, destBounds, destCore, destLevel);
@@ -198,8 +198,8 @@ public final class TeleportResolver {
 
     /** Direction the traveler was moving through the source portal (out the far side of the partner portal). */
     private static Direction exitThroughDirection(GatewayPortalShape source, PortalBounds sourceBounds,
-            BlockPos travelerFeet) {
-        Direction side = sideRelativeToPlane(source, sourceBounds, travelerFeet);
+            Entity traveler) {
+        Direction side = sideRelativeToPlane(source, sourceBounds, traveler);
         return side.getOpposite();
     }
 
@@ -227,22 +227,27 @@ public final class TeleportResolver {
         return shape.axis == Direction.Axis.X ? Direction.Axis.Z : Direction.Axis.X;
     }
 
-    private static Direction sideRelativeToPlane(GatewayPortalShape shape, PortalBounds bounds, BlockPos feet) {
+    private static Direction sideRelativeToPlane(GatewayPortalShape shape, PortalBounds bounds, Entity traveler) {
         Direction.Axis normalAxis = portalNormalAxis(shape);
         int plane = bounds.planeCoord;
-        int coord = axisCoord(feet, normalAxis);
+        int coord = axisCoord(traveler.blockPosition(), normalAxis);
         if (coord > plane)
             return Direction.get(Direction.AxisDirection.POSITIVE, normalAxis);
         if (coord < plane)
             return Direction.get(Direction.AxisDirection.NEGATIVE, normalAxis);
-        BlockPos center = bounds.center();
-        return dominantHorizontalDirection(feet.getX() - center.getX(), feet.getZ() - center.getZ(), normalAxis);
+        // Standing in the (one block thick) portal plane: they came from behind where they face. Only a
+        // direction along the portal's normal leads out of it; sideways would aim at the ring itself.
+        Direction facing = traveler.getDirection();
+        Direction ahead = facing.getAxis() == normalAxis ? facing
+                : Direction.get(Direction.AxisDirection.POSITIVE, normalAxis);
+        return ahead.getOpposite();
     }
 
+    /** Direction along the portal's normal axis toward the side given by (dx, dz). */
     private static Direction dominantHorizontalDirection(int dx, int dz, Direction.Axis normalAxis) {
         if (normalAxis == Direction.Axis.X)
-            return dz >= 0 ? Direction.SOUTH : Direction.NORTH;
-        return dx >= 0 ? Direction.EAST : Direction.WEST;
+            return dx >= 0 ? Direction.EAST : Direction.WEST;
+        return dz >= 0 ? Direction.SOUTH : Direction.NORTH;
     }
 
     private static int axisCoord(BlockPos pos, Direction.Axis axis) {
@@ -310,6 +315,11 @@ public final class TeleportResolver {
             return preferred;
         if (isSafe(level, preferred.above()))
             return preferred.above();
+        // A traveller enters standing on the ring's bottom Frame, one block above the ground; the
+        // exit tile at that height floats, so step down onto the ground in front of the portal.
+        // Landing back inside the portal would bounce them home after the cooldown, every time.
+        if (isSafe(level, preferred.below()))
+            return preferred.below();
 
         // Step back into the portal plane rather than forward into void.
         BlockPos inside = preferred.relative(exitDir.getOpposite());

@@ -41,6 +41,12 @@ crushing wheels with an encased fan blowing through water (or use the Washing up
   one of them uncraftable.
 - Sneak-wrenching a single battery now respects protection and claim mods.
 - The Smelting upgrade no longer melts iron and gold tools and armour into nuggets.
+- Items converted by the Smelting upgrade now join an existing stack instead of each taking a new
+  slot. Inserts from magnets, ports, bridges, belt loaders, terminals and the Crushing upgrade
+  could fill a box one ingot per slot.
+- Standing still inside a gateway no longer bounces you between the two gateways every few
+  seconds, paying the travel cost each time. You now step out onto the ground in front of the
+  partner portal, in the direction you are facing.
 
 ### Changed
 - **Breaking:** ender pearl dust from End Stone now comes from **washing** (encased fan through

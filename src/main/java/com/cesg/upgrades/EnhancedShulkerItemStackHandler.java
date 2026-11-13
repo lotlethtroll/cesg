@@ -161,6 +161,14 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
             return stack;
 
         ItemStack existing = mainStacks.get(slot);
+        // Callers that merge before filling empty slots (insertItemStacked) compare the RAW item, so a
+        // smelted result would otherwise start a new stack on every insert (one ingot per slot). Put a
+        // converted item on an existing stack of its stored form first.
+        if (transformed && existing.isEmpty()) {
+            int merge = mergeSlotFor(candidate);
+            if (merge >= 0 && merge != slot)
+                return insertItem(merge, stack, simulate);
+        }
         if (!existing.isEmpty() && !ItemStack.isSameItemSameComponents(existing, candidate))
             return maybeVoidOverflow(stack, candidate);
 
@@ -185,6 +193,18 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
         }
         stack.shrink(toInsert);
         return maybeVoidOverflow(stack, candidate);
+    }
+
+    /** First slot already holding {@code storedForm} with room for more, or -1. */
+    private int mergeSlotFor(ItemStack storedForm) {
+        for (int i = 0; i < mainStacks.size(); i++) {
+            ItemStack inSlot = mainStacks.get(i);
+            if (!inSlot.isEmpty() && ItemStack.isSameItemSameComponents(inSlot, storedForm)
+                    && inSlot.getCount() < ShulkerUpgradeItems.effectiveSlotLimit(inSlot, getInstalledStackLimit())
+                    && isItemValid(i, storedForm))
+                return i;
+        }
+        return -1;
     }
 
     /** Player-driven direct sets (hotbar swap) run the same transform as inserts. */
