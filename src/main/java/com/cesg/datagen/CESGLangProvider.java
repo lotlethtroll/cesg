@@ -147,6 +147,12 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.washing_upgrade_t1", "Washing Upgrade Mk I");
         add("item.cesg.washing_upgrade_t2", "Washing Upgrade Mk II");
         add("item.cesg.washing_upgrade_t3", "Washing Upgrade Mk III");
+        add("item.cesg.haunting_upgrade_t1", "Haunting Upgrade Mk I");
+        add("item.cesg.haunting_upgrade_t2", "Haunting Upgrade Mk II");
+        add("item.cesg.haunting_upgrade_t3", "Haunting Upgrade Mk III");
+        add("item.cesg.blasting_upgrade_t1", "Blasting Upgrade Mk I");
+        add("item.cesg.blasting_upgrade_t2", "Blasting Upgrade Mk II");
+        add("item.cesg.blasting_upgrade_t3", "Blasting Upgrade Mk III");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.summary",
                 "_Raises stack limits to 128_ per slot when installed in an _Enhanced Shulker_.");
         add("item.cesg.stack_depth_upgrade_t2.tooltip.summary",
@@ -158,7 +164,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.compacting_upgrade.tooltip.summary",
                 "_Combines_ partial stacks automatically when installed in an _Enhanced Shulker_.");
         add("item.cesg.smelting_upgrade.tooltip.summary",
-                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged.");
+                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged. _Tools and armour_ are never melted, and with a _Crushing module_ installed, anything it can crush (raw ores, ore blocks) is left for it.");
         add("item.cesg.magnet_upgrade_t1.tooltip.summary",
                 "A PLACED box pulls in dropped items it can accept within _4 blocks_. Only the highest-tier magnet module applies.");
         add("item.cesg.magnet_upgrade_t2.tooltip.summary",
@@ -179,6 +185,18 @@ public class CESGLangProvider extends LanguageProvider {
                 "A PLACED box _washes_ its contents, chaining to the final form, at _2 conversions/sec_. Only the highest-tier washing module applies.");
         add("item.cesg.washing_upgrade_t3.tooltip.summary",
                 "A PLACED box _washes_ its contents, chaining to the final form, at _4 conversions/sec_. Only the highest-tier washing module applies.");
+        add("item.cesg.haunting_upgrade_t1.tooltip.summary",
+                "A PLACED box _haunts_ its contents using Create haunting recipes (sandstone → end stone, sand → soul sand), chaining to the final form. _1 conversion/sec_. Skips anything an installed Crushing or Washing module can process. Also haunts e.g. _stone → infested stone_ and _potatoes → poisonous potatoes_. Only the highest-tier haunting module applies.");
+        add("item.cesg.haunting_upgrade_t2.tooltip.summary",
+                "A PLACED box _haunts_ its contents, chaining to the final form, at _2 conversions/sec_. Skips anything an installed Crushing or Washing module can process. Also haunts e.g. _stone → infested stone_ and _potatoes → poisonous potatoes_. Only the highest-tier haunting module applies.");
+        add("item.cesg.haunting_upgrade_t3.tooltip.summary",
+                "A PLACED box _haunts_ its contents, chaining to the final form, at _4 conversions/sec_. Skips anything an installed Crushing or Washing module can process. Also haunts e.g. _stone → infested stone_ and _potatoes → poisonous potatoes_. Only the highest-tier haunting module applies.");
+        add("item.cesg.blasting_upgrade_t1.tooltip.summary",
+                "A PLACED box _blasts_ its contents using blasting recipes — _metals only_ (raw ores → ingots), chaining to the final form. _1 conversion/sec_. Never melts _tools or armour_, and skips anything an installed Crushing, Washing or Haunting module can process. Only the highest-tier blasting module applies.");
+        add("item.cesg.blasting_upgrade_t2.tooltip.summary",
+                "A PLACED box _blasts_ its contents (_metals only_ — uses blasting recipes), chaining to the final form, at _2 conversions/sec_. Never melts _tools or armour_, and skips anything an installed Crushing, Washing or Haunting module can process. Only the highest-tier blasting module applies.");
+        add("item.cesg.blasting_upgrade_t3.tooltip.summary",
+                "A PLACED box _blasts_ its contents (_metals only_ — uses blasting recipes), chaining to the final form, at _4 conversions/sec_. Never melts _tools or armour_, and skips anything an installed Crushing, Washing or Haunting module can process. Only the highest-tier blasting module applies.");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.condition1", "When installed");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.behaviour1",
                 "Only modules in the _upgrade sidebar_ activate; spares kept in main storage are _inert_.");

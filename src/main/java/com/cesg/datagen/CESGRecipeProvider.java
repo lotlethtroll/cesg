@@ -248,6 +248,62 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_washing_t2", has(CESGRegistration.WASHING_UPGRADE_T2.get()))
                 .save(output);
 
+        // Haunting module: encased-fan core over soul fire; in-box haunting. Tiers chain like washing.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.HAUNTING_UPGRADE_T1.get())
+                .pattern(" C ")
+                .pattern("IFI")
+                .pattern(" S ")
+                .define('C', Items.SOUL_CAMPFIRE)
+                .define('I', AllItems.IRON_SHEET.get())
+                .define('F', AllBlocks.ENCASED_FAN.get())
+                .define('S', CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.HAUNTING_UPGRADE_T2.get())
+                .requires(CESGRegistration.HAUNTING_UPGRADE_T1.get())
+                .requires(AllItems.ELECTRON_TUBE.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_haunting_t1", has(CESGRegistration.HAUNTING_UPGRADE_T1.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.HAUNTING_UPGRADE_T3.get())
+                .requires(CESGRegistration.HAUNTING_UPGRADE_T2.get())
+                .requires(AllItems.PRECISION_MECHANISM.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_haunting_t2", has(CESGRegistration.HAUNTING_UPGRADE_T2.get()))
+                .save(output);
+
+        // Blasting module: encased-fan core over lava; in-box blasting (metals). Tiers chain like washing.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.BLASTING_UPGRADE_T1.get())
+                .pattern(" C ")
+                .pattern("IFI")
+                .pattern(" S ")
+                .define('C', Items.LAVA_BUCKET)
+                .define('I', AllItems.IRON_SHEET.get())
+                .define('F', AllBlocks.ENCASED_FAN.get())
+                .define('S', CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.BLASTING_UPGRADE_T2.get())
+                .requires(CESGRegistration.BLASTING_UPGRADE_T1.get())
+                .requires(AllItems.ELECTRON_TUBE.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_blasting_t1", has(CESGRegistration.BLASTING_UPGRADE_T1.get()))
+                .save(output);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CESGRegistration.BLASTING_UPGRADE_T3.get())
+                .requires(CESGRegistration.BLASTING_UPGRADE_T2.get())
+                .requires(AllItems.PRECISION_MECHANISM.get())
+                .requires(AllItems.BRASS_INGOT.get())
+                .requires(CESGRegistration.SHULKER_SHELL.get())
+                .unlockedBy("has_blasting_t2", has(CESGRegistration.BLASTING_UPGRADE_T2.get()))
+                .save(output);
+
         // Processed Shulker Shells are now made by dousing a Shulker Shell in Liquid Ender Pearl with a
         // Create Spout (see data/cesg/recipe/processed_shulker_shell_from_filling.json), so the old
         // iron-sheet crafting recipe is retired.

@@ -184,6 +184,30 @@ public class CESGRegistration {
                 .register();
     }
 
+    public static final ItemEntry<com.cesg.upgrades.HauntingUpgradeItem> HAUNTING_UPGRADE_T1 = hauntingUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.HauntingUpgradeItem> HAUNTING_UPGRADE_T2 = hauntingUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.HauntingUpgradeItem> HAUNTING_UPGRADE_T3 = hauntingUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.HauntingUpgradeItem> hauntingUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("haunting_upgrade_t" + tier, props -> new com.cesg.upgrades.HauntingUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/haunting_upgrade_t" + tier)))
+                .register();
+    }
+
+    public static final ItemEntry<com.cesg.upgrades.BlastingUpgradeItem> BLASTING_UPGRADE_T1 = blastingUpgrade(1);
+    public static final ItemEntry<com.cesg.upgrades.BlastingUpgradeItem> BLASTING_UPGRADE_T2 = blastingUpgrade(2);
+    public static final ItemEntry<com.cesg.upgrades.BlastingUpgradeItem> BLASTING_UPGRADE_T3 = blastingUpgrade(3);
+
+    private static ItemEntry<com.cesg.upgrades.BlastingUpgradeItem> blastingUpgrade(int tier) {
+        return CESG.REGISTRATE
+                .item("blasting_upgrade_t" + tier, props -> new com.cesg.upgrades.BlastingUpgradeItem(props, tier))
+                .model((ctx, prov) -> prov.withExistingParent(ctx.getName(), "minecraft:item/generated")
+                        .texture("layer0", CESG.id("item/blasting_upgrade_t" + tier)))
+                .register();
+    }
+
     public static final ItemEntry<ShulkerShellItem> SHULKER_SHELL = CESG.REGISTRATE.item("shulker_shell", ShulkerShellItem::new)
             .model(CESGPlaceholderModels::shulkerShell)
             .onRegisterAfter(Registries.ITEM, item -> ItemDescription.useKey(item, "item.cesg.shulker_shell"))
