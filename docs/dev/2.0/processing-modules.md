@@ -30,8 +30,10 @@ Washing farms pearl dust in one box (sandstone → end stone → pearl dust), th
 ### Smelting fixes
 
 - Smelting skips items with a max stack size of 1, so tools and armour are no longer stored as nuggets.
-- With a Crushing module installed, Smelting stops at any item a Crushing module can process (raw
-  ore, ore blocks, cobblestone), at any step of its chain, so Crushing gets it and keeps its bonus.
+- With a Crushing module installed, Smelting stops at raw ores and ore blocks (`c:raw_materials`,
+  `c:ores`) that a Crushing module can process, so Crushing gets them and keeps its bonus. Other
+  crushable items (cobblestone, or sand where an addon adds sand crushing) keep smelting as before;
+  an earlier version held back everything crushable, which made a 59-addon pack stop making glass.
   The check reads the box's own upgrade slots, so it also applies to unplaced boxes, where Crushing
   does not run; those items stay raw until the box is placed.
 

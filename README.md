@@ -36,6 +36,8 @@ in three grades (andesite Mk I / brass Mk II / diamond Mk III):
 - **Compacting** — merges partial stacks on insert
 - **Crushing / Washing** — run Create's crushing, milling and splashing recipes
   on the box's own contents, chaining cobblestone all the way down to sand
+- **Haunting / Blasting** — run haunting recipes (soul sand, blackstone, sandstone
+  → End Stone) or blasting recipes (metals only) on the box's contents
 
 ### End storage
 
@@ -70,7 +72,9 @@ A core can hold up to sixteen destinations. Switch between them, or turn on
 **route mode** and give each channel a filter so one gateway sorts iron to one
 base and gold to another. **Gateway Flux Batteries** buffer fuel beside the ring
 and merge into arrays up to 3×3×3; they keep a reserve back for player travel, so
-automation can never strand you on the wrong side of a portal.
+automation can never strand you on the wrong side of a portal. Sneak-wrench a
+battery or a whole array to move it with its fuel. Neighbouring gateway rings may
+touch or share Frames.
 
 ### Create integration
 
