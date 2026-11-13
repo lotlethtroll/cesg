@@ -212,11 +212,14 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
         for (int step = 0; step < 8; step++) {
             if (!seen.add(current.getItem()))
                 break; // recipe cycle (a -> b -> a): stop at the last stable form
-            // Tools/armour are never melted into nuggets, and anything an installed Crushing module can
-            // process (raw ore, ore blocks) is left for it so the crushing bonus isn't lost. Not cached:
-            // both depend on the stack or the installed modules, not only the item.
+            // Tools/armour are never melted into nuggets, and with a Crushing module installed raw ores
+            // and ore blocks it can crush are left for it so the crushing bonus isn't lost. Only ores:
+            // other crushable items (cobblestone, or sand in some packs) keep smelting as before. Not
+            // cached: both depend on the stack or the installed modules, not only the item.
             if (current.getMaxStackSize() <= 1
-                    || (crushingInstalled && ShulkerProcessingUpgrades.canCrush(level, current))) {
+                    || (crushingInstalled && (current.is(net.neoforged.neoforge.common.Tags.Items.ORES)
+                            || current.is(net.neoforged.neoforge.common.Tags.Items.RAW_MATERIALS))
+                            && ShulkerProcessingUpgrades.canCrush(level, current))) {
                 held = true;
                 break;
             }

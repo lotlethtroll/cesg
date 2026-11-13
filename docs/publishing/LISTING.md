@@ -48,6 +48,8 @@ diamond Mk III):
 - **Filter** — whitelist control over what gets in
 - **Crushing / Washing** — run Create's crushing, milling and splashing recipes
   on the box's own contents
+- **Haunting / Blasting** — run haunting or blasting (metals only) recipes on the
+  box's own contents
 
 ### End storage
 - **Ender Barrels** — crafted in twin pairs that share one inventory across any
@@ -70,7 +72,8 @@ A core holds up to sixteen destinations. Switch between them, or turn on **route
 mode** and give each channel a filter so one gateway sorts iron to one base and
 gold to another. **Gateway Flux Batteries** buffer fuel beside the ring and merge
 into arrays up to 3×3×3, keeping a reserve back for player travel so automation
-can never strand you.
+can never strand you. Sneak-wrench a battery or a whole array to move it with its
+fuel. Neighbouring gateway rings may touch or share Frames.
 
 **End Stone and ender pearls are renewable** through your own factory — haunt
 sandstone into End Stone, wash it with a fan for ender pearl dust, compact the dust back

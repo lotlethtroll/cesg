@@ -455,7 +455,7 @@
   "item.cesg.shulker_shell.tooltip.condition1": "Obtaining",
   "item.cesg.shulker_shell.tooltip.summary": "_Refined_ shulker shell used in _Enhanced Shulker_ tier upgrades and Create machines.",
   "item.cesg.smelting_upgrade": "Smelting Upgrade",
-  "item.cesg.smelting_upgrade.tooltip.summary": "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged. _Tools and armour_ are never melted, and with a _Crushing module_ installed, anything it can crush (raw ores, ore blocks) is left for it.",
+  "item.cesg.smelting_upgrade.tooltip.summary": "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged. _Tools and armour_ are never melted, and with a _Crushing module_ installed, raw ores and ore blocks are left for it.",
   "item.cesg.stack_depth_upgrade_t1": "Stack Depth Upgrade Mk I",
   "item.cesg.stack_depth_upgrade_t1.tooltip.behaviour1": "Only modules in the _upgrade sidebar_ activate; spares kept in main storage are _inert_.",
   "item.cesg.stack_depth_upgrade_t1.tooltip.condition1": "When installed",

@@ -168,7 +168,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.compacting_upgrade.tooltip.summary",
                 "_Combines_ partial stacks automatically when installed in an _Enhanced Shulker_.");
         add("item.cesg.smelting_upgrade.tooltip.summary",
-                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged. _Tools and armour_ are never melted, and with a _Crushing module_ installed, anything it can crush (raw ores, ore blocks) is left for it.");
+                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged. _Tools and armour_ are never melted, and with a _Crushing module_ installed, raw ores and ore blocks are left for it.");
         add("item.cesg.magnet_upgrade_t1.tooltip.summary",
                 "A PLACED box pulls in dropped items it can accept within _4 blocks_. Only the highest-tier magnet module applies.");
         add("item.cesg.magnet_upgrade_t2.tooltip.summary",

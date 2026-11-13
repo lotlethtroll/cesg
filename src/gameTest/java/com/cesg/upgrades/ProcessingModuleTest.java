@@ -129,10 +129,15 @@ public class ProcessingModuleTest {
         var withCrushing = handler(level, new ItemStack(CESGRegistration.SMELTING_UPGRADE.get()),
                 new ItemStack(CESGRegistration.CRUSHING_UPGRADE_T1.get()));
         ItemHandlerHelper.insertItemStacked(withCrushing, new ItemStack(Items.RAW_IRON), false);
+        ItemHandlerHelper.insertItemStacked(withCrushing, new ItemStack(Items.IRON_ORE), false);
         ItemHandlerHelper.insertItemStacked(withCrushing, new ItemStack(Items.SAND), false);
-        helper.assertTrue(count(withCrushing, Items.RAW_IRON) == 1 && count(withCrushing, Items.IRON_INGOT) == 0,
-                "Smelting should leave raw iron for Crushing: " + describe(withCrushing));
-        helper.assertTrue(count(withCrushing, Items.GLASS) == 1, "Smelting should still smelt sand: " + describe(withCrushing));
+        ItemHandlerHelper.insertItemStacked(withCrushing, new ItemStack(Items.COBBLESTONE), false);
+        helper.assertTrue(count(withCrushing, Items.RAW_IRON) == 1 && count(withCrushing, Items.IRON_ORE) == 1
+                && count(withCrushing, Items.IRON_INGOT) == 0,
+                "Smelting should leave raw iron and iron ore for Crushing: " + describe(withCrushing));
+        // Only ores are held back; other items smelt as before even if some pack makes them crushable.
+        helper.assertTrue(count(withCrushing, Items.GLASS) == 1 && count(withCrushing, Items.SMOOTH_STONE) == 1,
+                "Smelting should still smelt sand and cobblestone: " + describe(withCrushing));
         helper.succeed();
     }
 
