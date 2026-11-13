@@ -81,13 +81,18 @@ touch or share Frames.
 Stress-aware kinetics, goggle overlays, JEI recipe support, advancements, and a
 server config for travel costs and chunk-loading permissions.
 
-## 1.2.0 update
+## 2.0.0 update
 
-Custom mechanical GUIs, independent fluid routing filters, terminal recipe/uses
-shortcuts, transfer diagnostics, and fuel-preserving pickup for isolated batteries.
-See [CHANGELOG.md](CHANGELOG.md) and the [1.2 guide](docs/GUIDE-1.2.md).
+**Upgrading from 1.x: crushing-wheel pearl farms no longer make ender pearl dust
+from End Stone.** Wash End Stone with an encased fan through water (or the
+Washing upgrade) instead. This frees End Stone crushing for other addons such as
+Create Aeronautics.
 
-[Download 1.2.0](https://github.com/lotlethtroll/cesg/releases/tag/v1.2.0).
+Also new: move a fuelled battery array with the wrench, touching gateway rings,
+and Haunting and Blasting upgrades, plus fixes for enhanced shulker dyeing,
+gateway travel and terminal shift-crafting. See [CHANGELOG.md](CHANGELOG.md).
+
+[Download 2.0.0](https://github.com/lotlethtroll/cesg/releases/tag/v2.0.0).
 Back up your world before updating, and install the same version on client and server.
 
 ## Installation
@@ -112,7 +117,7 @@ python tools/ponder/verify.py
 
 GameTests run in an isolated `run/gametest` world. Test classes and their empty
 structure template are development-only and are excluded from the release jar.
-See the [1.2 release checklist](docs/publishing/RELEASE-1.2.0.md) for validation
+See the [2.0 release checklist](docs/publishing/RELEASE-2.0.0.md) for validation
 and remaining coverage limits, and the [post-1.2 roadmap](docs/dev/NEXT-RELEASE.md).
 
 The jar is written to the Gradle `libs` output directory as

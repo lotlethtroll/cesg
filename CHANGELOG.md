@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
-## [2.0.0] — Unreleased
+## [2.0.0] — 2026-11-13
 
 It is a major version because one recipe change stops existing builds:
 **crushing-wheel pearl farms no longer produce ender pearl dust from End Stone.** Replace the
