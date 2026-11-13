@@ -73,7 +73,7 @@ into arrays up to 3×3×3, keeping a reserve back for player travel so automatio
 can never strand you.
 
 **End Stone and ender pearls are renewable** through your own factory — haunt
-sandstone into End Stone, crush it for ender pearl dust, compact the dust back
+sandstone into End Stone, wash it with a fan for ender pearl dust, compact the dust back
 into pearls.
 
 ### Create integration

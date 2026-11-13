@@ -54,7 +54,7 @@ refine them through the Ender Infusion chain into **Teleport Essence** and
 **Liquid Eye of Ender** — the gateway fuels.
 
 End Stone and ender pearls are renewable through your own Create factory rather
-than new machines: haunt sandstone into End Stone, crush it for ender pearl dust,
+than new machines: haunt sandstone into End Stone, wash it with a fan for ender pearl dust,
 and compact the dust back into pearls.
 
 ### Gateways

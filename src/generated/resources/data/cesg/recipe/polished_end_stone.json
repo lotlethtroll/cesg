@@ -3,7 +3,7 @@
   "category": "building",
   "key": {
     "#": {
-      "item": "minecraft:end_stone"
+      "item": "cesg:smooth_end_stone"
     }
   },
   "pattern": [

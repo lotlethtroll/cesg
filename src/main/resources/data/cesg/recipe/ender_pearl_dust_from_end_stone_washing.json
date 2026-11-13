@@ -1,11 +1,10 @@
 {
-  "type": "create:crushing",
+  "type": "create:splashing",
   "ingredients": [
     {
       "item": "minecraft:end_stone"
     }
   ],
-  "processing_time": 300,
   "results": [
     {
       "id": "minecraft:sand"
