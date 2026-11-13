@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "minecraft:lava_bucket"
+    },
+    "F": {
+      "item": "create:encased_fan"
+    },
+    "I": {
+      "item": "create:iron_sheet"
+    },
+    "S": {
+      "item": "cesg:shulker_shell"
+    }
+  },
+  "pattern": [
+    " C ",
+    "IFI",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "cesg:blasting_upgrade_t1"
+  }
+}

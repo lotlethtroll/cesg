@@ -10,7 +10,7 @@ public class CESGMenuScreens {
         // Registered via @EventBusSubscriber below
     }
 
-    @net.neoforged.fml.common.EventBusSubscriber(modid = com.cesg.CESG.MOD_ID, bus = net.neoforged.fml.common.EventBusSubscriber.Bus.MOD, value = net.neoforged.api.distmarker.Dist.CLIENT)
+    @net.neoforged.fml.common.EventBusSubscriber(modid = com.cesg.CESG.MOD_ID, value = net.neoforged.api.distmarker.Dist.CLIENT)
     public static class Registration {
         @net.neoforged.bus.api.SubscribeEvent
         public static void onRegister(RegisterMenuScreensEvent event) {

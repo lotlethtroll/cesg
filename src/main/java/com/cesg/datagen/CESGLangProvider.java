@@ -57,14 +57,19 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.port.incoming", "Incoming: %s items, %s mB");
         add("block.cesg.gateway_flux_battery", "Gateway Flux Battery");
         add("block.cesg.gateway_flux_battery.tooltip.summary",
-                "Buffers _gateway fuel_ beside a _Gateway ring_ and keeps the _Core_ topped up so bursty travel and Port transfers never run the gateway dry. Single-fuel like a _fluid tank_ (locks to the first fuel piped in); _stack them into a 2×2×2 or 3×3×3 array_ for more capacity. _Sneak-wrench an isolated battery_ to retain fuel; drain arrays before dismantling them.");
+                "Buffers _gateway fuel_ beside a _Gateway ring_ and keeps the _Core_ topped up so bursty travel and Port transfers never run the gateway dry. Single-fuel like a _fluid tank_ (locks to the first fuel piped in); _stack them into a 2×2×2 or 3×3×3 array_ for more capacity. _Sneak-wrench any battery_ to pick up its whole array, fuel included, as one item; it places back as the same array.");
         add("cesg.goggles.battery.title", "Gateway Flux Battery");
         add("cesg.goggles.battery.empty", "Empty: 0/%s mB");
         add("cesg.goggles.battery.stored", "%s: %s/%s mB");
         add("cesg.goggles.battery.array", "Array: %sx%sx%s");
         add("cesg.goggles.battery.reserve", "Travel reserve: %s mB (automation paused below this)");
-        add("cesg.battery.pickup.array", "Fuel-preserving pickup requires an isolated battery. Drain and dismantle the array first.");
-        add("cesg.battery.pickup.place_alone", "Place a charged battery away from other batteries. Array relocation is not supported.");
+        add("cesg.battery.pickup.array", "A single battery touching other batteries can't be picked up with its fuel. Move the other batteries first.");
+        add("cesg.battery.pickup.refused", "Can't pick up this array: every block must be loaded, connected and yours to break.");
+        add("cesg.battery.pickup.array_size", "%s×%s×%s array");
+        add("cesg.battery.pickup.place_space", "Needs a clear %s×%s×%s space with no other battery touching it");
+        add("cesg.battery.pickup.place_capacity", "Holds %s mB, but a %s×%s×%s array now holds only %s mB. Raise capacityMbPerBlock to place it.");
+        add("cesg.battery.pickup.place_failed", "The battery array couldn't be placed here");
+        add("cesg.battery.pickup.place_alone", "Place a charged battery away from other batteries.");
         add("cesg.battery.pickup.fuel", "Stored fuel: %s, %s mB");
         add("cesg.battery.fuel_added", "Added %s mB to the Flux Battery");
         add("cesg.battery.fuel_drained", "Drained %s mB from the Flux Battery");
@@ -114,8 +119,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("block.cesg.gateway_frame", "Gateway Frame");
         add("block.cesg.gateway_frame.tooltip.summary",
                 "Build a _vertical ring_ of these around one _Gateway Core_ to form a walk-through portal. "
-                        + "Leave _a block of space_ between neighbouring gateways — rings whose frames touch "
-                        + "break each other.");
+                        + "Neighbouring gateways may _touch or share Frames_.");
         add("block.cesg.gateway_portal", "Gateway Portal");
 
         add("block.cesg.enhanced_shulker_box", "Shulker Box");
@@ -147,6 +151,12 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.washing_upgrade_t1", "Washing Upgrade Mk I");
         add("item.cesg.washing_upgrade_t2", "Washing Upgrade Mk II");
         add("item.cesg.washing_upgrade_t3", "Washing Upgrade Mk III");
+        add("item.cesg.haunting_upgrade_t1", "Haunting Upgrade Mk I");
+        add("item.cesg.haunting_upgrade_t2", "Haunting Upgrade Mk II");
+        add("item.cesg.haunting_upgrade_t3", "Haunting Upgrade Mk III");
+        add("item.cesg.blasting_upgrade_t1", "Blasting Upgrade Mk I");
+        add("item.cesg.blasting_upgrade_t2", "Blasting Upgrade Mk II");
+        add("item.cesg.blasting_upgrade_t3", "Blasting Upgrade Mk III");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.summary",
                 "_Raises stack limits to 128_ per slot when installed in an _Enhanced Shulker_.");
         add("item.cesg.stack_depth_upgrade_t2.tooltip.summary",
@@ -158,7 +168,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("item.cesg.compacting_upgrade.tooltip.summary",
                 "_Combines_ partial stacks automatically when installed in an _Enhanced Shulker_.");
         add("item.cesg.smelting_upgrade.tooltip.summary",
-                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged.");
+                "Items inserted into the box are stored as their _furnace result_ — ores arrive as ingots, food arrives cooked. Items without a smelting recipe store unchanged. _Tools and armour_ are never melted, and with a _Crushing module_ installed, raw ores and ore blocks are left for it.");
         add("item.cesg.magnet_upgrade_t1.tooltip.summary",
                 "A PLACED box pulls in dropped items it can accept within _4 blocks_. Only the highest-tier magnet module applies.");
         add("item.cesg.magnet_upgrade_t2.tooltip.summary",
@@ -179,6 +189,18 @@ public class CESGLangProvider extends LanguageProvider {
                 "A PLACED box _washes_ its contents, chaining to the final form, at _2 conversions/sec_. Only the highest-tier washing module applies.");
         add("item.cesg.washing_upgrade_t3.tooltip.summary",
                 "A PLACED box _washes_ its contents, chaining to the final form, at _4 conversions/sec_. Only the highest-tier washing module applies.");
+        add("item.cesg.haunting_upgrade_t1.tooltip.summary",
+                "A PLACED box _haunts_ its contents using Create haunting recipes (sandstone → end stone, sand → soul sand), chaining to the final form. _1 conversion/sec_. Skips anything an installed Crushing or Washing module can process. Also haunts e.g. _stone → infested stone_ and _potatoes → poisonous potatoes_. Only the highest-tier haunting module applies.");
+        add("item.cesg.haunting_upgrade_t2.tooltip.summary",
+                "A PLACED box _haunts_ its contents, chaining to the final form, at _2 conversions/sec_. Skips anything an installed Crushing or Washing module can process. Also haunts e.g. _stone → infested stone_ and _potatoes → poisonous potatoes_. Only the highest-tier haunting module applies.");
+        add("item.cesg.haunting_upgrade_t3.tooltip.summary",
+                "A PLACED box _haunts_ its contents, chaining to the final form, at _4 conversions/sec_. Skips anything an installed Crushing or Washing module can process. Also haunts e.g. _stone → infested stone_ and _potatoes → poisonous potatoes_. Only the highest-tier haunting module applies.");
+        add("item.cesg.blasting_upgrade_t1.tooltip.summary",
+                "A PLACED box _blasts_ its contents using blasting recipes — _metals only_ (raw ores → ingots), chaining to the final form. _1 conversion/sec_. Never melts _tools or armour_, and skips anything an installed Crushing, Washing or Haunting module can process. Only the highest-tier blasting module applies.");
+        add("item.cesg.blasting_upgrade_t2.tooltip.summary",
+                "A PLACED box _blasts_ its contents (_metals only_ — uses blasting recipes), chaining to the final form, at _2 conversions/sec_. Never melts _tools or armour_, and skips anything an installed Crushing, Washing or Haunting module can process. Only the highest-tier blasting module applies.");
+        add("item.cesg.blasting_upgrade_t3.tooltip.summary",
+                "A PLACED box _blasts_ its contents (_metals only_ — uses blasting recipes), chaining to the final form, at _4 conversions/sec_. Never melts _tools or armour_, and skips anything an installed Crushing, Washing or Haunting module can process. Only the highest-tier blasting module applies.");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.condition1", "When installed");
         add("item.cesg.stack_depth_upgrade_t1.tooltip.behaviour1",
                 "Only modules in the _upgrade sidebar_ activate; spares kept in main storage are _inert_.");
@@ -345,7 +367,7 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.gateway.route", "Route mode: pushed items follow the channel filters");
         add("cesg.goggles.gateway.frame.no_ring", "Build a Gateway Frame ring around this Core");
         add("cesg.goggles.gateway.frame.gap", "Ring has a gap — only Frames and the Core count");
-        add("cesg.goggles.gateway.frame.extra", "Extra Frames touching the ring — keep gateways apart");
+        add("cesg.goggles.gateway.frame.extra", "No complete Frame rectangle around a clear opening here");
         add("cesg.goggles.gateway.frame.blocked", "Clear the opening inside the ring");
         add("cesg.goggles.gateway.frame.size", "Opening must be 1-8 wide and 2-8 tall");
         add("cesg.goggles.gateway.frame.too_big", "Ring is too large");

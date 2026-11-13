@@ -46,6 +46,9 @@ final class TerminalBatchCrafting {
         if (recipe == null)
             recipe = findRecipe(level, input);
 
+        // One shift-click crafts ONE recipe: the one shown when it was clicked. Once its pattern can no
+        // longer be filled the batch ends; it must never fall through to whatever the leftovers match
+        // (two planks for sticks would otherwise end as a pile of buttons).
         for (int pass = 0; pass < MAX_PASSES && recipe != null && recipe.value().matches(input, level); pass++) {
             stockToFullStacks(menu, craftSlots, slotTemplates);
             input = ((net.minecraft.world.inventory.CraftingContainer) craftSlots).asCraftInput();
@@ -72,10 +75,9 @@ final class TerminalBatchCrafting {
             craftResult.onTake(player, recipeOutput);
             resetStackedContents(input);
 
+            // Refill before the loop re-checks the pattern, or the first emptied slot ends the batch.
+            stockToFullStacks(menu, craftSlots, slotTemplates);
             input = ((net.minecraft.world.inventory.CraftingContainer) craftSlots).asCraftInput();
-            recipe = getCraftingRecipe(resultSlots);
-            if (recipe == null || !recipe.value().matches(input, level))
-                recipe = findRecipe(level, input);
         }
 
         // Leave the grid topped up for the next shift-craft.
@@ -114,6 +116,8 @@ final class TerminalBatchCrafting {
                         template.getMaxStackSize());
                 if (!pulled.isEmpty())
                     craftSlots.setItem(i, pulled);
+                else
+                    borrowFromSibling(craftSlots, templates, i);
                 continue;
             }
 
@@ -123,6 +127,22 @@ final class TerminalBatchCrafting {
             ItemStack pulled = StorageNetwork.extract(level, menu.getTerminalPos(), current, need);
             if (!pulled.isEmpty())
                 current.grow(pulled.getCount());
+        }
+    }
+
+    /**
+     * Topping up fills the first slot of an ingredient from the network before its siblings, so a
+     * sibling can empty while the ingredient still sits in the grid. Move one item over so the pattern
+     * stays complete (two planks in a column must both refill, not one slot hoarding all of them).
+     */
+    private static void borrowFromSibling(Container craftSlots, ItemStack[] templates, int empty) {
+        for (int j = 0; j < 9; j++) {
+            ItemStack donor = craftSlots.getItem(j);
+            if (j != empty && templates[j] != null && donor.getCount() > 1
+                    && ItemStack.isSameItemSameComponents(donor, templates[empty])) {
+                craftSlots.setItem(empty, donor.split(1));
+                return;
+            }
         }
     }
 

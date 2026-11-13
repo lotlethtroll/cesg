@@ -36,6 +36,8 @@ in three grades (andesite Mk I / brass Mk II / diamond Mk III):
 - **Compacting** — merges partial stacks on insert
 - **Crushing / Washing** — run Create's crushing, milling and splashing recipes
   on the box's own contents, chaining cobblestone all the way down to sand
+- **Haunting / Blasting** — run haunting recipes (soul sand, blackstone, sandstone
+  → End Stone) or blasting recipes (metals only) on the box's contents
 
 ### End storage
 
@@ -54,7 +56,7 @@ refine them through the Ender Infusion chain into **Teleport Essence** and
 **Liquid Eye of Ender** — the gateway fuels.
 
 End Stone and ender pearls are renewable through your own Create factory rather
-than new machines: haunt sandstone into End Stone, crush it for ender pearl dust,
+than new machines: haunt sandstone into End Stone, wash it with a fan for ender pearl dust,
 and compact the dust back into pearls.
 
 ### Gateways
@@ -70,20 +72,27 @@ A core can hold up to sixteen destinations. Switch between them, or turn on
 **route mode** and give each channel a filter so one gateway sorts iron to one
 base and gold to another. **Gateway Flux Batteries** buffer fuel beside the ring
 and merge into arrays up to 3×3×3; they keep a reserve back for player travel, so
-automation can never strand you on the wrong side of a portal.
+automation can never strand you on the wrong side of a portal. Sneak-wrench a
+battery or a whole array to move it with its fuel. Neighbouring gateway rings may
+touch or share Frames.
 
 ### Create integration
 
 Stress-aware kinetics, goggle overlays, JEI recipe support, advancements, and a
 server config for travel costs and chunk-loading permissions.
 
-## 1.2.0 update
+## 2.0.0 update
 
-Custom mechanical GUIs, independent fluid routing filters, terminal recipe/uses
-shortcuts, transfer diagnostics, and fuel-preserving pickup for isolated batteries.
-See [CHANGELOG.md](CHANGELOG.md) and the [1.2 guide](docs/GUIDE-1.2.md).
+**Upgrading from 1.x: crushing-wheel pearl farms no longer make ender pearl dust
+from End Stone.** Wash End Stone with an encased fan through water (or the
+Washing upgrade) instead. This frees End Stone crushing for other addons such as
+Create Aeronautics.
 
-[Download 1.2.0](https://github.com/lotlethtroll/cesg/releases/tag/v1.2.0).
+Also new: move a fuelled battery array with the wrench, touching gateway rings,
+and Haunting and Blasting upgrades, plus fixes for enhanced shulker dyeing,
+gateway travel and terminal shift-crafting. See [CHANGELOG.md](CHANGELOG.md).
+
+[Download 2.0.0](https://github.com/lotlethtroll/cesg/releases/tag/v2.0.0).
 Back up your world before updating, and install the same version on client and server.
 
 ## Installation
@@ -108,7 +117,7 @@ python tools/ponder/verify.py
 
 GameTests run in an isolated `run/gametest` world. Test classes and their empty
 structure template are development-only and are excluded from the release jar.
-See the [1.2 release checklist](docs/publishing/RELEASE-1.2.0.md) for validation
+See the [2.0 release checklist](docs/publishing/RELEASE-2.0.0.md) for validation
 and remaining coverage limits, and the [post-1.2 roadmap](docs/dev/NEXT-RELEASE.md).
 
 The jar is written to the Gradle `libs` output directory as

@@ -161,6 +161,14 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
             return stack;
 
         ItemStack existing = mainStacks.get(slot);
+        // Callers that merge before filling empty slots (insertItemStacked) compare the RAW item, so a
+        // smelted result would otherwise start a new stack on every insert (one ingot per slot). Put a
+        // converted item on an existing stack of its stored form first.
+        if (transformed && existing.isEmpty()) {
+            int merge = mergeSlotFor(candidate);
+            if (merge >= 0 && merge != slot)
+                return insertItem(merge, stack, simulate);
+        }
         if (!existing.isEmpty() && !ItemStack.isSameItemSameComponents(existing, candidate))
             return maybeVoidOverflow(stack, candidate);
 
@@ -187,6 +195,18 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
         return maybeVoidOverflow(stack, candidate);
     }
 
+    /** First slot already holding {@code storedForm} with room for more, or -1. */
+    private int mergeSlotFor(ItemStack storedForm) {
+        for (int i = 0; i < mainStacks.size(); i++) {
+            ItemStack inSlot = mainStacks.get(i);
+            if (!inSlot.isEmpty() && ItemStack.isSameItemSameComponents(inSlot, storedForm)
+                    && inSlot.getCount() < ShulkerUpgradeItems.effectiveSlotLimit(inSlot, getInstalledStackLimit())
+                    && isItemValid(i, storedForm))
+                return i;
+        }
+        return -1;
+    }
+
     /** Player-driven direct sets (hotbar swap) run the same transform as inserts. */
     ItemStack transformForStorage(ItemStack stack) {
         return applySmeltingUpgrade(stack);
@@ -205,11 +225,24 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
             return stack;
         if (smeltTerminalItems.contains(stack.getItem()))
             return stack;
+        boolean crushingInstalled = ShulkerUpgradeItems.highestInstalledCrushingTier(upgradeStacks) > 0;
+        boolean held = false;
         ItemStack current = stack;
         java.util.Set<net.minecraft.world.item.Item> seen = new java.util.HashSet<>();
         for (int step = 0; step < 8; step++) {
             if (!seen.add(current.getItem()))
                 break; // recipe cycle (a -> b -> a): stop at the last stable form
+            // Tools/armour are never melted into nuggets, and with a Crushing module installed raw ores
+            // and ore blocks it can crush are left for it so the crushing bonus isn't lost. Only ores:
+            // other crushable items (cobblestone, or sand in some packs) keep smelting as before. Not
+            // cached: both depend on the stack or the installed modules, not only the item.
+            if (current.getMaxStackSize() <= 1
+                    || (crushingInstalled && (current.is(net.neoforged.neoforge.common.Tags.Items.ORES)
+                            || current.is(net.neoforged.neoforge.common.Tags.Items.RAW_MATERIALS))
+                            && ShulkerProcessingUpgrades.canCrush(level, current))) {
+                held = true;
+                break;
+            }
             var recipe = level.getRecipeManager().getRecipeFor(
                     net.minecraft.world.item.crafting.RecipeType.SMELTING,
                     new net.minecraft.world.item.crafting.SingleRecipeInput(current), level);
@@ -221,7 +254,8 @@ public class EnhancedShulkerItemStackHandler implements IItemHandlerModifiable {
                 break;
             current = result.copyWithCount(current.getCount());
         }
-        smeltTerminalItems.add(current.getItem());
+        if (!held)
+            smeltTerminalItems.add(current.getItem());
         return current;
     }
 

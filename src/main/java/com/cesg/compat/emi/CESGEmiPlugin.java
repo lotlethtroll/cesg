@@ -34,6 +34,11 @@ public class CESGEmiPlugin implements EmiPlugin {
                 registry.getRecipeManager().getAllRecipesFor(CESGRecipes.ENDER_INFUSING_TYPE.get())) {
             registry.addRecipe(new EnderInfusingEmiRecipe(ENDER_INFUSING, holder.id(), holder.value()));
         }
+        // Enhanced box dyeing is a special recipe EMI cannot enumerate; show one entry per color.
+        for (var entry : com.cesg.recipe.EnhancedShulkerDyeDisplay.entries())
+            registry.addRecipe(new dev.emi.emi.api.recipe.EmiCraftingRecipe(
+                    entry.inputs().stream().map(dev.emi.emi.api.stack.EmiIngredient::of).toList(),
+                    EmiStack.of(entry.result()), entry.id(), true));
         // Storage Terminal "+" transfer: fill the crafting grid from the network (server-authoritative).
         registry.addRecipeHandler(com.cesg.init.CESGMenus.STORAGE_TERMINAL.get(), new TerminalEmiRecipeHandler());
     }

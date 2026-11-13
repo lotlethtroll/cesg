@@ -1,0 +1,17 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "item": "minecraft:end_stone"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:sand"
+    },
+    {
+      "id": "cesg:ender_pearl_dust",
+      "chance": 0.15
+    }
+  ]
+}

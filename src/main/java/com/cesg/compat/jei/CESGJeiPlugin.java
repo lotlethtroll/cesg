@@ -60,6 +60,7 @@ public class CESGJeiPlugin implements IModPlugin {
         List<RecipeHolder<EnderInfusingRecipe>> recipes =
                 mc.level.getRecipeManager().getAllRecipesFor(CESGRecipes.ENDER_INFUSING_TYPE.get());
         registration.addRecipes(enderInfusingType(), recipes);
+        registration.addRecipes(RecipeTypes.CRAFTING, com.cesg.recipe.EnhancedShulkerDyeDisplay.recipes());
     }
 
     @Override

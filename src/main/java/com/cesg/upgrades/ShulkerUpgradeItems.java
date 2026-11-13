@@ -25,7 +25,9 @@ public final class ShulkerUpgradeItems {
                 || stack.is(CESGRegistration.VOID_UPGRADE.get())
                 || stack.getItem() instanceof MagnetUpgradeItem
                 || stack.getItem() instanceof CrushingUpgradeItem
-                || stack.getItem() instanceof WashingUpgradeItem;
+                || stack.getItem() instanceof WashingUpgradeItem
+                || stack.getItem() instanceof HauntingUpgradeItem
+                || stack.getItem() instanceof BlastingUpgradeItem;
     }
 
     /** Highest magnet module tier installed, or 0. Like stack depth, only the best tier applies. */
@@ -54,6 +56,26 @@ public final class ShulkerUpgradeItems {
         for (ItemStack stack : upgradeSlots) {
             if (stack.getItem() instanceof WashingUpgradeItem washing)
                 best = Math.max(best, washing.getModuleTier());
+        }
+        return best;
+    }
+
+    /** Highest haunting module tier installed, or 0. Only the best tier applies. */
+    public static int highestInstalledHauntingTier(Iterable<ItemStack> upgradeSlots) {
+        int best = 0;
+        for (ItemStack stack : upgradeSlots) {
+            if (stack.getItem() instanceof HauntingUpgradeItem haunting)
+                best = Math.max(best, haunting.getModuleTier());
+        }
+        return best;
+    }
+
+    /** Highest blasting module tier installed, or 0. Only the best tier applies. */
+    public static int highestInstalledBlastingTier(Iterable<ItemStack> upgradeSlots) {
+        int best = 0;
+        for (ItemStack stack : upgradeSlots) {
+            if (stack.getItem() instanceof BlastingUpgradeItem blasting)
+                best = Math.max(best, blasting.getModuleTier());
         }
         return best;
     }

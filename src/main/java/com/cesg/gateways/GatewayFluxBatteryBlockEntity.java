@@ -51,7 +51,7 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
         implements IHaveGoggleInformation, IMultiBlockEntityContainer.Fluid {
 
     /** Max base width (3×3). Height is capped to the width, giving 2×2×2 and 3×3×3 as the two arrays. */
-    private static final int MAX_WIDTH = 3;
+    static final int MAX_WIDTH = 3;
     private static final int REFILL_INTERVAL = 5;
     private static final int SYNC_INTERVAL = 10;
     private static final int MEMBER_SCAN_LIMIT = 32;
@@ -267,6 +267,11 @@ public class GatewayFluxBatteryBlockEntity extends BlockEntity
             }
         }
         return true;
+    }
+
+    /** True until this block's queued ConnectivityHandler pass has run. */
+    boolean connectivityPending() {
+        return updateConnectivity;
     }
 
     /** Request a ConnectivityHandler re-form on the next server tick (controller only). */

@@ -13,6 +13,59 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
+## [2.0.0] — 2026-11-13
+
+It is a major version because one recipe change stops existing builds:
+**crushing-wheel pearl farms no longer produce ender pearl dust from End Stone.** Replace the
+crushing wheels with an encased fan blowing through water (or use the Washing upgrade).
+
+### Added
+- Move a fueled Gateway Flux Battery array with the wrench: sneak-wrench any block of the array to
+  pick the whole array up as one item that keeps all of its fuel, and place it to rebuild it. Empty
+  arrays come back as plain batteries. Pickup and placement respect protection and claim mods.
+- Gateway rings may now touch or share Frames with neighbouring rings. Building a ring against a
+  working gateway no longer shuts it off. Every layout that worked before works the same way.
+- Haunting and Blasting upgrades (Mk I–III) for Enhanced Shulker Boxes, at 1/2/4 conversions per
+  second. Haunting uses haunting recipes; Blasting uses blasting recipes only (metals) and never
+  melts tools or armour. When several upgrades could process an item, Crushing and Washing go
+  first, then Haunting, then Blasting.
+
+### Fixed
+- Dyeing an Enhanced Shulker Box no longer destroys it. Depending on the modpack, dyeing could
+  produce an empty box or turn the box into a vanilla shulker box, losing its tier, upgrades and
+  contents. Enhanced boxes of any color now dye to the chosen color and keep everything inside.
+- End Stone no longer competes with other addons' crushing recipes. CESG's crushing recipe could
+  override Create Aeronautics' End Stone Powder (blocking Levitite) and similar recipes from Create
+  Sifting and Create Ultimate Factory.
+- Polished End Stone no longer shares its recipe with vanilla End Stone Bricks, which could make
+  one of them uncraftable.
+- Sneak-wrenching a single battery now respects protection and claim mods.
+- The Smelting upgrade no longer melts iron and gold tools and armour into nuggets.
+- Items converted by the Smelting upgrade now join an existing stack instead of each taking a new
+  slot. Inserts from magnets, ports, bridges, belt loaders, terminals and the Crushing upgrade
+  could fill a box one ingot per slot.
+- Standing still inside a gateway no longer bounces you between the two gateways every few
+  seconds, paying the travel cost each time. You now step out onto the ground in front of the
+  partner portal, in the direction you are facing.
+- Shift-click crafting in the Storage Terminal no longer switches to a different recipe part-way
+  through. Two planks for sticks could use up every plank in the network as Oak Buttons, because one
+  grid slot took all the refill planks and the other ran dry.
+
+### Changed
+- **Breaking:** ender pearl dust from End Stone now comes from **washing** (encased fan through
+  water, or the Washing upgrade): End Stone → Sand + 15% Ender Pearl Dust. Crushing and milling
+  End Stone are left to other mods. Without such mods, crushing wheels no longer process End Stone.
+- Polished End Stone is crafted from 2×2 Smooth End Stone (smelt End Stone first). The
+  stonecutter recipe from End Stone is unchanged.
+- With a Crushing upgrade installed, the Smelting upgrade leaves raw ores and ore blocks for
+  Crushing, so the crushing bonus is no longer lost. In a box that is not placed, they wait until
+  the box is placed. Everything else smelts as before.
+
+### Removed
+- Loading of gateway cores saved by pre-1.0.0 development builds (single-partner format).
+  Worlds from any public release are unaffected.
+- Uses of NeoForge's `EventBusSubscriber` bus option, which is marked for removal.
+
 ## [1.2.0] — 2026-10-30
 
 ### Added

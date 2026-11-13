@@ -190,15 +190,17 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
         }
     }
 
-    // --- Crushing / Washing modules: process box contents in place (7D) ---
+    // --- Crushing / Washing / Haunting / Blasting modules: process box contents in place ---
 
     private static final int PROCESS_INTERVAL = 20;
     private Object processContentsRef;
     private int crushingTier;
     private int washingTier;
+    private int hauntingTier;
+    private int blastingTier;
     private EnhancedShulkerBlockItemHandler processHandler;
 
-    /** Installed crushing/washing tiers, cached against the contents identity like the magnet tier. */
+    /** Installed processing tiers, cached against the contents identity like the magnet tier. */
     private void refreshProcessTiers() {
         ItemStack stack = getShulkerStack();
         Object contents = stack.get(com.cesg.init.CESGDataComponents.ENHANCED_SHULKER.get());
@@ -207,14 +209,26 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
             var upgrades = EnhancedShulkerUpgradeTooltip.getInstalledUpgrades(stack);
             crushingTier = ShulkerUpgradeItems.highestInstalledCrushingTier(upgrades);
             washingTier = ShulkerUpgradeItems.highestInstalledWashingTier(upgrades);
+            hauntingTier = ShulkerUpgradeItems.highestInstalledHauntingTier(upgrades);
+            blastingTier = ShulkerUpgradeItems.highestInstalledBlastingTier(upgrades);
         }
     }
 
     private void processTick(Level level) {
         if (level.isClientSide || level.getGameTime() % PROCESS_INTERVAL != 0)
             return;
+        runProcessingModules();
+    }
+
+    /**
+     * One processing pass: Crushing, Washing, Haunting, then Blasting, each at its installed tier's rate.
+     * Runs every {@link #PROCESS_INTERVAL} ticks on placed boxes; public so GameTests can drive a pass.
+     */
+    public void runProcessingModules() {
+        if (level == null || level.isClientSide)
+            return;
         refreshProcessTiers();
-        if ((crushingTier <= 0 && washingTier <= 0) || isViewed())
+        if ((crushingTier <= 0 && washingTier <= 0 && hauntingTier <= 0 && blastingTier <= 0) || isViewed())
             return;
         if (processHandler == null)
             processHandler = new EnhancedShulkerBlockItemHandler(this);
@@ -226,6 +240,13 @@ public class EnhancedShulkerBoxBlockEntity extends BlockEntity implements LidBlo
         if (washingTier > 0)
             ShulkerProcessingUpgrades.runWashing(level, processHandler,
                     WashingUpgradeItem.operationsForTier(washingTier), overflow);
+        var installed = new ShulkerProcessingUpgrades.Installed(crushingTier > 0, washingTier > 0, hauntingTier > 0);
+        if (hauntingTier > 0)
+            ShulkerProcessingUpgrades.runHaunting(level, processHandler,
+                    HauntingUpgradeItem.operationsForTier(hauntingTier), overflow, installed);
+        if (blastingTier > 0)
+            ShulkerProcessingUpgrades.runBlasting(level, processHandler,
+                    BlastingUpgradeItem.operationsForTier(blastingTier), overflow, installed);
     }
 
     public static void clientTick(Level level, BlockPos pos, BlockState state, EnhancedShulkerBoxBlockEntity blockEntity) {
