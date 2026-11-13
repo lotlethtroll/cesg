@@ -47,6 +47,9 @@ crushing wheels with an encased fan blowing through water (or use the Washing up
 - Standing still inside a gateway no longer bounces you between the two gateways every few
   seconds, paying the travel cost each time. You now step out onto the ground in front of the
   partner portal, in the direction you are facing.
+- Shift-click crafting in the Storage Terminal no longer switches to a different recipe part-way
+  through. Two planks for sticks could use up every plank in the network as Oak Buttons, because one
+  grid slot took all the refill planks and the other ran dry.
 
 ### Changed
 - **Breaking:** ender pearl dust from End Stone now comes from **washing** (encased fan through
