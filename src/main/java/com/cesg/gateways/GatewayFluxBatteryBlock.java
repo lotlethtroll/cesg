@@ -1,5 +1,10 @@
 package com.cesg.gateways;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.cesg.init.CESGBlockEntities;
@@ -38,8 +43,11 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 /**
  * Gateway Flux Battery (Phase 7E): a fuel reservoir placed beside a gateway ring that tops up the Core.
@@ -134,10 +142,9 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
     }
 
     /**
-     * Bucket pour/drain against any member block — always targets the controller tank
-     * (same single-fuel lock as pipes). Essence and Eye buckets only.
+     * Fuel-preserving pickup. An isolated 1x1x1 battery keeps its 1.2 behaviour; any block of a larger
+     * array picks up the whole array into one item (see {@link #pickUp}).
      */
-    /** Only isolated singles have unambiguous fuel ownership. Array relocation stays deferred. */
     @Override
     public InteractionResult onSneakWrenched(BlockState state, UseOnContext context) {
         Level level = context.getLevel();
@@ -145,24 +152,90 @@ public class GatewayFluxBatteryBlock extends BaseEntityBlock implements IWrencha
         if (player == null || player.isSpectator() || com.simibubi.create.foundation.utility.AdventureUtil.isAdventure(player))
             return InteractionResult.FAIL;
         if (level.isClientSide) return InteractionResult.SUCCESS;
-        BlockPos pos = context.getClickedPos();
-        if (!(level.getBlockEntity(pos) instanceof GatewayFluxBatteryBlockEntity battery)
-                || !battery.isController() || battery.getWidth() != 1 || battery.getHeight() != 1
-                || !GatewayFluxBatteryItem.isolatedPosition(level, pos)) {
-            player.displayClientMessage(Component.translatable("cesg.battery.pickup.array"), true);
-            return InteractionResult.FAIL;
+        return pickUp(level, player, context.getClickedPos(), level::isLoaded);
+    }
+
+    /**
+     * All-or-nothing pickup of the array containing {@code clickedPos}. Refuses, changing nothing, unless
+     * every member is loaded (per {@code loaded}), the prism is intact with no pending connectivity update,
+     * and no {@link BlockEvent.BreakEvent} is cancelled. Then all tank fuel is summed, every tank emptied
+     * and the members removed (controller last), so Create's split has nothing to distribute. A fuelled
+     * array becomes one unstackable item holding all of it; an empty array becomes plain batteries.
+     */
+    static InteractionResult pickUp(Level level, Player player, BlockPos clickedPos, Predicate<BlockPos> loaded) {
+        GatewayFluxBatteryBlockEntity controller = level.getBlockEntity(clickedPos) instanceof GatewayFluxBatteryBlockEntity clicked
+                ? clicked.getControllerBE() : null;
+        if (controller == null) return refuse(player, "cesg.battery.pickup.refused");
+        int width = controller.getWidth(), height = controller.getHeight();
+        BlockPos origin = controller.getBlockPos();
+        // A 1x1x1 keeps the 1.2 rule: only an isolated battery, never one touching other batteries.
+        if (width == 1 && height == 1 && !GatewayFluxBatteryItem.isolatedPosition(level, clickedPos, loaded))
+            return refuse(player, "cesg.battery.pickup.array");
+        List<BlockPos> cells = new ArrayList<>();
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                for (int z = 0; z < width; z++) {
+                    BlockPos pos = origin.offset(x, y, z);
+                    if (!loaded.test(pos)) return refuse(player, "cesg.battery.pickup.refused");
+                    if (!pos.equals(origin)) cells.add(pos);
+                }
+        cells.add(origin); // controller removed last
+        if (!cells.contains(clickedPos) || !controller.isArrayPrismIntact())
+            return refuse(player, "cesg.battery.pickup.refused");
+        List<GatewayFluxBatteryBlockEntity> members = new ArrayList<>();
+        FluidStack total = FluidStack.EMPTY;
+        for (BlockPos pos : cells) {
+            GatewayFluxBatteryBlockEntity member = (GatewayFluxBatteryBlockEntity) level.getBlockEntity(pos);
+            if (member.connectivityPending() || !level.mayInteract(player, pos)) return refuse(player, "cesg.battery.pickup.refused");
+            FluidStack fuel = member.getTankInventory().getFluid();
+            if (!fuel.isEmpty()) {
+                if (total.isEmpty()) total = fuel.copy();
+                else if (FluidStack.isSameFluidSameComponents(total, fuel)) total.grow(fuel.getAmount());
+                else return refuse(player, "cesg.battery.pickup.refused");
+            }
+            members.add(member);
         }
-        ItemStack pickup = GatewayFluxBatteryItem.pickupStack(battery);
-        FluidStack fuel = battery.getTankInventory().getFluid().copy();
-        battery.getTankInventory().setFluid(FluidStack.EMPTY);
-        if (!level.removeBlock(pos, false)) {
-            battery.getTankInventory().setFluid(fuel);
-            return InteractionResult.FAIL;
-        }
-        if (!player.getInventory().add(pickup)) player.drop(pickup, false);
+        for (BlockPos pos : cells)
+            if (NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, pos, level.getBlockState(pos), player)).isCanceled())
+                return refuse(player, "cesg.battery.pickup.refused");
+
+        Block block = controller.getBlockState().getBlock();
+        withoutSnapshotCapture(level, () -> {
+            for (GatewayFluxBatteryBlockEntity member : members) member.getTankInventory().setFluid(FluidStack.EMPTY);
+            for (BlockPos pos : cells)
+                if (!level.removeBlock(pos, false))
+                    com.cesg.CESG.LOGGER.warn("Gateway Flux Battery pickup could not remove {}", pos);
+            return true;
+        });
+        ItemHandlerHelper.giveItemToPlayer(player, total.isEmpty() ? new ItemStack(block, cells.size())
+                : GatewayFluxBatteryItem.packedStack(block, total, width, height, level.registryAccess()));
         return InteractionResult.SUCCESS;
     }
 
+    /**
+     * NeoForge captures block snapshots while an item is used and replays or reverts them afterwards,
+     * deferring {@code onPlace}. Multi-block pickup/placement must see Create's connectivity immediately
+     * and fires its own Break/Place events, so it runs with capture off.
+     */
+    static boolean withoutSnapshotCapture(Level level, BooleanSupplier action) {
+        boolean capturing = level.captureBlockSnapshots;
+        level.captureBlockSnapshots = false;
+        try {
+            return action.getAsBoolean();
+        } finally {
+            level.captureBlockSnapshots = capturing;
+        }
+    }
+
+    static InteractionResult refuse(@Nullable Player player, String key, Object... args) {
+        if (player != null) player.displayClientMessage(Component.translatable(key, args), true);
+        return InteractionResult.FAIL;
+    }
+
+    /**
+     * Bucket pour/drain against any member block — always targets the controller tank
+     * (same single-fuel lock as pipes). Essence and Eye buckets only.
+     */
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {

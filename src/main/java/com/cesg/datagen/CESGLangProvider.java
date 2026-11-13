@@ -57,14 +57,19 @@ public class CESGLangProvider extends LanguageProvider {
         add("cesg.goggles.port.incoming", "Incoming: %s items, %s mB");
         add("block.cesg.gateway_flux_battery", "Gateway Flux Battery");
         add("block.cesg.gateway_flux_battery.tooltip.summary",
-                "Buffers _gateway fuel_ beside a _Gateway ring_ and keeps the _Core_ topped up so bursty travel and Port transfers never run the gateway dry. Single-fuel like a _fluid tank_ (locks to the first fuel piped in); _stack them into a 2×2×2 or 3×3×3 array_ for more capacity. _Sneak-wrench an isolated battery_ to retain fuel; drain arrays before dismantling them.");
+                "Buffers _gateway fuel_ beside a _Gateway ring_ and keeps the _Core_ topped up so bursty travel and Port transfers never run the gateway dry. Single-fuel like a _fluid tank_ (locks to the first fuel piped in); _stack them into a 2×2×2 or 3×3×3 array_ for more capacity. _Sneak-wrench any battery_ to pick up its whole array, fuel included, as one item; it places back as the same array.");
         add("cesg.goggles.battery.title", "Gateway Flux Battery");
         add("cesg.goggles.battery.empty", "Empty: 0/%s mB");
         add("cesg.goggles.battery.stored", "%s: %s/%s mB");
         add("cesg.goggles.battery.array", "Array: %sx%sx%s");
         add("cesg.goggles.battery.reserve", "Travel reserve: %s mB (automation paused below this)");
-        add("cesg.battery.pickup.array", "Fuel-preserving pickup requires an isolated battery. Drain and dismantle the array first.");
-        add("cesg.battery.pickup.place_alone", "Place a charged battery away from other batteries. Array relocation is not supported.");
+        add("cesg.battery.pickup.array", "A single battery touching other batteries can't be picked up with its fuel. Move the other batteries first.");
+        add("cesg.battery.pickup.refused", "Can't pick up this array: every block must be loaded, connected and yours to break.");
+        add("cesg.battery.pickup.array_size", "%s×%s×%s array");
+        add("cesg.battery.pickup.place_space", "Needs a clear %s×%s×%s space with no other battery touching it");
+        add("cesg.battery.pickup.place_capacity", "Holds %s mB, but a %s×%s×%s array now holds only %s mB. Raise capacityMbPerBlock to place it.");
+        add("cesg.battery.pickup.place_failed", "The battery array couldn't be placed here");
+        add("cesg.battery.pickup.place_alone", "Place a charged battery away from other batteries.");
         add("cesg.battery.pickup.fuel", "Stored fuel: %s, %s mB");
         add("cesg.battery.fuel_added", "Added %s mB to the Flux Battery");
         add("cesg.battery.fuel_drained", "Drained %s mB from the Flux Battery");
