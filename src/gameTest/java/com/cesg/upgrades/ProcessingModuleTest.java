@@ -172,6 +172,40 @@ public class ProcessingModuleTest {
                 ItemStack.EMPTY);
     }
 
+    /**
+     * Smelted results stack. insertItemStacked looks for existing stacks of the RAW item, so each
+     * converted insert used to start a new slot: Smelting + Crushing left one ingot per slot.
+     */
+    @GameTest(template = "empty")
+    public void smeltedResultsStackInOneSlot(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        var handler = handler(level, new ItemStack(CESGRegistration.SMELTING_UPGRADE.get()));
+        for (int i = 0; i < 5; i++)
+            ItemHandlerHelper.insertItemStacked(handler, new ItemStack(Items.RAW_IRON), false);
+        helper.assertTrue(count(handler, Items.IRON_INGOT) == 5 && slotsHolding(handler, Items.IRON_INGOT) == 1,
+                "Inserted raw iron did not stack as ingots: " + describe(handler));
+
+        var box = placedBox(helper, List.of(new ItemStack(Items.RAW_IRON, 4), new ItemStack(Items.IRON_ORE, 4)),
+                new ItemStack(CESGRegistration.SMELTING_UPGRADE.get()),
+                new ItemStack(CESGRegistration.CRUSHING_UPGRADE_T3.get()));
+        for (int pass = 0; pass < 6; pass++)
+            box.runProcessingModules();
+        var contents = box.getShulkerStack().get(CESGDataComponents.ENHANCED_SHULKER.get());
+        long ingotSlots = contents.mainSlots().stream().filter(s -> s.item().is(Items.IRON_INGOT)).count();
+        helper.assertTrue(count(box, Items.RAW_IRON) == 0 && count(box, Items.IRON_ORE) == 0
+                && count(box, Items.IRON_INGOT) >= 8 && ingotSlots == 1,
+                "Crushed ore did not smelt into one ingot stack: " + describe(box));
+        helper.succeed();
+    }
+
+    private static int slotsHolding(EnhancedShulkerItemStackHandler handler, Item item) {
+        int slots = 0;
+        for (int i = 0; i < handler.getSlots(); i++)
+            if (handler.getStackInSlot(i).is(item))
+                slots++;
+        return slots;
+    }
+
     private static int count(EnhancedShulkerBoxBlockEntity box, Item item) {
         var contents = box.getShulkerStack().get(CESGDataComponents.ENHANCED_SHULKER.get());
         return contents.mainSlots().stream().filter(s -> s.item().is(item)).mapToInt(s -> s.item().getCount()).sum();
