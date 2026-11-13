@@ -1,6 +1,6 @@
-# After 1.2.0
+# After 2.0.0
 
-These are candidates for the next feature release (provisionally 1.3.0), not release commitments. The 1.2 implementation records live in docs/dev/1.2.
+These are candidates for the next feature release (provisionally 2.1.0), not release commitments. 2.0.0 is a compatibility release: its version is major only because the End Stone recipe move stops crushing-wheel pearl farms (see docs/dev/2.0). The 1.2 implementation records live in docs/dev/1.2.
 
 ## First design task: fueled battery-array relocation
 

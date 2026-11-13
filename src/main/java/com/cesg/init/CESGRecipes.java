@@ -36,6 +36,11 @@ public final class CESGRecipes {
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<com.cesg.recipe.EnderBarrelPairingRecipe>> ENDER_BARREL_PAIRING =
             SERIALIZERS.register("ender_barrel_pairing", com.cesg.recipe.EnderBarrelPairingRecipeSerializer::new);
 
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<com.cesg.recipe.EnhancedAwareShulkerBoxColoring>> SHULKER_BOX_COLORING =
+            SERIALIZERS.register("shulker_box_coloring",
+                    () -> new net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer<>(
+                            com.cesg.recipe.EnhancedAwareShulkerBoxColoring::new));
+
     private CESGRecipes() {}
 
     public static void register(IEventBus modEventBus) {

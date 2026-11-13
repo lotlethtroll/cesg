@@ -13,6 +13,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow
 Jar naming: `cesg-<minecraft version>-<mod version>.jar`. Each release is tagged
 `v<mod version>` in git.
 
+## [2.0.0] — Unreleased
+
+Compatibility release. It is a major version because one recipe change stops existing builds:
+**crushing-wheel pearl farms no longer produce ender pearl dust from End Stone.** Replace the
+crushing wheels with an encased fan blowing through water (or use the Washing upgrade).
+
+### Fixed
+- Dyeing an Enhanced Shulker Box no longer destroys it. Depending on the modpack, dyeing could
+  produce an empty box or turn the box into a vanilla shulker box, losing its tier, upgrades and
+  contents. Enhanced boxes of any color now dye to the chosen color and keep everything inside.
+- End Stone no longer competes with other addons' crushing recipes. CESG's crushing recipe could
+  override Create Aeronautics' End Stone Powder (blocking Levitite) and similar recipes from Create
+  Sifting and Create Ultimate Factory.
+- Polished End Stone no longer shares its recipe with vanilla End Stone Bricks, which could make
+  one of them uncraftable.
+
+### Changed
+- **Breaking:** ender pearl dust from End Stone now comes from **washing** (encased fan through
+  water, or the Washing upgrade): End Stone → Sand + 15% Ender Pearl Dust. Crushing and milling
+  End Stone are left to other mods. Without such mods, crushing wheels no longer process End Stone.
+- Polished End Stone is crafted from 2×2 Smooth End Stone (smelt End Stone first). The
+  stonecutter recipe from End Stone is unchanged.
+
 ## [1.2.0] — 2026-10-30
 
 ### Added

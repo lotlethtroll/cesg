@@ -17,8 +17,6 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
 import net.minecraft.data.recipes.SingleItemRecipeBuilder;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
@@ -92,14 +90,8 @@ public class CESGRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_shulker_shell", has(CESGRegistration.SHULKER_SHELL.get()))
                 .save(output);
 
-        for (DyeColor color : DyeColor.values()) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, EnhancedShulkerBoxes.byColor(color).get())
-                    .requires(EnhancedShulkerBoxes.DEFAULT.get())
-                    .requires(DyeItem.byColor(color))
-                    .group("cesg:enhanced_shulker_box_dye")
-                    .unlockedBy("has_enhanced_shulker_box", has(EnhancedShulkerBoxes.DEFAULT.get()))
-                    .save(output, CESG.MOD_ID + ":enhanced_" + color.getName() + "_shulker_box_from_dye");
-        }
+        // Enhanced box dyeing is handled by EnhancedAwareShulkerBoxColoring, which replaces
+        // minecraft:shulker_box_coloring (hand-written in data/minecraft/recipe/) and keeps box data.
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.STACK_DEPTH_UPGRADE_T1.get())
                 .pattern(" B ")
@@ -336,10 +328,11 @@ public class CESGRecipeProvider extends RecipeProvider {
 
         // End Cultivation (7G): End materials are made renewable through native Create processing,
         // authored as static JSON (not datagen'd). Haunting sandstone -> end stone (the essence-free
-        // base path); crushing end stone -> sand + a chance of ender pearl dust; compacting 3 dust ->
+        // base path); washing end stone -> sand + a chance of ender pearl dust (washing, because other
+        // addons claim end stone crushing and milling); compacting 3 dust ->
         // 1 ender pearl; optional filling stone with Liquid Ender Pearl -> end stone (premium
         // accelerant). See data/cesg/recipe/{end_stone_from_haunting, ender_pearl_dust_from_end_stone_
-        // crushing, ender_pearl_from_compacting, end_stone_from_filling}.json.
+        // washing, ender_pearl_from_compacting, end_stone_from_filling}.json.
 
         // Amethyst (structure) + Echo Shard (location imprint/recall) + Ender Eye (dimensional sight).
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CESGRegistration.GATEWAY_BINDING_ITEM.get())
@@ -418,9 +411,12 @@ public class CESGRecipeProvider extends RecipeProvider {
                         .unlockedBy("has_material", has(source))
                         .save(output);
             } else { // polished
+                // 2x2 end stone is vanilla's end stone bricks recipe: an identical grid would leave
+                // whichever recipe loses RecipeManager's hash order uncraftable. Polish smooth end stone.
+                Block grid = source == Blocks.END_STONE ? smoothBase("smooth_end_stone") : source;
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, base, 4)
-                        .pattern("##").pattern("##").define('#', source)
-                        .unlockedBy("has_material", has(source))
+                        .pattern("##").pattern("##").define('#', grid)
+                        .unlockedBy("has_material", has(grid))
                         .save(output);
                 cut(output, source, base, 1, baseName + "_from_" + sourceName);
             }
@@ -433,6 +429,11 @@ public class CESGRecipeProvider extends RecipeProvider {
             cut(output, base, slab, 2, baseName + "_slab_from_" + baseName);
             cut(output, base, wall, 1, baseName + "_wall_from_" + baseName);
         }
+    }
+
+    private static Block smoothBase(String name) {
+        return CESGDecoratives.families().stream().filter(f -> f.name().equals(name)).findFirst()
+                .orElseThrow(() -> new IllegalStateException("No decorative family " + name)).base().get();
     }
 
     /** Stonecutting recipe under the cesg namespace (the vanilla helper defaults to minecraft:). */
